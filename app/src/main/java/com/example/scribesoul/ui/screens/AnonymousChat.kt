@@ -87,14 +87,14 @@ fun AnonymousChatScreen(navController: NavController) {
                     Text(
                         text = "SoulFess",
                         style = MaterialTheme.typography.titleLarge.copy(fontWeight = FontWeight(650)),
-                        color = Color.Black,
+                        color = Color(0xFF2B395B),
                         textAlign = TextAlign.Center
                     )
 
                     Text(
                         text = "Share your story anonymously",
                         style = MaterialTheme.typography.bodyMedium,
-                        color = Color.Gray,
+                        color = Color(0xFF2B395B),
                         textAlign = TextAlign.Center,
                         modifier = Modifier.padding(bottom = 20.dp)
                     )
@@ -165,7 +165,7 @@ fun ChatCard(
                     Text(
                         text = title,
                         style = MaterialTheme.typography.titleMedium,
-                        color = Color.Black
+                        color = Color(0xFF2B395B)
                     )
 
                     Spacer(modifier = Modifier.width(5.dp))
@@ -173,7 +173,7 @@ fun ChatCard(
                     Text(
                         text = "16-06-2025",
                         style = MaterialTheme.typography.bodySmall,
-                        color = Color.Gray
+                        color = Color(0xFF2B395B)
                     )
 
                     Spacer(modifier = Modifier.weight(1f))
@@ -192,7 +192,7 @@ fun ChatCard(
                 Text(
                     text = description,
                     style = MaterialTheme.typography.bodyMedium,
-                    color = Color.DarkGray
+                    color = Color(0xFF2B395B)
                 )
 
                 Spacer(modifier = Modifier.height(8.dp))
@@ -210,7 +210,7 @@ fun ChatCard(
                         Text(
                             text = "24", // Ganti sesuai kebutuhan
                             style = MaterialTheme.typography.bodySmall,
-                            color = Color.Gray
+                            color = Color(0xFF2B395B)
                         )
                     }
 
@@ -223,7 +223,7 @@ fun ChatCard(
                         Text(
                             text = "12", // Ganti sesuai kebutuhan
                             style = MaterialTheme.typography.bodySmall,
-                            color = Color.Gray
+                            color = Color(0xFF2B395B)
                         )
                     }
                 }
