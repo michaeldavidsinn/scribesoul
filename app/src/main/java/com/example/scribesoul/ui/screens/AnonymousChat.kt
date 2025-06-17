@@ -30,8 +30,10 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.MoreVert
 
 import androidx.compose.foundation.Canvas
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.ui.graphics.*
 import androidx.compose.ui.graphics.drawscope.drawIntoCanvas
 import androidx.compose.ui.graphics.drawscope.DrawScope
@@ -51,7 +53,8 @@ fun AnonymousChatScreen(navController: NavController) {
             modifier = Modifier
                 .fillMaxSize()
                 .graphicsLayer {
-                    scaleY = 1.5f // stretch ke atas bawah untuk efek diamond
+                    scaleY = 1.15f // cukup sedikit, jangan terlalu besar
+                    alpha = 0.9f // transparan agar teks tidak ketutupan
                 }
         ) {
             drawRect(
@@ -66,13 +69,14 @@ fun AnonymousChatScreen(navController: NavController) {
             )
         }
 
+
         // Gunakan LazyColumn langsung sebagai konten scrollable
         LazyColumn(
             modifier = Modifier
                 .fillMaxSize()
                 .padding(16.dp),
-            contentPadding = PaddingValues(vertical = 16.dp),
-            verticalArrangement = Arrangement.spacedBy(8.dp)
+            contentPadding = PaddingValues(0.dp),
+            verticalArrangement = Arrangement.spacedBy(0.dp)
         ) {
             item {
                 Column(
@@ -97,11 +101,23 @@ fun AnonymousChatScreen(navController: NavController) {
                 }
             }
 
-            items(10) { index ->
-                ChatCard(
-                    title = "Anonymous",
-                    description = "This is message number $index."
-                )
+            itemsIndexed(List(10) { it }) { index, item ->
+                Column {
+                    ChatCard(
+                        title = "Anonymous",
+                        description = "This is message number $item."
+                    )
+
+                    if (index < 9) { // hanya tampilkan garis jika bukan item terakhir
+                        Image(
+                            painter = painterResource(id = R.drawable.gariswarna),
+                            contentDescription = "Divider",
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .height(12.dp) // Sesuaikan tinggi gambar
+                        )
+                    }
+                }
             }
         }
     }
@@ -120,8 +136,8 @@ fun ChatCard(
         colors = CardDefaults.cardColors(
             containerColor = Color(0xFFF5F8FF).copy(alpha = 0.4f) // 50% transparan
         ),
-        elevation = CardDefaults.cardElevation(defaultElevation = 2.dp),
-        shape = MaterialTheme.shapes.medium
+        elevation = CardDefaults.cardElevation(defaultElevation = 0.dp),
+        shape = RectangleShape
     ) {
         Row(
             modifier = Modifier
