@@ -41,6 +41,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
 import com.example.scribesoul.R
 
@@ -89,14 +90,38 @@ fun JoinChatScreen(navController: NavController) {
                     horizontalAlignment = Alignment.CenterHorizontally
                 ) {
                     Text(
-                        text = "Wanna Join our Community?",
-                        style = MaterialTheme.typography.titleLarge.copy(fontWeight = FontWeight(650)),
+                        text = "Wanna join our",
+                        style = MaterialTheme.typography.titleLarge.copy(
+                            fontWeight = FontWeight(650),
+                            fontSize = 32.sp
+                        ),
                         color = Color(0xFF2B395B),
                         textAlign = TextAlign.Center
                     )
 
+                    Spacer(modifier = Modifier.height(2.dp)) // Jarak antar baris, sesuaikan sesuai keinginan
+
+                    Text(
+                        text = "community?",
+                        style = MaterialTheme.typography.titleLarge.copy(
+                            fontWeight = FontWeight(650),
+                            fontSize = 32.sp
+                        ),
+                        color = Color(0xFF2B395B),
+                        textAlign = TextAlign.Center
+                    )
                 }
             }
+
+        }
+        Column(
+            modifier = Modifier
+                .align(Alignment.BottomCenter)
+                .padding(bottom = 20.dp),
+            verticalArrangement = Arrangement.spacedBy(1.dp)
+        ) {
+            InputBar()
+            BottomBarAnonymous()
         }
     }
 }
