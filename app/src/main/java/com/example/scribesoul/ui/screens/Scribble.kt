@@ -71,6 +71,8 @@ fun ScribbleScreen(navController: NavController) {
                         .fillMaxWidth(),
                     horizontalAlignment = Alignment.CenterHorizontally
                 ) {
+                    Spacer(modifier = Modifier.height(20.dp))
+
                     Text(
                         text = "Scribble",
                         style = MaterialTheme.typography.titleLarge.copy(

@@ -89,6 +89,8 @@ fun JoinChatScreen(navController: NavController) {
                         .fillMaxWidth(),
                     horizontalAlignment = Alignment.CenterHorizontally
                 ) {
+                    Spacer(modifier = Modifier.height(20.dp))
+
                     Text(
                         text = "Wanna join our",
                         style = MaterialTheme.typography.titleLarge.copy(

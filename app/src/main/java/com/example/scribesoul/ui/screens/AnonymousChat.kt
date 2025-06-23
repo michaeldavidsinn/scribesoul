@@ -97,6 +97,8 @@ fun AnonymousChatScreen(navController: NavController) {
                         .fillMaxWidth(),
                     horizontalAlignment = Alignment.CenterHorizontally
                 ) {
+                    Spacer(modifier = Modifier.height(20.dp))
+
                     Text(
                         text = "SoulFess",
                         style = MaterialTheme.typography.titleLarge.copy(
