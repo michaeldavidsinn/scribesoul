@@ -184,7 +184,7 @@ fun ScribbleScreen(navController: NavController) {
 fun BottomBarScribble(modifier: Modifier = Modifier) {
     Box(
         modifier = modifier
-            .padding(start = 24.dp, end = 24.dp, top = 6.dp, bottom = 40.dp)
+            .padding(start = 24.dp, end = 24.dp, top = 6.dp, bottom = 20.dp)
             .shadow(
                 elevation = 6.dp,
                 shape = RoundedCornerShape(30.dp),

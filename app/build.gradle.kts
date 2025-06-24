@@ -51,6 +51,8 @@ dependencies {
     implementation(libs.androidx.material3)
     implementation(libs.androidx.navigation.runtime.android)
     implementation(libs.androidx.navigation.compose.jvmstubs)
+    implementation("androidx.compose.foundation:foundation-layout")
+    implementation("com.google.accompanist:accompanist-flowlayout:0.30.1")
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.junit)
     androidTestImplementation(libs.androidx.espresso.core)
