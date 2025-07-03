@@ -138,6 +138,46 @@ fun JoinChatScreen(navController: NavController) {
                         color = Color(0xFF2B395B),
                         textAlign = TextAlign.Center
                     )
+
+                    Spacer(modifier = Modifier.height(24.dp))
+
+                    Box(
+                        modifier = Modifier
+                            .fillMaxWidth(0.5f) // Panjang kotak 50% dari layar
+                            .height(50.dp)
+                            .clip(RoundedCornerShape(8.dp))
+                            .background(Color(0xFF1EB980)) // Warna biru tua
+                            .align(Alignment.CenterHorizontally), // Posisi tengah horizontal
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Text(
+                            text = "Yes",
+                            color = Color.White,
+                            fontSize = 18.sp,
+                            fontWeight = FontWeight.Bold,
+                            textAlign = TextAlign.Center
+                        )
+                    }
+
+                    Spacer(modifier = Modifier.height(24.dp))
+
+                    Box(
+                        modifier = Modifier
+                            .fillMaxWidth(0.5f) // Panjang kotak 50% dari layar
+                            .height(50.dp)
+                            .clip(RoundedCornerShape(8.dp))
+                            .background(Color(0xFFF44336)) // Warna biru tua
+                            .align(Alignment.CenterHorizontally), // Posisi tengah horizontal
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Text(
+                            text = "No",
+                            color = Color.White,
+                            fontSize = 18.sp,
+                            fontWeight = FontWeight.Bold,
+                            textAlign = TextAlign.Center
+                        )
+                    }
                 }
             }
 
