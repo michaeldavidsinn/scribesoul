@@ -80,108 +80,97 @@ fun JoinChatScreen(navController: NavController) {
 
 
         // Gunakan LazyColumn langsung sebagai konten scrollable
-        LazyColumn(
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(top = 16.dp),
+            horizontalArrangement = Arrangement.Start
+        ) {
+            Box(
+                modifier = Modifier
+                    .clip(RoundedCornerShape(50))
+                    .clickable { /* TODO: Back action */ }
+                    .padding(horizontal = 16.dp, vertical = 8.dp)
+            ) {
+                Icon(
+                    imageVector = Icons.Default.ArrowBack,
+                    contentDescription = "Back",
+                    tint = Color.Black,
+                    modifier = Modifier.size(20.dp)
+                )
+            }
+        }
+
+        // Konten utama di tengah vertikal
+        Column(
             modifier = Modifier
                 .fillMaxSize()
-                .padding(16.dp),
-            contentPadding = PaddingValues(0.dp),
-            verticalArrangement = Arrangement.spacedBy(0.dp)
+                .padding(horizontal = 16.dp)
+                .align(Alignment.Center), // INI YANG MEMBUAT TENGAH VERTIKAL
+            horizontalAlignment = Alignment.CenterHorizontally
         ) {
-            item {
-                Column(
-                    modifier = Modifier
-                        .fillMaxWidth(),
-                    horizontalAlignment = Alignment.CenterHorizontally
-                ) {
 
-                    Row(
-                        modifier = Modifier
-                            .fillMaxWidth(),
-                        horizontalArrangement = Arrangement.Start
-                    ) {
-                        Box(
-                            modifier = Modifier
-                                .clip(RoundedCornerShape(50))
+            Spacer(modifier = Modifier.height(230.dp))
 
-                                .clickable { /* TODO: action back */ }
-                                .padding(horizontal = 16.dp, vertical = 8.dp)
-                        ) {
-                            Icon(
-                                imageVector = Icons.Default.ArrowBack,
-                                contentDescription = "Back",
-                                tint = Color.Black,
-                                modifier = Modifier.size(20.dp)
-                            )
-                        }
-                    }
+            Text(
+                text = "Wanna join our",
+                style = MaterialTheme.typography.titleLarge.copy(
+                    fontWeight = FontWeight(650),
+                    fontSize = 32.sp
+                ),
+                color = Color(0xFF2B395B),
+                textAlign = TextAlign.Center
+            )
 
-                    Spacer(modifier = Modifier.height(20.dp))
+            Spacer(modifier = Modifier.height(2.dp))
 
-                    Text(
-                        text = "Wanna join our",
-                        style = MaterialTheme.typography.titleLarge.copy(
-                            fontWeight = FontWeight(650),
-                            fontSize = 32.sp
-                        ),
-                        color = Color(0xFF2B395B),
-                        textAlign = TextAlign.Center
-                    )
+            Text(
+                text = "community?",
+                style = MaterialTheme.typography.titleLarge.copy(
+                    fontWeight = FontWeight(650),
+                    fontSize = 32.sp
+                ),
+                color = Color(0xFF2B395B),
+                textAlign = TextAlign.Center
+            )
 
-                    Spacer(modifier = Modifier.height(2.dp)) // Jarak antar baris, sesuaikan sesuai keinginan
+            Spacer(modifier = Modifier.height(24.dp))
 
-                    Text(
-                        text = "community?",
-                        style = MaterialTheme.typography.titleLarge.copy(
-                            fontWeight = FontWeight(650),
-                            fontSize = 32.sp
-                        ),
-                        color = Color(0xFF2B395B),
-                        textAlign = TextAlign.Center
-                    )
-
-                    Spacer(modifier = Modifier.height(24.dp))
-
-                    Box(
-                        modifier = Modifier
-                            .fillMaxWidth(0.5f) // Panjang kotak 50% dari layar
-                            .height(50.dp)
-                            .clip(RoundedCornerShape(8.dp))
-                            .background(Color(0xFF1EB980)) // Warna biru tua
-                            .align(Alignment.CenterHorizontally), // Posisi tengah horizontal
-                        contentAlignment = Alignment.Center
-                    ) {
-                        Text(
-                            text = "Yes",
-                            color = Color.White,
-                            fontSize = 18.sp,
-                            fontWeight = FontWeight.Bold,
-                            textAlign = TextAlign.Center
-                        )
-                    }
-
-                    Spacer(modifier = Modifier.height(24.dp))
-
-                    Box(
-                        modifier = Modifier
-                            .fillMaxWidth(0.5f) // Panjang kotak 50% dari layar
-                            .height(50.dp)
-                            .clip(RoundedCornerShape(8.dp))
-                            .background(Color(0xFFF44336)) // Warna biru tua
-                            .align(Alignment.CenterHorizontally), // Posisi tengah horizontal
-                        contentAlignment = Alignment.Center
-                    ) {
-                        Text(
-                            text = "No",
-                            color = Color.White,
-                            fontSize = 18.sp,
-                            fontWeight = FontWeight.Bold,
-                            textAlign = TextAlign.Center
-                        )
-                    }
-                }
+            Box(
+                modifier = Modifier
+                    .fillMaxWidth(0.5f)
+                    .height(50.dp)
+                    .clip(RoundedCornerShape(8.dp))
+                    .background(Color(0xFF4CAF50)),
+                contentAlignment = Alignment.Center
+            ) {
+                Text(
+                    text = "Yes",
+                    color = Color.White,
+                    fontSize = 18.sp,
+                    fontWeight = FontWeight.Bold
+                )
             }
 
+            Spacer(modifier = Modifier.height(24.dp))
+
+            Box(
+                modifier = Modifier
+                    .fillMaxWidth(0.5f)
+                    .height(50.dp)
+                    .clip(RoundedCornerShape(8.dp))
+                    .background(Color(0xFFF44336)),
+                contentAlignment = Alignment.Center
+            ) {
+                Text(
+                    text = "No",
+                    color = Color.White,
+                    fontSize = 18.sp,
+                    fontWeight = FontWeight.Bold
+                )
+            }
         }
+
         Column(
             modifier = Modifier
                 .align(Alignment.BottomCenter)
