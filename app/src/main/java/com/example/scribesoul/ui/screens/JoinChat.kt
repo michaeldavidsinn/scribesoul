@@ -136,38 +136,61 @@ fun JoinChatScreen(navController: NavController) {
 
             Spacer(modifier = Modifier.height(24.dp))
 
-            Box(
-                modifier = Modifier
-                    .fillMaxWidth(0.5f)
-                    .height(50.dp)
-                    .clip(RoundedCornerShape(8.dp))
-                    .background(Color(0xFF4CAF50)),
-                contentAlignment = Alignment.Center
+            Row(
+                horizontalArrangement = Arrangement.spacedBy(16.dp),
+                verticalAlignment = Alignment.CenterVertically
             ) {
-                Text(
-                    text = "Yes",
-                    color = Color.White,
-                    fontSize = 18.sp,
-                    fontWeight = FontWeight.Bold
-                )
-            }
+                Box(
+                    modifier = Modifier
+                        .width(140.dp)
+                        .height(50.dp)
+                        .clip(RoundedCornerShape(8.dp))
+                        .background(
+                            brush = Brush.horizontalGradient(
+                                colors = listOf(
+                                    Color(0xFF82D9D2),
+                                    Color(0xFF7CC3E6),
+                                    Color(0xFF74A8FF)
+                                )
+                            ),
+                            shape = RoundedCornerShape(50)
+                        ),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Text(
+                        text = "YES",
+                        color = Color.White,
+                        fontSize = 18.sp,
+                        fontWeight = FontWeight.Bold
+                    )
+                }
 
-            Spacer(modifier = Modifier.height(24.dp))
+                Spacer(modifier = Modifier.width(1.dp))
 
-            Box(
-                modifier = Modifier
-                    .fillMaxWidth(0.5f)
-                    .height(50.dp)
-                    .clip(RoundedCornerShape(8.dp))
-                    .background(Color(0xFFF44336)),
-                contentAlignment = Alignment.Center
-            ) {
-                Text(
-                    text = "No",
-                    color = Color.White,
-                    fontSize = 18.sp,
-                    fontWeight = FontWeight.Bold
-                )
+                Box(
+                    modifier = Modifier
+                        .width(140.dp)
+                        .height(50.dp)
+//                        .clip(RoundedCornerShape(8.dp))
+                        .background(
+                            brush = Brush.horizontalGradient(
+                                colors = listOf(
+                                    Color(0xFF82D9D2),
+                                    Color(0xFF7CC3E6),
+                                    Color(0xFF74A8FF)
+                                )
+                            ),
+                            shape = RoundedCornerShape(50)
+                        ),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Text(
+                        text = "NO",
+                        color = Color.White,
+                        fontSize = 18.sp,
+                        fontWeight = FontWeight.Bold
+                    )
+                }
             }
         }
 
