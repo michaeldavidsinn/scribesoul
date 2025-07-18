@@ -53,6 +53,8 @@ dependencies {
     implementation(libs.androidx.navigation.compose.jvmstubs)
     implementation("androidx.compose.foundation:foundation-layout")
     implementation("com.google.accompanist:accompanist-flowlayout:0.30.1")
+    implementation("io.coil-kt:coil-compose:2.2.2")
+    implementation("androidx.compose.material:material-icons-extended:<version>")
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.junit)
     androidTestImplementation(libs.androidx.espresso.core)
