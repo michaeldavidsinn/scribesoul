@@ -201,7 +201,7 @@ fun JoinChatScreen(navController: NavController) {
             verticalArrangement = Arrangement.spacedBy(1.dp)
         ) {
             InputBar()
-            BottomBarAnonymous()
+            BottomBarAnonymous(navController = navController)
         }
     }
 }

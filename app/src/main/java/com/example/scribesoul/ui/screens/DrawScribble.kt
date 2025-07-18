@@ -30,6 +30,7 @@ import androidx.compose.ui.graphics.Path
 import androidx.compose.ui.graphics.drawscope.DrawScope
 import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.input.pointer.pointerInput
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalSoftwareKeyboardController
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.input.ImeAction
@@ -37,6 +38,7 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
+import androidx.navigation.compose.rememberNavController
 import coil.compose.rememberAsyncImagePainter
 import com.example.scribesoul.R
 
@@ -46,7 +48,7 @@ enum class ToolMode {
 
 @RequiresApi(Build.VERSION_CODES.VANILLA_ICE_CREAM)
 @Composable
-fun DrawScribbleScreen(navController: NavController? = null) {
+fun DrawScribbleScreen(navController: NavController) {
 
     val paths = remember { mutableStateListOf<Pair<List<Offset>, ToolMode>>() }
     var currentPath by remember { mutableStateOf<List<Offset>>(emptyList()) }
@@ -69,6 +71,8 @@ fun DrawScribbleScreen(navController: NavController? = null) {
     val imagePickerLauncher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.GetContent()
     ) { uri: Uri? -> imageUri.value = uri }
+
+    val showLayerMenu = remember { mutableStateOf(false) }
 
     Box(
         modifier = Modifier
@@ -358,11 +362,68 @@ fun DrawScribbleScreen(navController: NavController? = null) {
                         .size(22.dp)
                         .clickable { toolMode = ToolMode.ERASE }
                 )
-                Image(
-                    painter = painterResource(id = R.drawable.layer),
-                    contentDescription = "Layer",
-                    modifier = Modifier.size(22.dp)
-                )
+                Box {
+                    Image(
+                        painter = painterResource(id = R.drawable.layer),
+                        contentDescription = "Layer",
+                        modifier = Modifier
+                            .size(22.dp)
+                            .clickable { showLayerMenu.value = true }
+                    )
+                    DropdownMenu(
+                        expanded = showLayerMenu.value,
+                        onDismissRequest = { showLayerMenu.value = false }
+                    ) {
+                        DropdownMenuItem(
+                            text = { Text("Bring Text Forward") },
+                            onClick = {
+                                if (selectedTexts.size == 1) {
+                                    val index = texts.indexOf(selectedTexts[0])
+                                    if (index < texts.size - 1) {
+                                        texts.removeAt(index)
+                                        texts.add(index + 1, selectedTexts[0])
+                                    }
+                                }
+                                showLayerMenu.value = false
+                            }
+                        )
+                        DropdownMenuItem(
+                            text = { Text("Send Text Backward") },
+                            onClick = {
+                                if (selectedTexts.size == 1) {
+                                    val index = texts.indexOf(selectedTexts[0])
+                                    if (index > 0) {
+                                        texts.removeAt(index)
+                                        texts.add(index - 1, selectedTexts[0])
+                                    }
+                                }
+                                showLayerMenu.value = false
+                            }
+                        )
+                        DropdownMenuItem(
+                            text = { Text("Bring Shape Forward") },
+                            onClick = {
+                                if (shapes.isNotEmpty()) {
+                                    val shape = shapes.last()
+                                    shapes.remove(shape)
+                                    shapes.add(0, shape) // move to top
+                                }
+                                showLayerMenu.value = false
+                            }
+                        )
+                        DropdownMenuItem(
+                            text = { Text("Send Shape Backward") },
+                            onClick = {
+                                if (shapes.isNotEmpty()) {
+                                    val shape = shapes.first()
+                                    shapes.remove(shape)
+                                    shapes.add(shape) // move to end
+                                }
+                                showLayerMenu.value = false
+                            }
+                        )
+                    }
+                }
                 Image(
                     painter = painterResource(id = R.drawable.dot3),
                     contentDescription = "More",
@@ -376,7 +437,7 @@ fun DrawScribbleScreen(navController: NavController? = null) {
                 .align(Alignment.BottomCenter)
                 .padding(bottom = 20.dp)
         ) {
-            BottomBarScribble()
+            BottomBarScribble(navController = navController)
         }
     }
 }
@@ -430,5 +491,6 @@ fun DrawScope.drawStar(center: Offset, radius: Float, color: Color) {
 @Preview(showBackground = true)
 @Composable
 fun DrawScribblePreview() {
-    DrawScribbleScreen()
+    val dummyController = rememberNavController()
+    DrawScribbleScreen(navController = dummyController)
 }

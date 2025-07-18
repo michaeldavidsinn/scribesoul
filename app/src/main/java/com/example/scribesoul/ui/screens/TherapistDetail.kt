@@ -41,14 +41,17 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.material3.Icon
+import androidx.compose.runtime.remember
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.platform.LocalContext
+import androidx.navigation.NavController
 import com.example.scribesoul.R
 import com.google.accompanist.flowlayout.FlowRow
 
 @OptIn(ExperimentalLayoutApi::class)
 @Composable
-fun TherapistDetailScreen() {
+fun TherapistDetailScreen(navController: NavController) {
     Box(
         modifier = Modifier
             .fillMaxSize()
@@ -473,7 +476,7 @@ fun TherapistDetailScreen() {
                 .align(Alignment.BottomCenter)
                 .padding(bottom = 20.dp)
         ) {
-            BottomBarTherapist()
+            BottomBarTherapist(navController = navController)
         }
     }
 }
@@ -481,7 +484,10 @@ fun TherapistDetailScreen() {
 @Preview(showBackground = true)
 @Composable
 fun TherapistDetailPreview() {
+    val context = LocalContext.current
+    val navController = remember { NavController(context) }
+
     Surface(modifier = Modifier.fillMaxSize()) {
-        TherapistDetailScreen()
+        TherapistDetailScreen(navController = navController)
     }
 }

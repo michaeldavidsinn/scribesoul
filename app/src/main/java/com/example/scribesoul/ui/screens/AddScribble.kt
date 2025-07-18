@@ -76,7 +76,7 @@ fun AddScribbleScreen(navController: NavController) {
                 .padding(bottom = 20.dp),
             verticalArrangement = Arrangement.spacedBy(1.dp)
         ) {
-            BottomBarScribble()
+            BottomBarScribble(navController = navController)
         }
     }
 }
