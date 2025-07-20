@@ -30,7 +30,6 @@ import androidx.compose.ui.graphics.Path
 import androidx.compose.ui.graphics.drawscope.DrawScope
 import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.input.pointer.pointerInput
-import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalSoftwareKeyboardController
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.input.ImeAction
@@ -45,6 +44,13 @@ import com.example.scribesoul.R
 enum class ToolMode {
     DRAW, ERASE, Highlighter, Lasso
 }
+
+data class DrawablePath(
+    var offsets: List<Offset>,
+    var toolMode: ToolMode,
+    var offset: Offset = Offset.Zero
+)
+
 
 @RequiresApi(Build.VERSION_CODES.VANILLA_ICE_CREAM)
 @Composable
@@ -229,7 +235,7 @@ fun DrawScribbleScreen(navController: NavController) {
         Row(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(top = 40.dp, start = 20.dp, end = 20.dp),
+                .padding(top = 60.dp, start = 20.dp, end = 20.dp),
             verticalAlignment = Alignment.CenterVertically
         ) {
             Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
