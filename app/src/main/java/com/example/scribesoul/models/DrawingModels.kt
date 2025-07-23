@@ -11,6 +11,10 @@ interface Movable {
     var rotation: Float
 }
 
+interface Colorable {
+    var color: Color
+}
+
 // Enum untuk mode alat gambar
 enum class ToolMode {
     DRAW, ERASE, Highlighter, Lasso
@@ -33,18 +37,20 @@ data class ImageLayer(
 data class ShapeItem(
     val type: String,
     override var offset: Offset,
-    override var rotation: Float = 0f
-) : Movable
+    override var rotation: Float = 0f,
+    var size: Size = Size(100f, 100f), // TAMBAHKAN ukuran
+    override var color: Color // TAMBAHKAN warna
+) : Movable, Colorable // Implementasikan Colorable
 
 data class EditableText(
     var text: String,
     override var offset: Offset,
     override var rotation: Float = 0f,
     var isEditing: Boolean = false,
-    var color: Color = Color.Black,
+    override var color: Color = Color.Black, // Jadikan override dari Colorable
     var fontSize: Int = 18,
-    var size: Size = Size.Zero // <- TAMBAHKAN PROPERTI BARU INI
-) : Movable
+    var size: Size = Size.Zero
+) : Movable, Colorable
 
 data class ItemGroup(
     val items: MutableList<Movable> = mutableListOf(),

@@ -91,52 +91,42 @@ class MoveCommand(private val target: Movable, private val from: Offset, private
     override fun undo() { target.offset = from }
 }
 
-class ChangeTextColorCommand(
-    private val targets: List<EditableText>,
+class ChangeColorCommand(
+    private val targets: List<Movable>,
     private val newColor: Color
 ) : Command {
-    private val oldColors = targets.associateWith { it.color } // Simpan warna lama
+    private val oldColors = targets.filterIsInstance<Colorable>().associateWith { it.color }
 
     override fun execute() {
-        targets.forEach { it.color = newColor }
+        targets.filterIsInstance<Colorable>().forEach { it.color = newColor }
     }
 
     override fun undo() {
-        oldColors.forEach { (text, oldColor) ->
-            text.color = oldColor
-        }
-    }
-}
-
-class ChangeTextSizeCommand(
-    private val targets: List<EditableText>,
-    private val newSize: Int
-) : Command {
-    private val oldSizes = targets.associateWith { it.fontSize } // Simpan ukuran lama
-
-    override fun execute() {
-        targets.forEach { it.fontSize = newSize.coerceIn(8, 96) } // Batasi ukuran 8sp-96sp
-    }
-
-    override fun undo() {
-        oldSizes.forEach { (text, oldSize) ->
-            text.fontSize = oldSize
+        oldColors.forEach { (item, oldColor) ->
+            (item as Colorable).color = oldColor
         }
     }
 }
 
 class GroupCommand(
     private val itemsToGroup: List<Movable>,
-    private val allLists: List<MutableList<out Movable>>, // List dari semua list (texts, shapes, dll)
+    private val allLists: List<MutableList<out Movable>>,
     private val groups: MutableList<ItemGroup>
 ) : Command {
     private lateinit var newGroup: ItemGroup
+    // Simpan posisi absolut asli untuk proses undo
+    private val originalOffsets = itemsToGroup.associateWith { it.offset }
 
     override fun execute() {
         // Hitung titik tengah dari semua item yang dipilih
         val centerX = itemsToGroup.map { it.offset.x }.average().toFloat()
         val centerY = itemsToGroup.map { it.offset.y }.average().toFloat()
         val groupCenter = Offset(centerX, centerY)
+
+        // PENTING: Ubah offset setiap item menjadi RELATIF terhadap pusat grup
+        itemsToGroup.forEach { item ->
+            item.offset = item.offset - groupCenter
+        }
 
         newGroup = ItemGroup(items = itemsToGroup.toMutableList(), offset = groupCenter)
 
@@ -151,8 +141,11 @@ class GroupCommand(
     override fun undo() {
         // Hapus grup
         groups.remove(newGroup)
-        // Kembalikan item ke list aslinya
+        // Kembalikan item ke list aslinya DAN kembalikan offset absolut aslinya
         newGroup.items.forEach { item ->
+            // Kembalikan offset asli sebelum menambahkannya kembali ke list
+            item.offset = originalOffsets[item] ?: item.offset
+
             when (item) {
                 is EditableText -> (allLists[0] as MutableList<EditableText>).add(item)
                 is ShapeItem -> (allLists[1] as MutableList<ShapeItem>).add(item)
@@ -241,6 +234,60 @@ class ResizeCommand(
     override fun undo() {
         when (target) {
             is ImageLayer -> target.size = fromSize
+        }
+    }
+}
+
+enum class LayerDirection {
+    TO_FRONT, TO_BACK
+}
+
+// Tambahkan class Command baru ini di file DrawingCommands.kt
+class LayeringCommand(
+    private val target: Movable,
+    private val allLists: List<MutableList<out Movable>>,
+    private val direction: LayerDirection
+) : Command {
+    private var originalIndex = -1
+    private var sourceList: MutableList<out Movable>? = null
+
+    // Helper untuk menemukan list asal dari sebuah item
+    @Suppress("UNCHECKED_CAST")
+    private fun findSourceList(item: Movable): MutableList<out Movable>? {
+        return when (item) {
+            is EditableText -> allLists[0] as MutableList<EditableText>
+            is ShapeItem -> allLists[1] as MutableList<ShapeItem>
+            is ImageLayer -> allLists[2] as MutableList<ImageLayer>
+            is ItemGroup -> allLists[3] as MutableList<ItemGroup>
+            else -> null
+        }
+    }
+
+    override fun execute() {
+        sourceList = findSourceList(target)
+        sourceList?.let { list ->
+            originalIndex = list.indexOf(target)
+            if (originalIndex != -1) {
+                // Hapus dulu dari posisi lama
+                (list as MutableList<Movable>).remove(target)
+                // Tambahkan ke depan atau belakang
+                if (direction == LayerDirection.TO_FRONT) {
+                    list.add(target) // Tambah di akhir = render paling atas
+                } else {
+                    list.add(0, target) // Tambah di awal = render paling bawah
+                }
+            }
+        }
+    }
+
+    override fun undo() {
+        sourceList?.let { list ->
+            if (originalIndex != -1) {
+                // Hapus dari posisi baru
+                (list as MutableList<Movable>).remove(target)
+                // Kembalikan ke posisi semula
+                list.add(originalIndex, target)
+            }
         }
     }
 }

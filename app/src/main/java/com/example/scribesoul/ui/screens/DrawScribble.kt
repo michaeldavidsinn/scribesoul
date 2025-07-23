@@ -15,6 +15,7 @@ import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.ChangeHistory
 import androidx.compose.material.icons.filled.ContentCopy
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.PlayArrow
@@ -39,6 +40,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
 import androidx.navigation.compose.rememberNavController
+import androidx.compose.material.icons.filled.Palette
 import coil.compose.rememberAsyncImagePainter
 import coil.request.ImageRequest
 import com.example.scribesoul.R
@@ -204,24 +206,11 @@ fun DrawScribbleScreen(navController: NavController) { // NavController dihapus 
         // --- UI / TOOLBAR SECTION ---
         if (selectedItems.isNotEmpty()) {
             Box(modifier = Modifier.align(Alignment.TopCenter).padding(top = 120.dp)) {
-                SelectionToolbar(
-                    onGroup = {
-                        if (selectedItems.size > 1) {
-                            val allLists = listOf(texts, shapes, imageLayers)
-                            executeCommand(GroupCommand(selectedItems.toList(), allLists, groups))
-                            selectedItems.clear()
-                        }
-                    },
-                    onCopy = {
-                        val allLists = listOf(texts, shapes, imageLayers, groups)
-                        executeCommand(CopyCommand(selectedItems.toList(), allLists))
-                        selectedItems.clear()
-                    },
-                    onDelete = {
-                        val allLists = listOf(texts, shapes, imageLayers, groups)
-                        executeCommand(DeleteItemsCommand(selectedItems.toList(), allLists))
-                        selectedItems.clear()
-                    }
+                PropertiesToolbar(
+                    selectedItems = selectedItems,
+                    executeCommand = ::executeCommand,
+                    onClearSelection = { selectedItems.clear() },
+                    allLists = listOf(texts, shapes, imageLayers, groups)
                 )
             }
         }
@@ -260,21 +249,53 @@ fun DrawScribbleScreen(navController: NavController) { // NavController dihapus 
                 Box {
                     Image(painter = painterResource(id = R.drawable.shapeasset), contentDescription = "Shape", modifier = Modifier.size(22.dp).clickable { showShapeMenu.value = true })
                     DropdownMenu(expanded = showShapeMenu.value, onDismissRequest = { showShapeMenu.value = false }) {
-                        DropdownMenuItem(onClick = { executeCommand(AddShapeCommand(ShapeItem("Circle", canvasCenter.value), shapes)); showShapeMenu.value = false },
-                            text = { Row { Icon(Icons.Filled.RadioButtonUnchecked, null); Spacer(Modifier.width(8.dp)); Text("Circle") } })
-                        DropdownMenuItem(onClick = { executeCommand(AddShapeCommand(ShapeItem("Star", canvasCenter.value), shapes)); showShapeMenu.value = false },
-                            text = { Row { Icon(Icons.Filled.Star, null); Spacer(Modifier.width(8.dp)); Text("Star") } })
-                        DropdownMenuItem(onClick = { executeCommand(AddShapeCommand(ShapeItem("Rectangle", canvasCenter.value), shapes)); showShapeMenu.value = false },
-                            text = { Row { Icon(Icons.Filled.PlayArrow, null); Spacer(Modifier.width(8.dp)); Text("Rectangle") } })
+                        DropdownMenuItem(onClick = { executeCommand(AddShapeCommand(ShapeItem("Circle", canvasCenter.value, color = Color.Red), shapes)); showShapeMenu.value = false }, text = { /*..*/ })
+                        DropdownMenuItem(onClick = { executeCommand(AddShapeCommand(ShapeItem("Rectangle", canvasCenter.value, color = Color.Magenta), shapes)); showShapeMenu.value = false }, text = { /*..*/ })
+                        DropdownMenuItem(onClick = { executeCommand(AddShapeCommand(ShapeItem("Star", canvasCenter.value, color = Color.Yellow), shapes)); showShapeMenu.value = false }, text = { /*..*/ })
+                        DropdownMenuItem(onClick = { executeCommand(AddShapeCommand(ShapeItem("Triangle", canvasCenter.value, color = Color.Green), shapes)); showShapeMenu.value = false }, text = { /*..*/ })
+                        DropdownMenuItem(onClick = { executeCommand(AddShapeCommand(ShapeItem("Hexagon", canvasCenter.value, color = Color.Cyan), shapes)); showShapeMenu.value = false }, text = { /*..*/ })
                     }
                 }
                 Image(painter = painterResource(id = R.drawable.pencil), contentDescription = "Pencil", modifier = Modifier.size(22.dp).clickable { toolMode = ToolMode.DRAW })
                 Image(painter = painterResource(id = R.drawable.eraser), contentDescription = "Eraser", modifier = Modifier.size(22.dp).clickable { toolMode = ToolMode.ERASE })
                 Box {
-                    Image(painter = painterResource(id = R.drawable.layer), contentDescription = "Layer", modifier = Modifier.size(22.dp).clickable { showLayerMenu.value = true })
-                    DropdownMenu(expanded = showLayerMenu.value, onDismissRequest = { showLayerMenu.value = false }) {
-                        DropdownMenuItem(text = { Text("Bring to Front") }, onClick = { /* TODO */ showLayerMenu.value = false })
-                        DropdownMenuItem(text = { Text("Send to Back") }, onClick = { /* TODO */ showLayerMenu.value = false })
+                    // Tentukan apakah menu harus aktif (hanya jika 1 item terpilih)
+                    val isLayerMenuEnabled = selectedItems.size == 1
+
+                    Image(
+                        painter = painterResource(id = R.drawable.layer),
+                        contentDescription = "Layer",
+                        modifier = Modifier
+                            .size(22.dp)
+                            .clickable(enabled = isLayerMenuEnabled) { showLayerMenu.value = true },
+                        alpha = if (isLayerMenuEnabled) 1f else 0.4f // Redupkan ikon jika tidak aktif
+                    )
+                    DropdownMenu(
+                        expanded = showLayerMenu.value,
+                        onDismissRequest = { showLayerMenu.value = false }
+                    ) {
+                        DropdownMenuItem(
+                            text = { Text("Bring to Front") },
+                            onClick = {
+                                if (isLayerMenuEnabled) {
+                                    val item = selectedItems.first()
+                                    val allLists = listOf(texts, shapes, imageLayers, groups)
+                                    executeCommand(LayeringCommand(item, allLists, LayerDirection.TO_FRONT))
+                                }
+                                showLayerMenu.value = false
+                            }
+                        )
+                        DropdownMenuItem(
+                            text = { Text("Send to Back") },
+                            onClick = {
+                                if (isLayerMenuEnabled) {
+                                    val item = selectedItems.first()
+                                    val allLists = listOf(texts, shapes, imageLayers, groups)
+                                    executeCommand(LayeringCommand(item, allLists, LayerDirection.TO_BACK))
+                                }
+                                showLayerMenu.value = false
+                            }
+                        )
                     }
                 }
                 Image(painter = painterResource(id = R.drawable.dot3), contentDescription = "More", modifier = Modifier.size(22.dp))
@@ -307,14 +328,12 @@ fun RenderMovableItem(
     val finalOffset = if (isGrouped) groupOffset else item.offset
     val finalRotation = if (isGrouped) groupRotation else item.rotation
 
-    var dragStartSize by remember { mutableStateOf(Size.Zero) }
-
-    // Modifier dasar untuk transformasi dan seleksi
-    var modifier = Modifier
+    val modifier = Modifier
         .graphicsLayer {
             translationX = finalOffset.x
             translationY = finalOffset.y
             rotationZ = finalRotation
+
             if (isGrouped) {
                 translationX += item.offset.x
                 translationY += item.offset.y
@@ -322,13 +341,8 @@ fun RenderMovableItem(
             }
         }
         .clickable(enabled = !isGrouped) { onSelect() }
+        .then(if (isSelected && !isGrouped) Modifier.border(2.dp, Color.Blue) else Modifier)
 
-    // Tambahkan border jika terpilih (dan bukan bagian dari grup)
-    if (isSelected && !isGrouped) {
-        modifier = modifier.border(2.dp, Color.Blue)
-    }
-
-    // Box pembungkus untuk menampung item dan handle-nya jika ada
     Box(modifier = modifier) {
         when (item) {
             is EditableText -> {
@@ -349,12 +363,16 @@ fun RenderMovableItem(
                 )
             }
             is ShapeItem -> {
-                Box(modifier = Modifier.size(100.dp)) {
+                Box(modifier = Modifier.size(item.size.width.dp, item.size.height.dp)) {
                     Canvas(modifier = Modifier.fillMaxSize()) {
+                        val shapeCenter = Offset(size.width / 2f, size.height / 2f)
+                        val shapeRadius = size.width / 2f
                         when (item.type) {
-                            "Circle" -> drawCircle(Color.Red, radius = 50f, center = Offset(50f, 50f))
-                            "Star" -> drawStar(center = Offset(50f, 50f), radius = 50f, color = Color.Yellow)
-                            "Rectangle" -> drawRect(color = Color.Magenta, size = this.size)
+                            "Circle" -> drawCircle(item.color, radius = shapeRadius, center = shapeCenter)
+                            "Star" -> drawStar(center = shapeCenter, radius = shapeRadius, color = item.color)
+                            "Rectangle" -> drawRect(color = item.color, size = this.size)
+                            "Triangle" -> drawPolygon(sides = 3, radius = shapeRadius, center = shapeCenter, color = item.color)
+                            "Hexagon" -> drawPolygon(sides = 6, radius = shapeRadius, center = shapeCenter, color = item.color)
                         }
                     }
                 }
@@ -364,7 +382,7 @@ fun RenderMovableItem(
                 val painter = rememberAsyncImagePainter(
                     model = ImageRequest.Builder(context)
                         .data(item.uri)
-                        .size(coil.size.Size.ORIGINAL) // Muat ukuran asli untuk kalkulasi
+                        .size(coil.size.Size.ORIGINAL)
                         .build(),
                     onSuccess = { result ->
                         if (item.size == Size(100f, 100f)) {
@@ -384,36 +402,12 @@ fun RenderMovableItem(
                     contentDescription = "Image Layer",
                     modifier = Modifier.size(item.size.width.dp, item.size.height.dp)
                 )
-
-                if (isSelected && !isGrouped) {
-                    Box(
-                        modifier = Modifier
-                            .align(Alignment.BottomEnd)
-                            .offset(x = 12.dp, y = 12.dp)
-                            .size(24.dp)
-                            .background(Color.Blue, CircleShape)
-                            .border(1.dp, Color.White, CircleShape)
-                            .pointerInput(item) {
-                                detectDragGestures(
-                                    onDragStart = {
-                                        dragStartSize = item.size
-                                    },
-                                    onDrag = { _, dragAmount ->
-                                        item.size = Size(
-                                            width = (item.size.width + dragAmount.x).coerceAtLeast(50f),
-                                            height = (item.size.height + dragAmount.y).coerceAtLeast(50f)
-                                        )
-                                    },
-                                    onDragEnd = {
-                                        if (dragStartSize != item.size) {
-                                            executeCommand(ResizeCommand(item, dragStartSize, item.size))
-                                        }
-                                    }
-                                )
-                            }
-                    )
-                }
             }
+        }
+
+        // Tampilkan handle interaksi jika item terpilih dan tidak di dalam grup
+        if (isSelected && !isGrouped) {
+            InteractionHandles(item = item, executeCommand = executeCommand)
         }
     }
 }
@@ -470,28 +464,114 @@ fun GroupHandles(
 }
 
 @Composable
-fun SelectionToolbar(
-    onGroup: () -> Unit,
-    onCopy: () -> Unit,
-    onDelete: () -> Unit
+fun BoxScope.InteractionHandles(item: Movable, executeCommand: (Command) -> Unit) {
+    var dragStartSize by remember { mutableStateOf(Size.Zero) }
+    var dragStartRotation by remember { mutableFloatStateOf(0f) }
+
+    // Handle Resize (jika item adalah Shape atau Image)
+    if (item is ShapeItem || item is ImageLayer) {
+        val size = if (item is ShapeItem) item.size else (item as ImageLayer).size
+        Box(
+            modifier = Modifier
+                .align(Alignment.BottomEnd)
+                .offset(x = 12.dp, y = 12.dp)
+                .size(24.dp)
+                .background(Color.Blue, CircleShape)
+                .border(1.dp, Color.White, CircleShape)
+                .pointerInput(item) {
+                    detectDragGestures(
+                        onDragStart = { dragStartSize = size },
+                        onDrag = { _, dragAmount ->
+                            val newSize = Size(
+                                width = (size.width + dragAmount.x).coerceAtLeast(50f),
+                                height = (size.height + dragAmount.y).coerceAtLeast(50f)
+                            )
+                            if (item is ShapeItem) item.size = newSize else if (item is ImageLayer) item.size = newSize
+                        },
+                        onDragEnd = {
+                            val finalSize = if (item is ShapeItem) item.size else (item as ImageLayer).size
+                            if (dragStartSize != finalSize) {
+                                executeCommand(ResizeCommand(item, dragStartSize, finalSize))
+                            }
+                        }
+                    )
+                }
+        )
+    }
+
+    // Handle Rotasi
+    Box(
+        modifier = Modifier
+            .align(Alignment.TopEnd)
+            .offset(x = 12.dp, y = (-12).dp)
+            .size(24.dp)
+            .background(Color.Magenta, CircleShape)
+            .border(1.dp, Color.White, CircleShape)
+            .pointerInput(item) {
+                detectDragGestures(
+                    onDragStart = { dragStartRotation = item.rotation },
+                    onDrag = { _, dragAmount -> item.rotation += dragAmount.x },
+                    onDragEnd = { executeCommand(RotateCommand(item, dragStartRotation, item.rotation)) }
+                )
+            }
+    )
+}
+
+// Composable BARU yang menggantikan SelectionToolbar dan TextPropertiesEditor
+@Composable
+fun BoxScope.PropertiesToolbar(
+    selectedItems: List<Movable>,
+    executeCommand: (Command) -> Unit,
+    onClearSelection: () -> Unit,
+    allLists: List<MutableList<out Movable>>
 ) {
+    val colors = listOf(Color.Black, Color.Red, Color.Blue, Color.Green, Color.Magenta, Color.Yellow)
+
     Surface(
+        modifier = Modifier.align(Alignment.TopCenter).padding(top = 120.dp),
         shape = MaterialTheme.shapes.medium,
         shadowElevation = 4.dp
     ) {
-        Row(
-            modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp),
-            horizontalArrangement = Arrangement.spacedBy(8.dp),
-            verticalAlignment = Alignment.CenterVertically
-        ) {
-            IconButton(onClick = onGroup) {
-                Icon(Icons.Default.Workspaces, contentDescription = "Group Items")
+        Column(modifier = Modifier.padding(16.dp)) {
+            // Aksi Umum: Group, Copy, Delete
+            Row(horizontalArrangement = Arrangement.spacedBy(8.dp), verticalAlignment = Alignment.CenterVertically) {
+                Text("Actions:", style = MaterialTheme.typography.titleMedium)
+                Spacer(modifier = Modifier.width(8.dp))
+                IconButton(onClick = {
+                    if (selectedItems.size > 1) {
+                        executeCommand(GroupCommand(selectedItems.toList(), allLists.take(3), allLists[3] as MutableList<ItemGroup>))
+                        onClearSelection()
+                    }
+                }) { Icon(Icons.Default.Workspaces, "Group") }
+
+                IconButton(onClick = {
+                    executeCommand(CopyCommand(selectedItems.toList(), allLists))
+                    onClearSelection()
+                }) { Icon(Icons.Default.ContentCopy, "Copy") }
+
+                IconButton(onClick = {
+                    executeCommand(DeleteItemsCommand(selectedItems.toList(), allLists))
+                    onClearSelection()
+                }) { Icon(Icons.Default.Delete, "Delete", tint = Color.Red) }
             }
-            IconButton(onClick = onCopy) {
-                Icon(Icons.Default.ContentCopy, contentDescription = "Copy Items")
-            }
-            IconButton(onClick = onDelete) {
-                Icon(Icons.Default.Delete, contentDescription = "Delete Items", tint = Color.Red)
+
+            // Properti Khusus (misal: Warna)
+            if (selectedItems.all { it is Colorable }) {
+                Divider(modifier = Modifier.padding(vertical = 8.dp))
+                Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                    Icon(Icons.Default.Palette, contentDescription = "Color")
+                    colors.forEach { color ->
+                        Box(
+                            modifier = Modifier
+                                .size(24.dp)
+                                .background(color, CircleShape)
+                                .border(1.dp, Color.Gray, CircleShape)
+                                .clickable {
+                                    executeCommand(ChangeColorCommand(selectedItems.toList(), color))
+                                }
+                        )
+                    }
+                }
             }
         }
     }

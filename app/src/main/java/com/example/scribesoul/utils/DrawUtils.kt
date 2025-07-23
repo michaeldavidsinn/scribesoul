@@ -142,3 +142,26 @@ fun calculateGroupBounds(group: ItemGroup): Rect {
 
     return Rect(left = minX, top = minY, right = maxX, bottom = maxY)
 }
+
+fun DrawScope.drawPolygon(sides: Int, radius: Float, center: Offset, color: Color) {
+    if (sides < 3) return
+
+    val path = Path()
+    val angle = 2.0 * Math.PI / sides
+
+    // Titik awal
+    path.moveTo(
+        center.x + (radius * cos(0.0)).toFloat(),
+        center.y + (radius * sin(0.0)).toFloat()
+    )
+
+    // Gambar garis ke setiap sudut poligon
+    for (i in 1 until sides) {
+        path.lineTo(
+            center.x + (radius * cos(angle * i)).toFloat(),
+            center.y + (radius * sin(angle * i)).toFloat()
+        )
+    }
+    path.close()
+    drawPath(path = path, color = color, style = Fill)
+}
