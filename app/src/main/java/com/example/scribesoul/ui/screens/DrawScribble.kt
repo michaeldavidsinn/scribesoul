@@ -1,84 +1,87 @@
 package com.example.scribesoul.ui.screens
 
-import android.os.Build
 import android.net.Uri
+import android.os.Build
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.annotation.RequiresApi
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.gestures.detectDragGestures
 import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.foundation.layout.*
-import androidx.compose.foundation.text.KeyboardActions
-import androidx.compose.foundation.text.KeyboardOptions
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.ContentCopy
+import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.PlayArrow
 import androidx.compose.material.icons.filled.RadioButtonUnchecked
 import androidx.compose.material.icons.filled.Star
+import androidx.compose.material.icons.filled.Workspaces
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.focus.FocusRequester
-import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.Path
-import androidx.compose.ui.graphics.drawscope.DrawScope
-import androidx.compose.ui.graphics.drawscope.Stroke
+import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.input.pointer.pointerInput
-import androidx.compose.ui.platform.LocalSoftwareKeyboardController
+import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.res.painterResource
-import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
 import androidx.navigation.compose.rememberNavController
 import coil.compose.rememberAsyncImagePainter
+import coil.request.ImageRequest
 import com.example.scribesoul.R
-
-enum class ToolMode {
-    DRAW, ERASE, Highlighter, Lasso
-}
-
-data class DrawablePath(
-    var offsets: List<Offset>,
-    var toolMode: ToolMode,
-    var offset: Offset = Offset.Zero
-)
-
+import com.example.scribesoul.commands.*
+import com.example.scribesoul.models.*
+import com.example.scribesoul.utils.*
 
 @RequiresApi(Build.VERSION_CODES.VANILLA_ICE_CREAM)
 @Composable
-fun DrawScribbleScreen(navController: NavController) {
+fun DrawScribbleScreen(navController: NavController) { // NavController dihapus karena tidak digunakan
 
-    val paths = remember { mutableStateListOf<Pair<List<Offset>, ToolMode>>() }
-    var currentPath by remember { mutableStateOf<List<Offset>>(emptyList()) }
-    var toolMode by remember { mutableStateOf(ToolMode.DRAW) }
-    val undonePaths = remember { mutableStateListOf<Pair<List<Offset>, ToolMode>>() }
-    val imageUri = remember { mutableStateOf<Uri?>(null) }
-    val showShapeMenu = remember { mutableStateOf(false) }
-
-    data class ShapeItem(val type: String, var offset: Offset)
-
+    val undoStack = remember { mutableStateListOf<Command>() }
+    val redoStack = remember { mutableStateListOf<Command>() }
+    val paths = remember { mutableStateListOf<DrawablePath>() }
     val shapes = remember { mutableStateListOf<ShapeItem>() }
-
-    var isAddingText by remember { mutableStateOf(false) }
-    val canvasCenter = remember { mutableStateOf(Offset(500f, 500f)) }
-
-    data class EditableText(var text: String, var offset: Offset, var isEditing: Boolean = false)
     val texts = remember { mutableStateListOf<EditableText>() }
-    val selectedTexts = remember { mutableStateListOf<EditableText>() }
+    val imageLayers = remember { mutableStateListOf<ImageLayer>() }
+    val groups = remember { mutableStateListOf<ItemGroup>() }
+    val currentPath = remember { mutableStateListOf<Offset>() }
+    var toolMode by remember { mutableStateOf(ToolMode.DRAW) }
+    var isAddingText by remember { mutableStateOf(false) }
+    val selectedItems = remember { mutableStateListOf<Movable>() }
+    val showShapeMenu = remember { mutableStateOf(false) }
+    val showLayerMenu = remember { mutableStateOf(false) }
+    val canvasCenter = remember { mutableStateOf(Offset(500f, 500f)) }
+    var dragStartOffset by remember { mutableStateOf(Offset.Zero) }
+    var dragStartRotation by remember { mutableFloatStateOf(0f) }
+
+    fun executeCommand(command: Command) {
+        command.execute()
+        undoStack.add(command)
+        redoStack.clear()
+    }
 
     val imagePickerLauncher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.GetContent()
-    ) { uri: Uri? -> imageUri.value = uri }
+    ) { uri: Uri? ->
+        uri?.let {
+            executeCommand(AddImageCommand(ImageLayer(uri = it, offset = canvasCenter.value), imageLayers))
+        }
+    }
 
-    val showLayerMenu = remember { mutableStateOf(false) }
+    val density = LocalDensity.current
 
     Box(
         modifier = Modifier
@@ -86,149 +89,140 @@ fun DrawScribbleScreen(navController: NavController) {
             .background(Color.White)
             .pointerInput(toolMode) {
                 detectDragGestures(
-                    onDragStart = { currentPath = listOf(it) },
-                    onDrag = { change, _ -> currentPath = currentPath + change.position },
+                    onDragStart = {
+                        currentPath.clear()
+                        currentPath.add(it)
+                    },
+                    onDrag = { change, _ ->
+                        currentPath.add(change.position)
+                    },
                     onDragEnd = {
-                        if (toolMode == ToolMode.Lasso && currentPath.size > 2) {
-                            val polygon = currentPath
-                            selectedTexts.clear()
-                            texts.forEach { text ->
-                                if (isPointInPolygon(text.offset, polygon)) {
-                                    selectedTexts.add(text)
+                        when (toolMode) {
+                            ToolMode.ERASE -> {
+                                val originalPaths = paths.toList()
+                                val pathsAfterErase = mutableListOf<DrawablePath>()
+                                originalPaths.forEach { drawablePath ->
+                                    if (drawablePath.toolMode != ToolMode.Highlighter) {
+                                        val remainingOffsets = drawablePath.offsets.filter { point ->
+                                            currentPath.none { eraserPoint -> distance(point, eraserPoint) < 40f }
+                                        }
+                                        if (remainingOffsets.isNotEmpty()) {
+                                            pathsAfterErase.add(drawablePath.copy(offsets = remainingOffsets))
+                                        }
+                                    } else {
+                                        pathsAfterErase.add(drawablePath)
+                                    }
+                                }
+                                executeCommand(EraseCommand(originalPaths, pathsAfterErase, paths))
+                            }
+                            ToolMode.Lasso -> {
+                                if (currentPath.size > 2) {
+                                    val polygon = currentPath.toList()
+                                    selectedItems.clear()
+                                    val allMovables = texts + shapes + imageLayers + groups
+                                    allMovables.forEach { item ->
+                                        if (isMovableInPolygon(item, polygon, density)) {
+                                            selectedItems.add(item)
+                                        }
+                                    }
                                 }
                             }
-                        } else if (currentPath.isNotEmpty()) {
-                            paths.add(currentPath to toolMode)
+                            else -> {
+                                if (currentPath.isNotEmpty()) {
+                                    executeCommand(AddDrawableCommand(DrawablePath(currentPath.toList(), toolMode), paths))
+                                }
+                            }
                         }
-                        currentPath = emptyList()
+                        currentPath.clear()
                     }
                 )
             }
-
-
             .pointerInput(isAddingText) {
                 detectTapGestures { offset ->
                     if (isAddingText) {
-                        texts.add(EditableText("", offset, true))
+                        executeCommand(AddTextCommand(EditableText(text = "New Text", offset = offset), texts))
                         isAddingText = false
                     }
                 }
             }
     ) {
-
-        imageUri.value?.let { uri ->
-            Image(
-                painter = rememberAsyncImagePainter(model = uri),
-                contentDescription = "Background Image",
-                modifier = Modifier.fillMaxSize()
-            )
-        }
-
+        // --- RENDERING SECTION ---
         Canvas(modifier = Modifier.fillMaxSize()) {
-
-            paths.forEach { (pathList, mode) -> drawPathFromOffsets(pathList, mode) }
+            paths.filter { it.toolMode == ToolMode.Highlighter }.forEach { drawPathFromOffsets(it.offsets, it.toolMode) }
+            paths.filter { it.toolMode != ToolMode.Highlighter }.forEach { drawPathFromOffsets(it.offsets, it.toolMode) }
             drawPathFromOffsets(currentPath, toolMode)
         }
 
-            shapes.forEach { shape ->
-                val localOffset = shape.offset
+        val individualItems = remember(texts, shapes, imageLayers) {
+            texts + shapes + imageLayers
+        }
 
-                Box(
-                    modifier = Modifier
-                        .absoluteOffset { IntOffset(localOffset.x.toInt(), localOffset.y.toInt()) }
-                        .size(100.dp)
-                        .pointerInput(Unit) {
-                            detectDragGestures { change, dragAmount ->
-                                change.consume()
-                                shape.offset += dragAmount
-                                shape.offset = localOffset
-                            }
-                        }
-                ) {
-                    Canvas(modifier = Modifier.fillMaxSize()) {
-                        when (shape.type) {
-                            "Circle" -> drawCircle(Color.Red, radius = 50f, center = Offset(50f, 50f))
-                            "Star" -> drawStar(center = Offset(50f, 50f), radius = 50f, color = Color.Yellow)
-                            "GIF" -> drawRect(
-                                color = Color.Magenta,
-                                topLeft = Offset(25f, 25f),
-                                size = androidx.compose.ui.geometry.Size(50f, 50f)
-                            )
-                        }
-                    }
-                }
-            }
-
-        texts.forEach { editableText ->
-            var localOffset by remember { mutableStateOf(editableText.offset) }
-            val focusRequester = remember { FocusRequester() }
-            val keyboardController = LocalSoftwareKeyboardController.current
-            val isSelected = selectedTexts.contains(editableText)
-
-            Box(
-                modifier = Modifier
-                    .absoluteOffset(localOffset.x.dp, localOffset.y.dp)
-                    .then(
-                        if (!editableText.isEditing) {
-                            Modifier.pointerInput(Unit) {
-                                detectDragGestures { change, dragAmount ->
-                                    change.consume()
-                                    localOffset += dragAmount
-                                    editableText.offset = localOffset
-                                }
-                            }
-                        } else Modifier
-                    )
-                    .clickable {
-                        texts.forEach { it.isEditing = false }
-                        editableText.isEditing = true
-                    }
-                    .background(if (isSelected) Color.LightGray else Color.Transparent)
-                    .padding(2.dp)
-            ) {
-                if (editableText.isEditing) {
-                    LaunchedEffect(editableText) {
-                        focusRequester.requestFocus()
-                        keyboardController?.show()
-                    }
-                    OutlinedTextField(
-                        value = editableText.text,
-                        onValueChange = { editableText.text = it },
-                        singleLine = true,
-                        modifier = Modifier
-                            .widthIn(min = 40.dp, max = 200.dp)
-                            .focusRequester(focusRequester),
-                        keyboardOptions = KeyboardOptions.Default.copy(imeAction = ImeAction.Done),
-                        keyboardActions = KeyboardActions(onDone = {
-                            editableText.isEditing = false
-                            keyboardController?.hide()
-                        })
-                    )
-                } else {
-                    Text(
-                        text = editableText.text,
-                        color = Color.Black,
-                        modifier = Modifier.padding(4.dp)
-                    )
-                }
+        individualItems.forEach { item ->
+            key(item) {
+                RenderMovableItem(
+                    item = item,
+                    isSelected = selectedItems.contains(item),
+                    onSelect = {
+                        selectedItems.clear()
+                        selectedItems.add(item)
+                    },
+                    executeCommand = ::executeCommand
+                )
             }
         }
 
-        if (selectedTexts.isNotEmpty()) {
-            Row(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .background(Color.Gray)
-                    .padding(8.dp),
-                horizontalArrangement = Arrangement.SpaceBetween
-            ) {
-                Text("${selectedTexts.size} item selected", color = Color.White)
-                TextButton(onClick = {
-                    texts.removeAll(selectedTexts)
-                    selectedTexts.clear()
-                }) {
-                    Text("Delete", color = Color.Red)
+        groups.forEach { group ->
+            key(group) {
+                group.items.forEach { item ->
+                    key(item) {
+                        RenderMovableItem(
+                            item = item,
+                            isSelected = selectedItems.contains(group),
+                            isGrouped = true,
+                            groupOffset = group.offset,
+                            groupRotation = group.rotation,
+                            onSelect = {}, // Item dalam grup tidak bisa dipilih
+                            executeCommand = ::executeCommand // Parameter harus tetap diberikan
+                        )
+                    }
                 }
+                GroupHandles(
+                    group = group,
+                    isSelected = selectedItems.contains(group),
+                    onMoveStart = { dragStartOffset = it },
+                    onMoveEnd = { newOffset -> executeCommand(MoveCommand(group, dragStartOffset, newOffset)) },
+                    onRotateStart = { dragStartRotation = it },
+                    onRotateEnd = { newRotation -> executeCommand(RotateCommand(group, dragStartRotation, newRotation)) },
+                    onSelect = {
+                        selectedItems.clear()
+                        selectedItems.add(group)
+                    }
+                )
+            }
+        }
+
+        // --- UI / TOOLBAR SECTION ---
+        if (selectedItems.isNotEmpty()) {
+            Box(modifier = Modifier.align(Alignment.TopCenter).padding(top = 120.dp)) {
+                SelectionToolbar(
+                    onGroup = {
+                        if (selectedItems.size > 1) {
+                            val allLists = listOf(texts, shapes, imageLayers)
+                            executeCommand(GroupCommand(selectedItems.toList(), allLists, groups))
+                            selectedItems.clear()
+                        }
+                    },
+                    onCopy = {
+                        val allLists = listOf(texts, shapes, imageLayers, groups)
+                        executeCommand(CopyCommand(selectedItems.toList(), allLists))
+                        selectedItems.clear()
+                    },
+                    onDelete = {
+                        val allLists = listOf(texts, shapes, imageLayers, groups)
+                        executeCommand(DeleteItemsCommand(selectedItems.toList(), allLists))
+                        selectedItems.clear()
+                    }
+                )
             }
         }
 
@@ -239,264 +233,274 @@ fun DrawScribbleScreen(navController: NavController) {
             verticalAlignment = Alignment.CenterVertically
         ) {
             Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
-                Image(
-                    painter = painterResource(id = R.drawable.arrow_left),
-                    contentDescription = "Undo",
+                Image(painter = painterResource(id = R.drawable.arrow_left), contentDescription = "Undo",
                     modifier = Modifier
                         .size(20.dp)
-                        .clickable {
-                            if (paths.isNotEmpty()) {
-                                val removed = paths.removeLast()
-                                undonePaths.add(removed)
-                            }
-                        }
-                )
-                Image(
-                    painter = painterResource(id = R.drawable.arrow_right),
-                    contentDescription = "Redo",
+                        .clickable(enabled = undoStack.isNotEmpty()) {
+                            val commandToUndo = undoStack.removeLast()
+                            commandToUndo.undo()
+                            redoStack.add(commandToUndo)
+                        })
+                Image(painter = painterResource(id = R.drawable.arrow_right), contentDescription = "Redo",
                     modifier = Modifier
                         .size(20.dp)
-                        .clickable {
-                            if (undonePaths.isNotEmpty()) {
-                                val restored = undonePaths.removeLast()
-                                paths.add(restored)
-                            }
-                        }
-                )
+                        .clickable(enabled = redoStack.isNotEmpty()) {
+                            val commandToRedo = redoStack.removeLast()
+                            commandToRedo.execute()
+                            undoStack.add(commandToRedo)
+                        })
             }
 
             Spacer(modifier = Modifier.weight(1f))
 
-            Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
-                Image(
-                    painter = painterResource(id = R.drawable.text),
-                    contentDescription = "Text",
-                    modifier = Modifier
-                        .size(18.dp)
-                        .clickable { isAddingText = true }
-                )
-                Image(
-                    painter = painterResource(id = R.drawable.lassotool),
-                    contentDescription = "Lasso Tool",
-                    modifier = Modifier
-                        .size(22.dp)
-                        .clickable { toolMode = ToolMode.Lasso }
-                )
-                Image(
-                    painter = painterResource(id = R.drawable.image),
-                    contentDescription = "Image",
-                    modifier = Modifier
-                        .size(22.dp)
-                        .clickable { imagePickerLauncher.launch("image/*") }
-                )
-                imageUri.value?.let { uri ->
-                    Image(
-                        painter = rememberAsyncImagePainter(model = uri),
-                        contentDescription = "Selected Image",
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .height(200.dp)
-                            .padding(top = 16.dp)
-                    )
-                }
+            Row(horizontalArrangement = Arrangement.spacedBy(12.dp), verticalAlignment = Alignment.CenterVertically) {
+                Image(painter = painterResource(id = R.drawable.text), contentDescription = "Text", modifier = Modifier.size(18.dp).clickable { isAddingText = true })
+                Image(painter = painterResource(id = R.drawable.lassotool), contentDescription = "Lasso Tool", modifier = Modifier.size(22.dp).clickable { toolMode = ToolMode.Lasso })
+                Image(painter = painterResource(id = R.drawable.image), contentDescription = "Image", modifier = Modifier.size(22.dp).clickable { imagePickerLauncher.launch("image/*") })
                 Box {
-                    Image(
-                        painter = painterResource(id = R.drawable.shapeasset),
-                        contentDescription = "Shape",
-                        modifier = Modifier
-                            .size(22.dp)
-                            .clickable { showShapeMenu.value = true }
-                    )
-                    DropdownMenu(
-                        expanded = showShapeMenu.value,
-                        onDismissRequest = { showShapeMenu.value = false }
-                    ) {
-                        DropdownMenuItem(
-                            onClick = {
-                                shapes.add(ShapeItem("Circle", canvasCenter.value))
-                                showShapeMenu.value = false
-                            },
-                            text = {
-                                Row(verticalAlignment = Alignment.CenterVertically) {
-                                    Icon(Icons.Filled.RadioButtonUnchecked, contentDescription = null)
-                                    Spacer(modifier = Modifier.width(8.dp))
-                                    Text("Circle")
-                                }
-                            }
-                        )
-                        DropdownMenuItem(
-                            onClick = {
-                                shapes.add(ShapeItem("Star", canvasCenter.value))
-                                showShapeMenu.value = false
-                            },
-                            text = {
-                                Row(verticalAlignment = Alignment.CenterVertically) {
-                                    Icon(Icons.Filled.Star, contentDescription = null)
-                                    Spacer(modifier = Modifier.width(8.dp))
-                                    Text("Star")
-                                }
-                            }
-                        )
-
-                        DropdownMenuItem(
-                            onClick = {
-                                shapes.add(ShapeItem("GIF", canvasCenter.value))
-                                showShapeMenu.value = false
-                            },
-                            text = {
-                                Row(verticalAlignment = Alignment.CenterVertically) {
-                                    Icon(Icons.Filled.PlayArrow, contentDescription = null)
-                                    Spacer(modifier = Modifier.width(8.dp))
-                                    Text("GIF Asset")
-                                }
-                            }
-                        )
+                    Image(painter = painterResource(id = R.drawable.shapeasset), contentDescription = "Shape", modifier = Modifier.size(22.dp).clickable { showShapeMenu.value = true })
+                    DropdownMenu(expanded = showShapeMenu.value, onDismissRequest = { showShapeMenu.value = false }) {
+                        DropdownMenuItem(onClick = { executeCommand(AddShapeCommand(ShapeItem("Circle", canvasCenter.value), shapes)); showShapeMenu.value = false },
+                            text = { Row { Icon(Icons.Filled.RadioButtonUnchecked, null); Spacer(Modifier.width(8.dp)); Text("Circle") } })
+                        DropdownMenuItem(onClick = { executeCommand(AddShapeCommand(ShapeItem("Star", canvasCenter.value), shapes)); showShapeMenu.value = false },
+                            text = { Row { Icon(Icons.Filled.Star, null); Spacer(Modifier.width(8.dp)); Text("Star") } })
+                        DropdownMenuItem(onClick = { executeCommand(AddShapeCommand(ShapeItem("Rectangle", canvasCenter.value), shapes)); showShapeMenu.value = false },
+                            text = { Row { Icon(Icons.Filled.PlayArrow, null); Spacer(Modifier.width(8.dp)); Text("Rectangle") } })
                     }
                 }
-
-                Image(
-                    painter = painterResource(id = R.drawable.pencil),
-                    contentDescription = "Pencil",
-                    modifier = Modifier
-                        .size(22.dp)
-                        .clickable { toolMode = ToolMode.DRAW }
-                )
-                Image(
-                    painter = painterResource(id = R.drawable.eraser),
-                    contentDescription = "Eraser",
-                    modifier = Modifier
-                        .size(22.dp)
-                        .clickable { toolMode = ToolMode.ERASE }
-                )
+                Image(painter = painterResource(id = R.drawable.pencil), contentDescription = "Pencil", modifier = Modifier.size(22.dp).clickable { toolMode = ToolMode.DRAW })
+                Image(painter = painterResource(id = R.drawable.eraser), contentDescription = "Eraser", modifier = Modifier.size(22.dp).clickable { toolMode = ToolMode.ERASE })
                 Box {
-                    Image(
-                        painter = painterResource(id = R.drawable.layer),
-                        contentDescription = "Layer",
-                        modifier = Modifier
-                            .size(22.dp)
-                            .clickable { showLayerMenu.value = true }
-                    )
-                    DropdownMenu(
-                        expanded = showLayerMenu.value,
-                        onDismissRequest = { showLayerMenu.value = false }
-                    ) {
-                        DropdownMenuItem(
-                            text = { Text("Bring Text Forward") },
-                            onClick = {
-                                if (selectedTexts.size == 1) {
-                                    val index = texts.indexOf(selectedTexts[0])
-                                    if (index < texts.size - 1) {
-                                        texts.removeAt(index)
-                                        texts.add(index + 1, selectedTexts[0])
-                                    }
-                                }
-                                showLayerMenu.value = false
-                            }
-                        )
-                        DropdownMenuItem(
-                            text = { Text("Send Text Backward") },
-                            onClick = {
-                                if (selectedTexts.size == 1) {
-                                    val index = texts.indexOf(selectedTexts[0])
-                                    if (index > 0) {
-                                        texts.removeAt(index)
-                                        texts.add(index - 1, selectedTexts[0])
-                                    }
-                                }
-                                showLayerMenu.value = false
-                            }
-                        )
-                        DropdownMenuItem(
-                            text = { Text("Bring Shape Forward") },
-                            onClick = {
-                                if (shapes.isNotEmpty()) {
-                                    val shape = shapes.last()
-                                    shapes.remove(shape)
-                                    shapes.add(0, shape) // move to top
-                                }
-                                showLayerMenu.value = false
-                            }
-                        )
-                        DropdownMenuItem(
-                            text = { Text("Send Shape Backward") },
-                            onClick = {
-                                if (shapes.isNotEmpty()) {
-                                    val shape = shapes.first()
-                                    shapes.remove(shape)
-                                    shapes.add(shape) // move to end
-                                }
-                                showLayerMenu.value = false
-                            }
-                        )
+                    Image(painter = painterResource(id = R.drawable.layer), contentDescription = "Layer", modifier = Modifier.size(22.dp).clickable { showLayerMenu.value = true })
+                    DropdownMenu(expanded = showLayerMenu.value, onDismissRequest = { showLayerMenu.value = false }) {
+                        DropdownMenuItem(text = { Text("Bring to Front") }, onClick = { /* TODO */ showLayerMenu.value = false })
+                        DropdownMenuItem(text = { Text("Send to Back") }, onClick = { /* TODO */ showLayerMenu.value = false })
                     }
                 }
-                Image(
-                    painter = painterResource(id = R.drawable.dot3),
-                    contentDescription = "More",
-                    modifier = Modifier.size(22.dp)
-                )
+                Image(painter = painterResource(id = R.drawable.dot3), contentDescription = "More", modifier = Modifier.size(22.dp))
             }
         }
-
         Column(
             modifier = Modifier
                 .align(Alignment.BottomCenter)
-                .padding(bottom = 20.dp)
+                .padding(bottom = 20.dp),
+            verticalArrangement = Arrangement.spacedBy(1.dp)
         ) {
-            BottomBarScribble(navController = navController)
+
+            BottomBarScribble(
+                navController = navController,
+            )
         }
     }
 }
 
-fun DrawScope.drawPathFromOffsets(offsets: List<Offset>, mode: ToolMode) {
-    if (offsets.size < 2) return
-    val path = Path().apply {
-        moveTo(offsets.first().x, offsets.first().y)
-        for (i in 1 until offsets.size) {
-            lineTo(offsets[i].x, offsets[i].y)
+@Composable
+fun RenderMovableItem(
+    item: Movable,
+    isSelected: Boolean,
+    isGrouped: Boolean = false,
+    groupOffset: Offset = Offset.Zero,
+    groupRotation: Float = 0f,
+    onSelect: () -> Unit,
+    executeCommand: (Command) -> Unit
+) {
+    val finalOffset = if (isGrouped) groupOffset else item.offset
+    val finalRotation = if (isGrouped) groupRotation else item.rotation
+
+    var dragStartSize by remember { mutableStateOf(Size.Zero) }
+
+    // Modifier dasar untuk transformasi dan seleksi
+    var modifier = Modifier
+        .graphicsLayer {
+            translationX = finalOffset.x
+            translationY = finalOffset.y
+            rotationZ = finalRotation
+            if (isGrouped) {
+                translationX += item.offset.x
+                translationY += item.offset.y
+                rotationZ += item.rotation
+            }
+        }
+        .clickable(enabled = !isGrouped) { onSelect() }
+
+    // Tambahkan border jika terpilih (dan bukan bagian dari grup)
+    if (isSelected && !isGrouped) {
+        modifier = modifier.border(2.dp, Color.Blue)
+    }
+
+    // Box pembungkus untuk menampung item dan handle-nya jika ada
+    Box(modifier = modifier) {
+        when (item) {
+            is EditableText -> {
+                Text(
+                    text = item.text,
+                    color = item.color,
+                    fontSize = item.fontSize.sp,
+                    modifier = Modifier.padding(4.dp),
+                    onTextLayout = { textLayoutResult ->
+                        val newSize = Size(
+                            width = textLayoutResult.size.width.toFloat(),
+                            height = textLayoutResult.size.height.toFloat()
+                        )
+                        if (item.size != newSize) {
+                            item.size = newSize
+                        }
+                    }
+                )
+            }
+            is ShapeItem -> {
+                Box(modifier = Modifier.size(100.dp)) {
+                    Canvas(modifier = Modifier.fillMaxSize()) {
+                        when (item.type) {
+                            "Circle" -> drawCircle(Color.Red, radius = 50f, center = Offset(50f, 50f))
+                            "Star" -> drawStar(center = Offset(50f, 50f), radius = 50f, color = Color.Yellow)
+                            "Rectangle" -> drawRect(color = Color.Magenta, size = this.size)
+                        }
+                    }
+                }
+            }
+            is ImageLayer -> {
+                val context = LocalContext.current
+                val painter = rememberAsyncImagePainter(
+                    model = ImageRequest.Builder(context)
+                        .data(item.uri)
+                        .size(coil.size.Size.ORIGINAL) // Muat ukuran asli untuk kalkulasi
+                        .build(),
+                    onSuccess = { result ->
+                        if (item.size == Size(100f, 100f)) {
+                            val drawable = result.result.drawable
+                            val intrinsicWidth = drawable.intrinsicWidth
+                            val intrinsicHeight = drawable.intrinsicHeight
+                            if (intrinsicHeight > 0) {
+                                val aspectRatio = intrinsicWidth / intrinsicHeight.toFloat()
+                                val newWidth = 300f
+                                item.size = Size(newWidth, newWidth / aspectRatio)
+                            }
+                        }
+                    }
+                )
+                Image(
+                    painter = painter,
+                    contentDescription = "Image Layer",
+                    modifier = Modifier.size(item.size.width.dp, item.size.height.dp)
+                )
+
+                if (isSelected && !isGrouped) {
+                    Box(
+                        modifier = Modifier
+                            .align(Alignment.BottomEnd)
+                            .offset(x = 12.dp, y = 12.dp)
+                            .size(24.dp)
+                            .background(Color.Blue, CircleShape)
+                            .border(1.dp, Color.White, CircleShape)
+                            .pointerInput(item) {
+                                detectDragGestures(
+                                    onDragStart = {
+                                        dragStartSize = item.size
+                                    },
+                                    onDrag = { _, dragAmount ->
+                                        item.size = Size(
+                                            width = (item.size.width + dragAmount.x).coerceAtLeast(50f),
+                                            height = (item.size.height + dragAmount.y).coerceAtLeast(50f)
+                                        )
+                                    },
+                                    onDragEnd = {
+                                        if (dragStartSize != item.size) {
+                                            executeCommand(ResizeCommand(item, dragStartSize, item.size))
+                                        }
+                                    }
+                                )
+                            }
+                    )
+                }
+            }
         }
     }
-    val color = when (mode) {
-        ToolMode.DRAW -> Color.Black
-        ToolMode.ERASE -> Color.White
-        ToolMode.Highlighter -> Color.Yellow.copy(alpha = 0.5f)
-        ToolMode.Lasso -> Color.Blue.copy(alpha = 0.3f)
-    }
-    drawPath(path = path, color = color, style = Stroke(width = if (mode == ToolMode.Highlighter) 20f else 8f))
 }
 
-fun isPointInPolygon(point: Offset, polygon: List<Offset>): Boolean {
-    var crossings = 0
-    for (i in polygon.indices) {
-        val a = polygon[i]
-        val b = polygon[(i + 1) % polygon.size]
-        if ((a.y > point.y) != (b.y > point.y)) {
-            val atX = (b.x - a.x) * (point.y - a.y) / (b.y - a.y + 0.00001f) + a.x
-            if (point.x < atX) crossings++
+
+@Composable
+fun GroupHandles(
+    group: ItemGroup,
+    isSelected: Boolean,
+    onMoveStart: (Offset) -> Unit,
+    onMoveEnd: (Offset) -> Unit,
+    onRotateStart: (Float) -> Unit,
+    onRotateEnd: (Float) -> Unit,
+    onSelect: () -> Unit
+) {
+    if (isSelected) {
+        val groupBounds = calculateGroupBounds(group)
+        Box(
+            modifier = Modifier
+                .offset { IntOffset(groupBounds.left.toInt(), groupBounds.top.toInt()) }
+                .size(width = (groupBounds.width / LocalDensity.current.density).dp, height = (groupBounds.height / LocalDensity.current.density).dp)
+                .border(2.dp, Color.Cyan)
+                .clickable { onSelect() }
+        )
+    }
+
+    val handleModifier = Modifier.size(24.dp).border(1.dp, Color.White, CircleShape)
+    Box(
+        modifier = Modifier
+            .offset { IntOffset(group.offset.x.toInt() - 12, group.offset.y.toInt() - 12) }
+            .then(handleModifier)
+            .background(Color.Cyan.copy(alpha = 0.8f), CircleShape)
+            .pointerInput(group) {
+                detectDragGestures(
+                    onDragStart = { onMoveStart(group.offset) },
+                    onDrag = { _, dragAmount -> group.offset += dragAmount },
+                    onDragEnd = { onMoveEnd(group.offset) }
+                )
+            }
+    )
+    Box(
+        modifier = Modifier
+            .offset { IntOffset((group.offset.x + 80).toInt(), group.offset.y.toInt() - 12) }
+            .then(handleModifier)
+            .background(Color.Magenta.copy(alpha = 0.8f), CircleShape)
+            .pointerInput(group) {
+                detectDragGestures(
+                    onDragStart = { onRotateStart(group.rotation) },
+                    onDrag = { _, dragAmount -> group.rotation += dragAmount.x },
+                    onDragEnd = { onRotateEnd(group.rotation) }
+                )
+            }
+    )
+}
+
+@Composable
+fun SelectionToolbar(
+    onGroup: () -> Unit,
+    onCopy: () -> Unit,
+    onDelete: () -> Unit
+) {
+    Surface(
+        shape = MaterialTheme.shapes.medium,
+        shadowElevation = 4.dp
+    ) {
+        Row(
+            modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp),
+            horizontalArrangement = Arrangement.spacedBy(8.dp),
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            IconButton(onClick = onGroup) {
+                Icon(Icons.Default.Workspaces, contentDescription = "Group Items")
+            }
+            IconButton(onClick = onCopy) {
+                Icon(Icons.Default.ContentCopy, contentDescription = "Copy Items")
+            }
+            IconButton(onClick = onDelete) {
+                Icon(Icons.Default.Delete, contentDescription = "Delete Items", tint = Color.Red)
+            }
         }
     }
-    return crossings % 2 == 1
-}
-
-fun DrawScope.drawStar(center: Offset, radius: Float, color: Color) {
-    val path = Path()
-    val angle = (2.0 * Math.PI / 5).toFloat()
-    val innerRadius = radius * 0.5f
-
-    for (i in 0..9) {
-        val r = if (i % 2 == 0) radius else innerRadius
-        val x = center.x + (r * kotlin.math.cos(i * angle)).toFloat()
-        val y = center.y + (r * kotlin.math.sin(i * angle)).toFloat()
-        if (i == 0) path.moveTo(x, y) else path.lineTo(x, y)
-    }
-    path.close()
-    drawPath(path = path, color = color)
 }
 
 @RequiresApi(Build.VERSION_CODES.VANILLA_ICE_CREAM)
-@Preview(showBackground = true)
+@Preview
 @Composable
 fun DrawScribblePreview() {
-    val dummyController = rememberNavController()
-    DrawScribbleScreen(navController = dummyController)
+    val dummyController = rememberNavController() // <-- Tambahkan kembali
+    DrawScribbleScreen(navController = dummyController) // <-- Tambahkan kembali
 }

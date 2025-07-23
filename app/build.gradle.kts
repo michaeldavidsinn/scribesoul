@@ -56,6 +56,7 @@ dependencies {
 
     // Accompanist (optional)
     implementation("com.google.accompanist:accompanist-flowlayout:0.30.1")
+    implementation(libs.navigation.runtime.android)
 
     // Testing & Debug
     testImplementation("junit:junit:4.13.2")
