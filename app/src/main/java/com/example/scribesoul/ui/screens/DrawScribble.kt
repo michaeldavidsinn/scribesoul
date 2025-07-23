@@ -50,6 +50,7 @@ import com.example.scribesoul.commands.*
 import com.example.scribesoul.models.*
 import com.example.scribesoul.utils.*
 import androidx.compose.ui.graphics.drawscope.Stroke // Import for drawing the eraser circle outline
+import androidx.compose.ui.draw.rotate
 
 @RequiresApi(Build.VERSION_CODES.VANILLA_ICE_CREAM)
 @Composable
@@ -323,50 +324,57 @@ fun DrawScribbleScreen(navController: NavController) {
                 }
             }
 
-            // --- NEW: Compact Thickness Sliders Below Main Tools ---
-            Spacer(modifier = Modifier.height(8.dp)) // Space between tool row and sliders
-            AnimatedVisibility(
-                visible = toolMode == ToolMode.DRAW || toolMode == ToolMode.ERASE,
-                enter = expandVertically() + fadeIn(),
-                exit = shrinkVertically() + fadeOut()
+            Spacer(modifier = Modifier.height(8.dp)) // Space below the main tools
+        }
+
+        // --- NEW: Compact Thickness Sliders on Left Side (Portrait) ---
+        AnimatedVisibility(
+            visible = toolMode == ToolMode.DRAW || toolMode == ToolMode.ERASE,
+            enter = expandVertically(expandFrom = Alignment.Top) + fadeIn(),
+            exit = shrinkVertically(shrinkTowards = Alignment.Top) + fadeOut(),
+            modifier = Modifier
+                .align(Alignment.CenterStart) // Aligned to the center-left
+                .padding(start = 16.dp) // Padding from the left edge
+        ) {
+            Column(
+                modifier = Modifier
+                    .background(MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.8f), RoundedCornerShape(8.dp))
+                    .padding(horizontal = 8.dp, vertical = 12.dp), // Adjusted padding for vertical layout
+                horizontalAlignment = Alignment.CenterHorizontally,
+                verticalArrangement = Arrangement.spacedBy(12.dp) // Spacing between sliders
             ) {
-                Row(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .background(MaterialTheme.colorScheme.surfaceVariant, RoundedCornerShape(8.dp))
-                        .padding(horizontal = 16.dp, vertical = 8.dp),
-                    verticalAlignment = Alignment.CenterVertically,
-                    horizontalArrangement = Arrangement.SpaceAround
-                ) {
-                    if (toolMode == ToolMode.DRAW) {
-                        Row(verticalAlignment = Alignment.CenterVertically) {
-                            Icon(painterResource(id = R.drawable.pencil), contentDescription = "Pencil Icon", Modifier.size(16.dp))
-                            Spacer(Modifier.width(4.dp))
-                            Text("Draw:", fontSize = 12.sp)
-                            Slider(
-                                value = drawThickness,
-                                onValueChange = { drawThickness = it },
-                                valueRange = 1f..50f,
-                                steps = 49,
-                                modifier = Modifier.width(100.dp)
-                            )
-                            Text("${drawThickness.toInt()}", fontSize = 12.sp, color = MaterialTheme.colorScheme.primary)
-                        }
+                if (toolMode == ToolMode.DRAW) {
+                    Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                        Icon(painterResource(id = R.drawable.pencil), contentDescription = "Pencil Icon", Modifier.size(24.dp))
+                        Text("Draw", fontSize = 12.sp)
+                        Slider(
+                            value = drawThickness,
+                            onValueChange = { drawThickness = it },
+                            valueRange = 1f..50f,
+                            steps = 49,
+                            modifier = Modifier
+                                .width(80.dp) // <-- Ini akan menjadi PANJANG efektif garis slider (misal 150dp)
+                                .height(150.dp) // <-- Ini akan menjadi LEBAR efektif slider (misal 40dp, jadi lebih tipis)
+                                .rotate(270f) // Rotasi diterapkan setelah lebar dan tinggi didefinisikan
+                        )
+                        Text("${drawThickness.toInt()}", fontSize = 12.sp, color = MaterialTheme.colorScheme.primary)
                     }
-                    if (toolMode == ToolMode.ERASE) {
-                        Row(verticalAlignment = Alignment.CenterVertically) {
-                            Icon(painterResource(id = R.drawable.eraser), contentDescription = "Eraser Icon", Modifier.size(16.dp))
-                            Spacer(Modifier.width(4.dp))
-                            Text("Erase:", fontSize = 12.sp)
-                            Slider(
-                                value = eraseThickness,
-                                onValueChange = { eraseThickness = it },
-                                valueRange = 10f..100f,
-                                steps = 90,
-                                modifier = Modifier.width(100.dp)
-                            )
-                            Text("${eraseThickness.toInt()}", fontSize = 12.sp, color = MaterialTheme.colorScheme.primary)
-                        }
+                }
+                if (toolMode == ToolMode.ERASE) {
+                    Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                        Icon(painterResource(id = R.drawable.eraser), contentDescription = "Eraser Icon", Modifier.size(24.dp))
+                        Text("Erase", fontSize = 12.sp)
+                        Slider(
+                            value = eraseThickness,
+                            onValueChange = { eraseThickness = it },
+                            valueRange = 10f..100f,
+                            steps = 90,
+                            modifier = Modifier
+                                .width(70.dp) // <-- Ini akan menjadi PANJANG efektif garis slider (misal 150dp)
+                                .height(150.dp) // <-- Ini akan menjadi LEBAR efektif slider (misal 40dp, jadi lebih tipis)
+                                .rotate(270f) // Rotasi diterapkan setelah lebar dan tinggi didefinisikan
+                        )
+                        Text("${eraseThickness.toInt()}", fontSize = 12.sp, color = MaterialTheme.colorScheme.primary)
                     }
                 }
             }
