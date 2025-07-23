@@ -5,6 +5,11 @@ import android.os.Build
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.annotation.RequiresApi
+import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.expandVertically
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.animation.shrinkVertically
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
@@ -14,13 +19,10 @@ import androidx.compose.foundation.gestures.detectDragGestures
 import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.ChangeHistory
 import androidx.compose.material.icons.filled.ContentCopy
 import androidx.compose.material.icons.filled.Delete
-import androidx.compose.material.icons.filled.PlayArrow
-import androidx.compose.material.icons.filled.RadioButtonUnchecked
-import androidx.compose.material.icons.filled.Star
 import androidx.compose.material.icons.filled.Workspaces
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
@@ -47,11 +49,11 @@ import com.example.scribesoul.R
 import com.example.scribesoul.commands.*
 import com.example.scribesoul.models.*
 import com.example.scribesoul.utils.*
+import androidx.compose.ui.graphics.drawscope.Stroke // Import for drawing the eraser circle outline
 
 @RequiresApi(Build.VERSION_CODES.VANILLA_ICE_CREAM)
 @Composable
-fun DrawScribbleScreen(navController: NavController) { // NavController dihapus karena tidak digunakan
-
+fun DrawScribbleScreen(navController: NavController) {
     val undoStack = remember { mutableStateListOf<Command>() }
     val redoStack = remember { mutableStateListOf<Command>() }
     val paths = remember { mutableStateListOf<DrawablePath>() }
@@ -68,6 +70,9 @@ fun DrawScribbleScreen(navController: NavController) { // NavController dihapus 
     val canvasCenter = remember { mutableStateOf(Offset(500f, 500f)) }
     var dragStartOffset by remember { mutableStateOf(Offset.Zero) }
     var dragStartRotation by remember { mutableFloatStateOf(0f) }
+
+    var drawThickness by remember { mutableFloatStateOf(8f) }
+    var eraseThickness by remember { mutableFloatStateOf(40f) }
 
     fun executeCommand(command: Command) {
         command.execute()
@@ -89,7 +94,7 @@ fun DrawScribbleScreen(navController: NavController) { // NavController dihapus 
         modifier = Modifier
             .fillMaxSize()
             .background(Color.White)
-            .pointerInput(toolMode) {
+            .pointerInput(toolMode, drawThickness, eraseThickness) {
                 detectDragGestures(
                     onDragStart = {
                         currentPath.clear()
@@ -106,7 +111,7 @@ fun DrawScribbleScreen(navController: NavController) { // NavController dihapus 
                                 originalPaths.forEach { drawablePath ->
                                     if (drawablePath.toolMode != ToolMode.Highlighter) {
                                         val remainingOffsets = drawablePath.offsets.filter { point ->
-                                            currentPath.none { eraserPoint -> distance(point, eraserPoint) < 40f }
+                                            currentPath.none { eraserPoint -> distance(point, eraserPoint) < eraseThickness }
                                         }
                                         if (remainingOffsets.isNotEmpty()) {
                                             pathsAfterErase.add(drawablePath.copy(offsets = remainingOffsets))
@@ -131,7 +136,7 @@ fun DrawScribbleScreen(navController: NavController) { // NavController dihapus 
                             }
                             else -> {
                                 if (currentPath.isNotEmpty()) {
-                                    executeCommand(AddDrawableCommand(DrawablePath(currentPath.toList(), toolMode), paths))
+                                    executeCommand(AddDrawableCommand(DrawablePath(currentPath.toList(), toolMode, drawThickness), paths))
                                 }
                             }
                         }
@@ -150,9 +155,20 @@ fun DrawScribbleScreen(navController: NavController) { // NavController dihapus 
     ) {
         // --- RENDERING SECTION ---
         Canvas(modifier = Modifier.fillMaxSize()) {
-            paths.filter { it.toolMode == ToolMode.Highlighter }.forEach { drawPathFromOffsets(it.offsets, it.toolMode) }
-            paths.filter { it.toolMode != ToolMode.Highlighter }.forEach { drawPathFromOffsets(it.offsets, it.toolMode) }
-            drawPathFromOffsets(currentPath, toolMode)
+            paths.filter { it.toolMode == ToolMode.Highlighter }.forEach { drawPathFromOffsets(it.offsets, it.toolMode, it.thickness) }
+            paths.filter { it.toolMode != ToolMode.Highlighter }.forEach { drawPathFromOffsets(it.offsets, it.toolMode, it.thickness) }
+            drawPathFromOffsets(currentPath, toolMode, drawThickness)
+
+            // Visualisasi Penghapus
+            if (toolMode == ToolMode.ERASE && currentPath.isNotEmpty()) {
+                val lastPoint = currentPath.last()
+                drawCircle(
+                    color = Color.LightGray.copy(alpha = 0.5f),
+                    center = lastPoint,
+                    radius = eraseThickness,
+                    style = Stroke(width = 2.dp.toPx())
+                )
+            }
         }
 
         val individualItems = remember(texts, shapes, imageLayers) {
@@ -183,8 +199,8 @@ fun DrawScribbleScreen(navController: NavController) { // NavController dihapus 
                             isGrouped = true,
                             groupOffset = group.offset,
                             groupRotation = group.rotation,
-                            onSelect = {}, // Item dalam grup tidak bisa dipilih
-                            executeCommand = ::executeCommand // Parameter harus tetap diberikan
+                            onSelect = {},
+                            executeCommand = ::executeCommand
                         )
                     }
                 }
@@ -215,92 +231,148 @@ fun DrawScribbleScreen(navController: NavController) { // NavController dihapus 
             }
         }
 
-        Row(
+        // Top Toolbar
+        Column(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(top = 60.dp, start = 20.dp, end = 20.dp),
-            verticalAlignment = Alignment.CenterVertically
+                .padding(top = 60.dp, start = 20.dp, end = 20.dp)
+                .align(Alignment.TopCenter), // Ensure it stays at the top
+            horizontalAlignment = Alignment.CenterHorizontally
         ) {
-            Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
-                Image(painter = painterResource(id = R.drawable.arrow_left), contentDescription = "Undo",
-                    modifier = Modifier
-                        .size(20.dp)
-                        .clickable(enabled = undoStack.isNotEmpty()) {
-                            val commandToUndo = undoStack.removeLast()
-                            commandToUndo.undo()
-                            redoStack.add(commandToUndo)
-                        })
-                Image(painter = painterResource(id = R.drawable.arrow_right), contentDescription = "Redo",
-                    modifier = Modifier
-                        .size(20.dp)
-                        .clickable(enabled = redoStack.isNotEmpty()) {
-                            val commandToRedo = redoStack.removeLast()
-                            commandToRedo.execute()
-                            undoStack.add(commandToRedo)
-                        })
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                // Undo/Redo
+                Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
+                    Image(painter = painterResource(id = R.drawable.arrow_left), contentDescription = "Undo",
+                        modifier = Modifier
+                            .size(20.dp)
+                            .clickable(enabled = undoStack.isNotEmpty()) {
+                                val commandToUndo = undoStack.removeLast()
+                                commandToUndo.undo()
+                                redoStack.add(commandToUndo)
+                            })
+                    Image(painter = painterResource(id = R.drawable.arrow_right), contentDescription = "Redo",
+                        modifier = Modifier
+                            .size(20.dp)
+                            .clickable(enabled = redoStack.isNotEmpty()) {
+                                val commandToRedo = redoStack.removeLast()
+                                commandToRedo.execute()
+                                undoStack.add(commandToRedo)
+                            })
+                }
+
+                // Main Tools
+                Row(horizontalArrangement = Arrangement.spacedBy(12.dp), verticalAlignment = Alignment.CenterVertically) {
+                    Image(painter = painterResource(id = R.drawable.text), contentDescription = "Text", modifier = Modifier.size(18.dp).clickable { isAddingText = true })
+                    Image(painter = painterResource(id = R.drawable.lassotool), contentDescription = "Lasso Tool", modifier = Modifier.size(22.dp).clickable { toolMode = ToolMode.Lasso })
+                    Image(painter = painterResource(id = R.drawable.image), contentDescription = "Image", modifier = Modifier.size(22.dp).clickable { imagePickerLauncher.launch("image/*") })
+                    Box {
+                        Image(painter = painterResource(id = R.drawable.shapeasset), contentDescription = "Shape", modifier = Modifier.size(22.dp).clickable { showShapeMenu.value = true })
+                        DropdownMenu(expanded = showShapeMenu.value, onDismissRequest = { showShapeMenu.value = false }) {
+                            DropdownMenuItem(onClick = { executeCommand(AddShapeCommand(ShapeItem("Circle", canvasCenter.value, color = Color.Red), shapes)); showShapeMenu.value = false }, text = { Text("Circle") })
+                            DropdownMenuItem(onClick = { executeCommand(AddShapeCommand(ShapeItem("Rectangle", canvasCenter.value, color = Color.Magenta), shapes)); showShapeMenu.value = false }, text = { Text("Rectangle") })
+                            DropdownMenuItem(onClick = { executeCommand(AddShapeCommand(ShapeItem("Star", canvasCenter.value, color = Color.Yellow), shapes)); showShapeMenu.value = false }, text = { Text("Star") })
+                            DropdownMenuItem(onClick = { executeCommand(AddShapeCommand(ShapeItem("Triangle", canvasCenter.value, color = Color.Green), shapes)); showShapeMenu.value = false }, text = { Text("Triangle") })
+                            DropdownMenuItem(onClick = { executeCommand(AddShapeCommand(ShapeItem("Hexagon", canvasCenter.value, color = Color.Cyan), shapes)); showShapeMenu.value = false }, text = { Text("Hexagon") })
+                        }
+                    }
+                    Image(painter = painterResource(id = R.drawable.pencil), contentDescription = "Pencil", modifier = Modifier.size(22.dp).clickable { toolMode = ToolMode.DRAW })
+                    Image(painter = painterResource(id = R.drawable.eraser), contentDescription = "Eraser", modifier = Modifier.size(22.dp).clickable { toolMode = ToolMode.ERASE })
+                    Box {
+                        val isLayerMenuEnabled = selectedItems.size == 1
+                        Image(
+                            painter = painterResource(id = R.drawable.layer),
+                            contentDescription = "Layer",
+                            modifier = Modifier
+                                .size(22.dp)
+                                .clickable(enabled = isLayerMenuEnabled) { showLayerMenu.value = true },
+                            alpha = if (isLayerMenuEnabled) 1f else 0.4f
+                        )
+                        DropdownMenu(
+                            expanded = showLayerMenu.value,
+                            onDismissRequest = { showLayerMenu.value = false }
+                        ) {
+                            DropdownMenuItem(
+                                text = { Text("Bring to Front") },
+                                onClick = {
+                                    if (isLayerMenuEnabled) {
+                                        val item = selectedItems.first()
+                                        val allLists = listOf(texts, shapes, imageLayers, groups)
+                                        executeCommand(LayeringCommand(item, allLists, LayerDirection.TO_FRONT))
+                                    }
+                                    showLayerMenu.value = false
+                                }
+                            )
+                            DropdownMenuItem(
+                                text = { Text("Send to Back") },
+                                onClick = {
+                                    if (isLayerMenuEnabled) {
+                                        val item = selectedItems.first()
+                                        val allLists = listOf(texts, shapes, imageLayers, groups)
+                                        executeCommand(LayeringCommand(item, allLists, LayerDirection.TO_BACK))
+                                    }
+                                    showLayerMenu.value = false
+                                }
+                            )
+                        }
+                    }
+                    Image(painter = painterResource(id = R.drawable.dot3), contentDescription = "More", modifier = Modifier.size(22.dp))
+                }
             }
 
-            Spacer(modifier = Modifier.weight(1f))
-
-            Row(horizontalArrangement = Arrangement.spacedBy(12.dp), verticalAlignment = Alignment.CenterVertically) {
-                Image(painter = painterResource(id = R.drawable.text), contentDescription = "Text", modifier = Modifier.size(18.dp).clickable { isAddingText = true })
-                Image(painter = painterResource(id = R.drawable.lassotool), contentDescription = "Lasso Tool", modifier = Modifier.size(22.dp).clickable { toolMode = ToolMode.Lasso })
-                Image(painter = painterResource(id = R.drawable.image), contentDescription = "Image", modifier = Modifier.size(22.dp).clickable { imagePickerLauncher.launch("image/*") })
-                Box {
-                    Image(painter = painterResource(id = R.drawable.shapeasset), contentDescription = "Shape", modifier = Modifier.size(22.dp).clickable { showShapeMenu.value = true })
-                    DropdownMenu(expanded = showShapeMenu.value, onDismissRequest = { showShapeMenu.value = false }) {
-                        DropdownMenuItem(onClick = { executeCommand(AddShapeCommand(ShapeItem("Circle", canvasCenter.value, color = Color.Red), shapes)); showShapeMenu.value = false }, text = { /*..*/ })
-                        DropdownMenuItem(onClick = { executeCommand(AddShapeCommand(ShapeItem("Rectangle", canvasCenter.value, color = Color.Magenta), shapes)); showShapeMenu.value = false }, text = { /*..*/ })
-                        DropdownMenuItem(onClick = { executeCommand(AddShapeCommand(ShapeItem("Star", canvasCenter.value, color = Color.Yellow), shapes)); showShapeMenu.value = false }, text = { /*..*/ })
-                        DropdownMenuItem(onClick = { executeCommand(AddShapeCommand(ShapeItem("Triangle", canvasCenter.value, color = Color.Green), shapes)); showShapeMenu.value = false }, text = { /*..*/ })
-                        DropdownMenuItem(onClick = { executeCommand(AddShapeCommand(ShapeItem("Hexagon", canvasCenter.value, color = Color.Cyan), shapes)); showShapeMenu.value = false }, text = { /*..*/ })
+            // --- NEW: Compact Thickness Sliders Below Main Tools ---
+            Spacer(modifier = Modifier.height(8.dp)) // Space between tool row and sliders
+            AnimatedVisibility(
+                visible = toolMode == ToolMode.DRAW || toolMode == ToolMode.ERASE,
+                enter = expandVertically() + fadeIn(),
+                exit = shrinkVertically() + fadeOut()
+            ) {
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .background(MaterialTheme.colorScheme.surfaceVariant, RoundedCornerShape(8.dp))
+                        .padding(horizontal = 16.dp, vertical = 8.dp),
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.SpaceAround
+                ) {
+                    if (toolMode == ToolMode.DRAW) {
+                        Row(verticalAlignment = Alignment.CenterVertically) {
+                            Icon(painterResource(id = R.drawable.pencil), contentDescription = "Pencil Icon", Modifier.size(16.dp))
+                            Spacer(Modifier.width(4.dp))
+                            Text("Draw:", fontSize = 12.sp)
+                            Slider(
+                                value = drawThickness,
+                                onValueChange = { drawThickness = it },
+                                valueRange = 1f..50f,
+                                steps = 49,
+                                modifier = Modifier.width(100.dp)
+                            )
+                            Text("${drawThickness.toInt()}", fontSize = 12.sp, color = MaterialTheme.colorScheme.primary)
+                        }
+                    }
+                    if (toolMode == ToolMode.ERASE) {
+                        Row(verticalAlignment = Alignment.CenterVertically) {
+                            Icon(painterResource(id = R.drawable.eraser), contentDescription = "Eraser Icon", Modifier.size(16.dp))
+                            Spacer(Modifier.width(4.dp))
+                            Text("Erase:", fontSize = 12.sp)
+                            Slider(
+                                value = eraseThickness,
+                                onValueChange = { eraseThickness = it },
+                                valueRange = 10f..100f,
+                                steps = 90,
+                                modifier = Modifier.width(100.dp)
+                            )
+                            Text("${eraseThickness.toInt()}", fontSize = 12.sp, color = MaterialTheme.colorScheme.primary)
+                        }
                     }
                 }
-                Image(painter = painterResource(id = R.drawable.pencil), contentDescription = "Pencil", modifier = Modifier.size(22.dp).clickable { toolMode = ToolMode.DRAW })
-                Image(painter = painterResource(id = R.drawable.eraser), contentDescription = "Eraser", modifier = Modifier.size(22.dp).clickable { toolMode = ToolMode.ERASE })
-                Box {
-                    // Tentukan apakah menu harus aktif (hanya jika 1 item terpilih)
-                    val isLayerMenuEnabled = selectedItems.size == 1
-
-                    Image(
-                        painter = painterResource(id = R.drawable.layer),
-                        contentDescription = "Layer",
-                        modifier = Modifier
-                            .size(22.dp)
-                            .clickable(enabled = isLayerMenuEnabled) { showLayerMenu.value = true },
-                        alpha = if (isLayerMenuEnabled) 1f else 0.4f // Redupkan ikon jika tidak aktif
-                    )
-                    DropdownMenu(
-                        expanded = showLayerMenu.value,
-                        onDismissRequest = { showLayerMenu.value = false }
-                    ) {
-                        DropdownMenuItem(
-                            text = { Text("Bring to Front") },
-                            onClick = {
-                                if (isLayerMenuEnabled) {
-                                    val item = selectedItems.first()
-                                    val allLists = listOf(texts, shapes, imageLayers, groups)
-                                    executeCommand(LayeringCommand(item, allLists, LayerDirection.TO_FRONT))
-                                }
-                                showLayerMenu.value = false
-                            }
-                        )
-                        DropdownMenuItem(
-                            text = { Text("Send to Back") },
-                            onClick = {
-                                if (isLayerMenuEnabled) {
-                                    val item = selectedItems.first()
-                                    val allLists = listOf(texts, shapes, imageLayers, groups)
-                                    executeCommand(LayeringCommand(item, allLists, LayerDirection.TO_BACK))
-                                }
-                                showLayerMenu.value = false
-                            }
-                        )
-                    }
-                }
-                Image(painter = painterResource(id = R.drawable.dot3), contentDescription = "More", modifier = Modifier.size(22.dp))
             }
         }
+
+
         Column(
             modifier = Modifier
                 .align(Alignment.BottomCenter)
@@ -405,7 +477,6 @@ fun RenderMovableItem(
             }
         }
 
-        // Tampilkan handle interaksi jika item terpilih dan tidak di dalam grup
         if (isSelected && !isGrouped) {
             InteractionHandles(item = item, executeCommand = executeCommand)
         }
@@ -468,7 +539,6 @@ fun BoxScope.InteractionHandles(item: Movable, executeCommand: (Command) -> Unit
     var dragStartSize by remember { mutableStateOf(Size.Zero) }
     var dragStartRotation by remember { mutableFloatStateOf(0f) }
 
-    // Handle Resize (jika item adalah Shape atau Image)
     if (item is ShapeItem || item is ImageLayer) {
         val size = if (item is ShapeItem) item.size else (item as ImageLayer).size
         Box(
@@ -499,7 +569,6 @@ fun BoxScope.InteractionHandles(item: Movable, executeCommand: (Command) -> Unit
         )
     }
 
-    // Handle Rotasi
     Box(
         modifier = Modifier
             .align(Alignment.TopEnd)
@@ -517,7 +586,6 @@ fun BoxScope.InteractionHandles(item: Movable, executeCommand: (Command) -> Unit
     )
 }
 
-// Composable BARU yang menggantikan SelectionToolbar dan TextPropertiesEditor
 @Composable
 fun BoxScope.PropertiesToolbar(
     selectedItems: List<Movable>,
@@ -581,6 +649,6 @@ fun BoxScope.PropertiesToolbar(
 @Preview
 @Composable
 fun DrawScribblePreview() {
-    val dummyController = rememberNavController() // <-- Tambahkan kembali
-    DrawScribbleScreen(navController = dummyController) // <-- Tambahkan kembali
+    val dummyController = rememberNavController()
+    DrawScribbleScreen(navController = dummyController)
 }

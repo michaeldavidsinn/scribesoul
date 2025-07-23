@@ -23,7 +23,8 @@ enum class ToolMode {
 // Data class untuk setiap jenis objek di kanvas
 data class DrawablePath(
     var offsets: List<Offset>,
-    val toolMode: ToolMode
+    val toolMode: ToolMode,
+    val thickness: Float = 8f
 )
 
 data class ImageLayer(

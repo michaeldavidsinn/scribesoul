@@ -28,7 +28,7 @@ fun Modifier.detectDragGesturesWithCommand(
     movable: Movable,
     onDragStart: (Movable) -> Unit,
     onDragEnd: (Movable) -> Unit
-): Modifier = pointerInput(this) {
+): Modifier = pointerInput(movable) { // Changed key to movable
     detectDragGestures(
         onDragStart = { onDragStart(movable) },
         onDrag = { change, dragAmount ->
@@ -43,16 +43,16 @@ fun distance(p1: Offset, p2: Offset): Float {
     return sqrt((p1.x - p2.x).pow(2) + (p1.y - p2.y).pow(2))
 }
 
-fun DrawScope.drawPathFromOffsets(offsets: List<Offset>, mode: ToolMode) {
+fun DrawScope.drawPathFromOffsets(offsets: List<Offset>, mode: ToolMode, thickness: Float) {
     if (offsets.size < 2) return
     val path = Path().apply {
         moveTo(offsets.first().x, offsets.first().y)
         (1 until offsets.size).forEach { lineTo(offsets[it].x, offsets[it].y) }
     }
     val (color, strokeWidth) = when (mode) {
-        ToolMode.DRAW -> Color.Black to 8f
+        ToolMode.DRAW -> Color.Black to thickness // Use passed thickness
         ToolMode.ERASE -> Color.Transparent to 0f // Eraser path is not drawn
-        ToolMode.Highlighter -> Color.Yellow.copy(alpha = 0.5f) to 20f
+        ToolMode.Highlighter -> Color.Yellow.copy(alpha = 0.5f) to thickness // Use passed thickness
         ToolMode.Lasso -> Color.Blue.copy(alpha = 0.3f) to 5f
     }
     drawPath(path = path, color = color, style = Stroke(width = strokeWidth))
