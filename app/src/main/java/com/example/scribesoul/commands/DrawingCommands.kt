@@ -92,9 +92,10 @@ class MoveCommand(private val target: Movable, private val from: Offset, private
 }
 
 class ChangeColorCommand(
-    private val targets: List<Movable>,
+    private val targets: List<Any>, // <-- Ubah dari List<Movable> ke List<Any>
     private val newColor: Color
 ) : Command {
+    // Logika di dalam sini tidak perlu diubah, karena sudah menggunakan filterIsInstance
     private val oldColors = targets.filterIsInstance<Colorable>().associateWith { it.color }
 
     override fun execute() {
@@ -143,9 +144,12 @@ class GroupCommand(
         groups.remove(newGroup)
         // Kembalikan item ke list aslinya DAN kembalikan offset absolut aslinya
         newGroup.items.forEach { item ->
-            // Kembalikan offset asli sebelum menambahkannya kembali ke list
-            item.offset = originalOffsets[item] ?: item.offset
+            // SOLUSI: Hitung offset absolut baru dari item.
+            // Offset absolut = posisi terakhir grup + offset relatif item di dalam grup.
+            // Saat ini, `item.offset` adalah offset RELATIF karena sudah diubah di `execute()`.
+            item.offset = newGroup.offset + item.offset
 
+            // Kembalikan item ke list yang sesuai
             when (item) {
                 is EditableText -> (allLists[0] as MutableList<EditableText>).add(item)
                 is ShapeItem -> (allLists[1] as MutableList<ShapeItem>).add(item)
@@ -172,12 +176,13 @@ class CopyCommand(
                 is ItemGroup -> { // Juga bisa menyalin grup
                     val newGroupItems = item.items.map {
                         when(it) {
-                            is EditableText -> it.copy(offset = it.offset + Offset(20f, 20f))
-                            is ShapeItem -> it.copy(offset = it.offset + Offset(20f, 20f))
-                            is ImageLayer -> it.copy(offset = it.offset + Offset(20f, 20f))
+                            is EditableText -> it.copy() // Hapus penambahan offset di sini
+                            is ShapeItem -> it.copy()   // Hapus penambahan offset di sini
+                            is ImageLayer -> it.copy()  // Hapus penambahan offset di sini
                             else -> it
                         }
                     }.toMutableList()
+                    // SALIN GRUP DAN HANYA UBAH OFFSET GRUP ITU SENDIRI
                     item.copy(items = newGroupItems, offset = item.offset + Offset(20f, 20f))
                 }
                 else -> item

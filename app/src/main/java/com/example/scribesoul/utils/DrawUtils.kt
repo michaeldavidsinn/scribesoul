@@ -17,6 +17,7 @@ import kotlin.math.sin
 import kotlin.math.sqrt
 import androidx.compose.ui.geometry.Rect
 import androidx.compose.ui.geometry.Size
+import androidx.compose.ui.graphics.PathEffect
 import androidx.compose.ui.unit.dp
 import com.example.scribesoul.models.EditableText
 import com.example.scribesoul.models.ImageLayer
@@ -43,19 +44,42 @@ fun distance(p1: Offset, p2: Offset): Float {
     return sqrt((p1.x - p2.x).pow(2) + (p1.y - p2.y).pow(2))
 }
 
-fun DrawScope.drawPathFromOffsets(offsets: List<Offset>, mode: ToolMode, thickness: Float) {
+fun DrawScope.drawPathFromOffsets(offsets: List<Offset>, color: Color, mode: ToolMode, thickness: Float) {
     if (offsets.size < 2) return
     val path = Path().apply {
         moveTo(offsets.first().x, offsets.first().y)
         (1 until offsets.size).forEach { lineTo(offsets[it].x, offsets[it].y) }
     }
-    val (color, strokeWidth) = when (mode) {
-        ToolMode.DRAW -> Color.Black to thickness // Use passed thickness
-        ToolMode.ERASE -> Color.Transparent to 0f // Eraser path is not drawn
-        ToolMode.Highlighter -> Color.Yellow.copy(alpha = 0.5f) to thickness // Use passed thickness
+    // Logika warna sekarang lebih dinamis
+    val (strokeColor, strokeWidth) = when (mode) {
+        ToolMode.DRAW -> color to thickness // Gunakan warna yang diberikan
+        ToolMode.ERASE -> Color.Transparent to 0f
+        ToolMode.Highlighter -> color.copy(alpha = 0.5f) to thickness // Gunakan warna yang diberikan
         ToolMode.Lasso -> Color.Blue.copy(alpha = 0.3f) to 5f
     }
-    drawPath(path = path, color = color, style = Stroke(width = strokeWidth))
+    drawPath(path = path, color = strokeColor, style = Stroke(width = strokeWidth))
+}
+
+// Helper untuk menggambar border seleksi pada path
+fun DrawScope.drawSelectionBorder(offsets: List<Offset>) {
+    if (offsets.isEmpty()) return
+    var minX = Float.MAX_VALUE
+    var minY = Float.MAX_VALUE
+    var maxX = Float.MIN_VALUE
+    var maxY = Float.MIN_VALUE
+
+    offsets.forEach {
+        minX = minOf(minX, it.x)
+        minY = minOf(minY, it.y)
+        maxX = maxOf(maxX, it.x)
+        maxY = maxOf(maxY, it.y)
+    }
+    drawRect(
+        color = Color.Blue,
+        topLeft = Offset(minX, minY),
+        size = Size(maxX - minX, maxY - minY),
+        style = Stroke(width = 3f, pathEffect = PathEffect.dashPathEffect(floatArrayOf(15f, 10f), 0f))
+    )
 }
 
 fun isPointInPolygon(point: Offset, polygon: List<Offset>): Boolean {
@@ -86,37 +110,63 @@ fun DrawScope.drawStar(center: Offset, radius: Float, color: Color) {
     drawPath(path = path, color = color, style = Fill)
 }
 
-fun isRectInPolygon(rect: Rect, polygon: List<Offset>): Boolean {
-    // Cek apakah salah satu dari 4 sudut ada di dalam poligon
-    if (isPointInPolygon(rect.topLeft, polygon)) return true
-    if (isPointInPolygon(rect.topRight, polygon)) return true
-    if (isPointInPolygon(rect.bottomLeft, polygon)) return true
-    if (isPointInPolygon(rect.bottomRight, polygon)) return true
-    return false
+private fun getTransformedCorners(offset: Offset, size: Size, rotationDegrees: Float): List<Offset> {
+    // Titik pusat objek, relatif terhadap pojok kiri atasnya
+    val center = Offset(size.width / 2f, size.height / 2f)
+
+    // Posisi 4 sudut relatif terhadap pojok kiri atas (0,0)
+    val corners = listOf(
+        Offset(0f, 0f),                      // Kiri-atas
+        Offset(size.width, 0f),             // Kanan-atas
+        Offset(size.width, size.height),    // Kanan-bawah
+        Offset(0f, size.height)             // Kiri-bawah
+    )
+
+    // Ubah derajat ke radian untuk fungsi sin/cos
+    val rotationRadians = Math.toRadians(rotationDegrees.toDouble()).toFloat()
+    val cos = cos(rotationRadians)
+    val sin = sin(rotationRadians)
+
+    return corners.map { corner ->
+        // 1. Geser sudut agar rotasi berpusat di tengah objek
+        val cornerRelativeToCenter = corner - center
+
+        // 2. Terapkan rumus rotasi 2D
+        val rotatedX = cornerRelativeToCenter.x * cos - cornerRelativeToCenter.y * sin
+        val rotatedY = cornerRelativeToCenter.x * sin + cornerRelativeToCenter.y * cos
+        val rotatedCorner = Offset(rotatedX, rotatedY)
+
+        // 3. Geser kembali sudut yang telah dirotasi dan terapkan offset utama objek
+        rotatedCorner + center + offset
+    }
 }
 
 fun isMovableInPolygon(movable: Movable, polygon: List<Offset>, density: androidx.compose.ui.unit.Density): Boolean {
-    return when (movable) {
-        is EditableText -> {
-            // Logika baru: buat Rect dari offset dan ukuran, lalu cek dengan poligon
-            val bounds = Rect(movable.offset, movable.size)
-            isRectInPolygon(bounds, polygon)
-        }
-        is ShapeItem -> {
-            val sizePx = with(density) { 100.dp.toPx() }
-            val bounds = Rect(movable.offset, Size(sizePx, sizePx))
-            isRectInPolygon(bounds, polygon)
-        }
-        is ImageLayer -> {
-            val bounds = Rect(movable.offset, movable.size)
-            isRectInPolygon(bounds, polygon)
-        }
+    val corners = when (movable) {
+        // Untuk item tunggal, langsung hitung sudutnya
+        is EditableText -> getTransformedCorners(movable.offset, movable.size, movable.rotation)
+        is ShapeItem -> getTransformedCorners(movable.offset, movable.size, movable.rotation)
+        is ImageLayer -> getTransformedCorners(movable.offset, movable.size, movable.rotation)
+
+        // Untuk grup, prosesnya sedikit lebih kompleks
         is ItemGroup -> {
-            val bounds = calculateGroupBounds(movable)
-            isRectInPolygon(bounds, polygon)
+            // 1. Dapatkan kotak pembatas (bounding box) yang ketat di sekitar semua item anak
+            val groupBounds = calculateGroupBounds(movable)
+
+            // 2. Dapatkan sudut-sudut dari kotak pembatas tersebut, lalu rotasikan sesuai rotasi grup
+            getTransformedCorners(
+                offset = movable.offset + groupBounds.topLeft, // Offset grup + offset relatif kotak
+                size = groupBounds.size,
+                rotationDegrees = movable.rotation
+            )
         }
-        else -> false
+        else -> return false
     }
+
+    // Sebuah objek dianggap terseleksi jika salah satu sudutnya berada di dalam poligon lasso.
+    // NOTE: Pengecekan ini sudah jauh lebih baik. Untuk akurasi 100% (misal: lasso kecil di dalam objek besar),
+    // diperlukan juga pengecekan interseksi garis, namun untuk sebagian besar kasus, ini sudah sangat memadai.
+    return corners.any { isPointInPolygon(it, polygon) }
 }
 
 fun calculateGroupBounds(group: ItemGroup): Rect {
@@ -128,18 +178,25 @@ fun calculateGroupBounds(group: ItemGroup): Rect {
     var maxY = Float.MIN_VALUE
 
     group.items.forEach { item ->
-        // Perhitungan simpel, belum menghitung rotasi item individual
-        val itemSize = when (item) {
-            is ShapeItem -> Size(100f, 100f) // Asumsi ukuran dalam px untuk kalkulasi
-            is ImageLayer -> item.size
-            else -> Size(50f, 50f) // Ukuran default untuk teks
+        // Dapatkan sudut absolut dari setiap item anak.
+        // Ingat, offset item anak adalah RELATIF terhadap pusat grup.
+        val itemCorners = when (item) {
+            is EditableText -> getTransformedCorners(item.offset, item.size, item.rotation)
+            is ShapeItem -> getTransformedCorners(item.offset, item.size, item.rotation)
+            is ImageLayer -> getTransformedCorners(item.offset, item.size, item.rotation)
+            else -> emptyList()
         }
-        minX = minOf(minX, item.offset.x)
-        minY = minOf(minY, item.offset.y)
-        maxX = maxOf(maxX, item.offset.x + itemSize.width)
-        maxY = maxOf(maxY, item.offset.y + itemSize.height)
+
+        // Cari nilai x,y min/max dari semua sudut yang didapat
+        itemCorners.forEach { corner ->
+            minX = minOf(minX, corner.x)
+            minY = minOf(minY, corner.y)
+            maxX = maxOf(maxX, corner.x)
+            maxY = maxOf(maxY, corner.y)
+        }
     }
 
+    // Mengembalikan Rect yang berisi semua item, relatif terhadap titik pusat grup (0,0)
     return Rect(left = minX, top = minY, right = maxX, bottom = maxY)
 }
 

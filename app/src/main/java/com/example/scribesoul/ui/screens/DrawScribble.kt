@@ -20,6 +20,7 @@ import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ContentCopy
 import androidx.compose.material.icons.filled.Delete
@@ -28,29 +29,43 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Size
+import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.TransformOrigin
+import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.graphics.graphicsLayer
+import androidx.compose.ui.graphics.toArgb
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.input.KeyboardType
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
 import androidx.navigation.compose.rememberNavController
-import androidx.compose.material.icons.filled.Palette
 import coil.compose.rememberAsyncImagePainter
 import coil.request.ImageRequest
 import com.example.scribesoul.R
 import com.example.scribesoul.commands.*
 import com.example.scribesoul.models.*
 import com.example.scribesoul.utils.*
-import androidx.compose.ui.graphics.drawscope.Stroke // Import for drawing the eraser circle outline
+import androidx.compose.material.icons.filled.Palette
 import androidx.compose.ui.draw.rotate
+
+
+private enum class ColorPickerTarget {
+    DRAW_STROKE,
+    EDIT_SELECTION,
+    ADD_SHAPE
+}
 
 @RequiresApi(Build.VERSION_CODES.VANILLA_ICE_CREAM)
 @Composable
@@ -75,10 +90,19 @@ fun DrawScribbleScreen(navController: NavController) {
     var drawThickness by remember { mutableFloatStateOf(8f) }
     var eraseThickness by remember { mutableFloatStateOf(40f) }
 
+    var drawColor by remember { mutableStateOf(Color.Black) }
+    val selectedPaths = remember { mutableStateListOf<DrawablePath>() }
+
+    var colorPickerTarget by remember { mutableStateOf<ColorPickerTarget?>(null) }
+    var pendingShapeType by remember { mutableStateOf<String?>(null) }
+
     fun executeCommand(command: Command) {
         command.execute()
         undoStack.add(command)
         redoStack.clear()
+        // Hapus seleksi setelah aksi dilakukan
+        selectedItems.clear()
+        selectedPaths.clear()
     }
 
     val imagePickerLauncher = rememberLauncherForActivityResult(
@@ -91,11 +115,49 @@ fun DrawScribbleScreen(navController: NavController) {
 
     val density = LocalDensity.current
 
+    if (colorPickerTarget != null) {
+        val initialColor = when (colorPickerTarget) {
+            ColorPickerTarget.DRAW_STROKE -> drawColor
+            ColorPickerTarget.EDIT_SELECTION ->
+                (selectedItems.filterIsInstance<Colorable>().firstOrNull()?.color)
+                    ?: (selectedPaths.firstOrNull()?.color)
+                    ?: Color.Black
+            ColorPickerTarget.ADD_SHAPE -> Color.Red
+            else -> Color.Black
+        }
+
+        ColorPickerDialog(
+            initialColor = initialColor,
+            onDismissRequest = { colorPickerTarget = null },
+            onColorSelected = { selectedColor ->
+                when (colorPickerTarget) {
+                    ColorPickerTarget.DRAW_STROKE -> {
+                        drawColor = selectedColor
+                    }
+                    ColorPickerTarget.EDIT_SELECTION -> {
+                        val allTargets = selectedItems.toList() + selectedPaths.toList()
+                        executeCommand(ChangeColorCommand(allTargets, selectedColor))
+                    }
+                    ColorPickerTarget.ADD_SHAPE -> {
+                        pendingShapeType?.let { shapeType ->
+                            executeCommand(AddShapeCommand(ShapeItem(shapeType, canvasCenter.value, color = selectedColor), shapes))
+                        }
+                    }
+                    null -> {
+                        // This case logically won't happen here but is required for an exhaustive 'when'.
+                    }
+                }
+                colorPickerTarget = null // Close dialog after selection
+                pendingShapeType = null  // Reset state
+            }
+        )
+    }
+
     Box(
         modifier = Modifier
             .fillMaxSize()
             .background(Color.White)
-            .pointerInput(toolMode, drawThickness, eraseThickness) {
+            .pointerInput(toolMode, drawThickness, eraseThickness, drawColor) {
                 detectDragGestures(
                     onDragStart = {
                         currentPath.clear()
@@ -109,35 +171,67 @@ fun DrawScribbleScreen(navController: NavController) {
                             ToolMode.ERASE -> {
                                 val originalPaths = paths.toList()
                                 val pathsAfterErase = mutableListOf<DrawablePath>()
+
                                 originalPaths.forEach { drawablePath ->
-                                    if (drawablePath.toolMode != ToolMode.Highlighter) {
-                                        val remainingOffsets = drawablePath.offsets.filter { point ->
-                                            currentPath.none { eraserPoint -> distance(point, eraserPoint) < eraseThickness }
-                                        }
-                                        if (remainingOffsets.isNotEmpty()) {
-                                            pathsAfterErase.add(drawablePath.copy(offsets = remainingOffsets))
-                                        }
-                                    } else {
+                                    if (drawablePath.toolMode == ToolMode.Highlighter) {
                                         pathsAfterErase.add(drawablePath)
+                                        return@forEach
+                                    }
+
+                                    val pointErasureStatus = drawablePath.offsets.map { point ->
+                                        currentPath.any { eraserPoint -> distance(point, eraserPoint) < eraseThickness }
+                                    }
+
+                                    var currentSegment = mutableListOf<Offset>()
+                                    pointErasureStatus.forEachIndexed { index, isErased ->
+                                        if (!isErased) {
+                                            currentSegment.add(drawablePath.offsets[index])
+                                        } else {
+                                            if (currentSegment.size > 1) {
+                                                pathsAfterErase.add(drawablePath.copy(offsets = currentSegment.toList()))
+                                            }
+                                            currentSegment = mutableListOf()
+                                        }
+                                    }
+
+                                    if (currentSegment.size > 1) {
+                                        pathsAfterErase.add(drawablePath.copy(offsets = currentSegment.toList()))
                                     }
                                 }
-                                executeCommand(EraseCommand(originalPaths, pathsAfterErase, paths))
+
+                                if (originalPaths != pathsAfterErase) {
+                                    executeCommand(EraseCommand(originalPaths, pathsAfterErase, paths))
+                                }
                             }
                             ToolMode.Lasso -> {
                                 if (currentPath.size > 2) {
                                     val polygon = currentPath.toList()
                                     selectedItems.clear()
+                                    selectedPaths.clear()
+
                                     val allMovables = texts + shapes + imageLayers + groups
                                     allMovables.forEach { item ->
                                         if (isMovableInPolygon(item, polygon, density)) {
                                             selectedItems.add(item)
                                         }
                                     }
+
+                                    paths.forEach { path ->
+                                        if (path.offsets.any { point -> isPointInPolygon(point, polygon) }) {
+                                            selectedPaths.add(path)
+                                        }
+                                    }
                                 }
                             }
                             else -> {
                                 if (currentPath.isNotEmpty()) {
-                                    executeCommand(AddDrawableCommand(DrawablePath(currentPath.toList(), toolMode, drawThickness), paths))
+                                    val newPath = DrawablePath(
+                                        offsets = currentPath.toList(),
+                                        toolMode = toolMode,
+                                        thickness = drawThickness,
+                                        color = if (toolMode == ToolMode.Highlighter) Color.Yellow else drawColor
+                                    )
+                                    executeCommand(AddDrawableCommand(newPath, paths))
                                 }
                             }
                         }
@@ -156,11 +250,20 @@ fun DrawScribbleScreen(navController: NavController) {
     ) {
         // --- RENDERING SECTION ---
         Canvas(modifier = Modifier.fillMaxSize()) {
-            paths.filter { it.toolMode == ToolMode.Highlighter }.forEach { drawPathFromOffsets(it.offsets, it.toolMode, it.thickness) }
-            paths.filter { it.toolMode != ToolMode.Highlighter }.forEach { drawPathFromOffsets(it.offsets, it.toolMode, it.thickness) }
-            drawPathFromOffsets(currentPath, toolMode, drawThickness)
 
-            // Visualisasi Penghapus
+            paths.filter { it.toolMode == ToolMode.Highlighter }.forEach {
+                drawPathFromOffsets(it.offsets, it.color, it.toolMode, it.thickness)
+            }
+
+            paths.filter { it.toolMode != ToolMode.Highlighter }.forEach {
+                drawPathFromOffsets(it.offsets, it.color, it.toolMode, it.thickness)
+            }
+            drawPathFromOffsets(currentPath, drawColor, toolMode, drawThickness)
+
+            selectedPaths.forEach {
+                drawSelectionBorder(it.offsets)
+            }
+
             if (toolMode == ToolMode.ERASE && currentPath.isNotEmpty()) {
                 val lastPoint = currentPath.last()
                 drawCircle(
@@ -221,13 +324,20 @@ fun DrawScribbleScreen(navController: NavController) {
         }
 
         // --- UI / TOOLBAR SECTION ---
-        if (selectedItems.isNotEmpty()) {
+        if (selectedItems.isNotEmpty() || selectedPaths.isNotEmpty()) {
             Box(modifier = Modifier.align(Alignment.TopCenter).padding(top = 120.dp)) {
                 PropertiesToolbar(
                     selectedItems = selectedItems,
+                    selectedPaths = selectedPaths,
                     executeCommand = ::executeCommand,
-                    onClearSelection = { selectedItems.clear() },
-                    allLists = listOf(texts, shapes, imageLayers, groups)
+                    onClearSelection = {
+                        selectedItems.clear()
+                        selectedPaths.clear()
+                    },
+                    allLists = listOf(texts, shapes, imageLayers, groups),
+                    onShowColorPicker = {
+                        colorPickerTarget = ColorPickerTarget.EDIT_SELECTION
+                    }
                 )
             }
         }
@@ -237,7 +347,7 @@ fun DrawScribbleScreen(navController: NavController) {
             modifier = Modifier
                 .fillMaxWidth()
                 .padding(top = 60.dp, start = 20.dp, end = 20.dp)
-                .align(Alignment.TopCenter), // Ensure it stays at the top
+                .align(Alignment.TopCenter),
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
             Row(
@@ -273,14 +383,38 @@ fun DrawScribbleScreen(navController: NavController) {
                     Box {
                         Image(painter = painterResource(id = R.drawable.shapeasset), contentDescription = "Shape", modifier = Modifier.size(22.dp).clickable { showShapeMenu.value = true })
                         DropdownMenu(expanded = showShapeMenu.value, onDismissRequest = { showShapeMenu.value = false }) {
-                            DropdownMenuItem(onClick = { executeCommand(AddShapeCommand(ShapeItem("Circle", canvasCenter.value, color = Color.Red), shapes)); showShapeMenu.value = false }, text = { Text("Circle") })
-                            DropdownMenuItem(onClick = { executeCommand(AddShapeCommand(ShapeItem("Rectangle", canvasCenter.value, color = Color.Magenta), shapes)); showShapeMenu.value = false }, text = { Text("Rectangle") })
-                            DropdownMenuItem(onClick = { executeCommand(AddShapeCommand(ShapeItem("Star", canvasCenter.value, color = Color.Yellow), shapes)); showShapeMenu.value = false }, text = { Text("Star") })
-                            DropdownMenuItem(onClick = { executeCommand(AddShapeCommand(ShapeItem("Triangle", canvasCenter.value, color = Color.Green), shapes)); showShapeMenu.value = false }, text = { Text("Triangle") })
-                            DropdownMenuItem(onClick = { executeCommand(AddShapeCommand(ShapeItem("Hexagon", canvasCenter.value, color = Color.Cyan), shapes)); showShapeMenu.value = false }, text = { Text("Hexagon") })
+                            DropdownMenuItem(onClick = {
+                                pendingShapeType = "Circle"
+                                colorPickerTarget = ColorPickerTarget.ADD_SHAPE
+                                showShapeMenu.value = false
+                            }, text = { Text("Circle") })
+                            DropdownMenuItem(onClick = {
+                                pendingShapeType = "Rectangle"
+                                colorPickerTarget = ColorPickerTarget.ADD_SHAPE
+                                showShapeMenu.value = false
+                            }, text = { Text("Rectangle") })
+                            DropdownMenuItem(onClick = {
+                                pendingShapeType = "Star"
+                                colorPickerTarget = ColorPickerTarget.ADD_SHAPE
+                                showShapeMenu.value = false
+                            }, text = { Text("Star") })
+                            DropdownMenuItem(onClick = {
+                                pendingShapeType = "Triangle"
+                                colorPickerTarget = ColorPickerTarget.ADD_SHAPE
+                                showShapeMenu.value = false
+                            }, text = { Text("Triangle") })
+                            DropdownMenuItem(onClick = {
+                                pendingShapeType = "Hexagon"
+                                colorPickerTarget = ColorPickerTarget.ADD_SHAPE
+                                showShapeMenu.value = false
+                            }, text = { Text("Hexagon") })
                         }
                     }
-                    Image(painter = painterResource(id = R.drawable.pencil), contentDescription = "Pencil", modifier = Modifier.size(22.dp).clickable { toolMode = ToolMode.DRAW })
+                    Image(painter = painterResource(id = R.drawable.pencil), contentDescription = "Pencil", modifier = Modifier.size(22.dp).clickable {
+                        toolMode = ToolMode.DRAW
+                        colorPickerTarget = ColorPickerTarget.DRAW_STROKE
+                    })
+
                     Image(painter = painterResource(id = R.drawable.eraser), contentDescription = "Eraser", modifier = Modifier.size(22.dp).clickable { toolMode = ToolMode.ERASE })
                     Box {
                         val isLayerMenuEnabled = selectedItems.size == 1
@@ -324,24 +458,23 @@ fun DrawScribbleScreen(navController: NavController) {
                 }
             }
 
-            Spacer(modifier = Modifier.height(8.dp)) // Space below the main tools
+            Spacer(modifier = Modifier.height(8.dp))
         }
 
-        // --- NEW: Compact Thickness Sliders on Left Side (Portrait) ---
         AnimatedVisibility(
             visible = toolMode == ToolMode.DRAW || toolMode == ToolMode.ERASE,
             enter = expandVertically(expandFrom = Alignment.Top) + fadeIn(),
             exit = shrinkVertically(shrinkTowards = Alignment.Top) + fadeOut(),
             modifier = Modifier
-                .align(Alignment.CenterStart) // Aligned to the center-left
-                .padding(start = 16.dp) // Padding from the left edge
+                .align(Alignment.CenterStart)
+                .padding(start = 16.dp)
         ) {
             Column(
                 modifier = Modifier
                     .background(MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.8f), RoundedCornerShape(8.dp))
-                    .padding(horizontal = 8.dp, vertical = 12.dp), // Adjusted padding for vertical layout
+                    .padding(horizontal = 8.dp, vertical = 12.dp),
                 horizontalAlignment = Alignment.CenterHorizontally,
-                verticalArrangement = Arrangement.spacedBy(12.dp) // Spacing between sliders
+                verticalArrangement = Arrangement.spacedBy(12.dp)
             ) {
                 if (toolMode == ToolMode.DRAW) {
                     Column(horizontalAlignment = Alignment.CenterHorizontally) {
@@ -352,10 +485,7 @@ fun DrawScribbleScreen(navController: NavController) {
                             onValueChange = { drawThickness = it },
                             valueRange = 1f..50f,
                             steps = 49,
-                            modifier = Modifier
-                                .width(80.dp) // <-- Ini akan menjadi PANJANG efektif garis slider (misal 150dp)
-                                .height(150.dp) // <-- Ini akan menjadi LEBAR efektif slider (misal 40dp, jadi lebih tipis)
-                                .rotate(270f) // Rotasi diterapkan setelah lebar dan tinggi didefinisikan
+                            modifier = Modifier.width(80.dp).height(150.dp).rotate(270f)
                         )
                         Text("${drawThickness.toInt()}", fontSize = 12.sp, color = MaterialTheme.colorScheme.primary)
                     }
@@ -369,10 +499,7 @@ fun DrawScribbleScreen(navController: NavController) {
                             onValueChange = { eraseThickness = it },
                             valueRange = 10f..100f,
                             steps = 90,
-                            modifier = Modifier
-                                .width(70.dp) // <-- Ini akan menjadi PANJANG efektif garis slider (misal 150dp)
-                                .height(150.dp) // <-- Ini akan menjadi LEBAR efektif slider (misal 40dp, jadi lebih tipis)
-                                .rotate(270f) // Rotasi diterapkan setelah lebar dan tinggi didefinisikan
+                            modifier = Modifier.width(70.dp).height(150.dp).rotate(270f)
                         )
                         Text("${eraseThickness.toInt()}", fontSize = 12.sp, color = MaterialTheme.colorScheme.primary)
                     }
@@ -380,17 +507,13 @@ fun DrawScribbleScreen(navController: NavController) {
             }
         }
 
-
         Column(
             modifier = Modifier
                 .align(Alignment.BottomCenter)
                 .padding(bottom = 20.dp),
             verticalArrangement = Arrangement.spacedBy(1.dp)
         ) {
-
-            BottomBarScribble(
-                navController = navController,
-            )
+            BottomBarScribble(navController = navController)
         }
     }
 }
@@ -504,16 +627,31 @@ fun GroupHandles(
 ) {
     if (isSelected) {
         val groupBounds = calculateGroupBounds(group)
+        val density = LocalDensity.current
+
         Box(
             modifier = Modifier
-                .offset { IntOffset(groupBounds.left.toInt(), groupBounds.top.toInt()) }
-                .size(width = (groupBounds.width / LocalDensity.current.density).dp, height = (groupBounds.height / LocalDensity.current.density).dp)
+                .size(
+                    width = (groupBounds.width / density.density).dp,
+                    height = (groupBounds.height / density.density).dp
+                )
+                .graphicsLayer {
+                    val pivotX = -groupBounds.left
+                    val pivotY = -groupBounds.top
+                    transformOrigin = TransformOrigin(
+                        pivotFractionX = if (groupBounds.width != 0f) pivotX / groupBounds.width else 0.5f,
+                        pivotFractionY = if (groupBounds.height != 0f) pivotY / groupBounds.height else 0.5f
+                    )
+                    rotationZ = group.rotation
+                    translationX = group.offset.x + groupBounds.left
+                    translationY = group.offset.y + groupBounds.top
+                }
                 .border(2.dp, Color.Cyan)
-                .clickable { onSelect() }
         )
     }
 
     val handleModifier = Modifier.size(24.dp).border(1.dp, Color.White, CircleShape)
+
     Box(
         modifier = Modifier
             .offset { IntOffset(group.offset.x.toInt() - 12, group.offset.y.toInt() - 12) }
@@ -527,6 +665,7 @@ fun GroupHandles(
                 )
             }
     )
+
     Box(
         modifier = Modifier
             .offset { IntOffset((group.offset.x + 80).toInt(), group.offset.y.toInt() - 12) }
@@ -597,61 +736,194 @@ fun BoxScope.InteractionHandles(item: Movable, executeCommand: (Command) -> Unit
 @Composable
 fun BoxScope.PropertiesToolbar(
     selectedItems: List<Movable>,
+    selectedPaths: List<DrawablePath>,
     executeCommand: (Command) -> Unit,
     onClearSelection: () -> Unit,
-    allLists: List<MutableList<out Movable>>
+    allLists: List<MutableList<out Movable>>,
+    onShowColorPicker: () -> Unit
 ) {
-    val colors = listOf(Color.Black, Color.Red, Color.Blue, Color.Green, Color.Magenta, Color.Yellow)
 
     Surface(
-        modifier = Modifier.align(Alignment.TopCenter).padding(top = 120.dp),
+        modifier = Modifier
+            .align(Alignment.TopCenter)
+            .padding(top = 120.dp),
         shape = MaterialTheme.shapes.medium,
         shadowElevation = 4.dp
     ) {
         Column(modifier = Modifier.padding(16.dp)) {
-            // Aksi Umum: Group, Copy, Delete
-            Row(horizontalArrangement = Arrangement.spacedBy(8.dp), verticalAlignment = Alignment.CenterVertically) {
-                Text("Actions:", style = MaterialTheme.typography.titleMedium)
-                Spacer(modifier = Modifier.width(8.dp))
-                IconButton(onClick = {
-                    if (selectedItems.size > 1) {
-                        executeCommand(GroupCommand(selectedItems.toList(), allLists.take(3), allLists[3] as MutableList<ItemGroup>))
-                        onClearSelection()
-                    }
-                }) { Icon(Icons.Default.Workspaces, "Group") }
+            if (selectedItems.isNotEmpty()) {
+                Row(
+                    horizontalArrangement = Arrangement.spacedBy(8.dp),
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Text("Actions:", style = MaterialTheme.typography.titleMedium)
+                    Spacer(modifier = Modifier.width(8.dp))
+                    IconButton(onClick = {
+                        if (selectedItems.size > 1) {
+                            executeCommand(GroupCommand(selectedItems.toList(), allLists.take(3), allLists[3] as MutableList<ItemGroup>))
+                        }
+                    }) { Icon(Icons.Default.Workspaces, "Group") }
 
-                IconButton(onClick = {
-                    executeCommand(CopyCommand(selectedItems.toList(), allLists))
-                    onClearSelection()
-                }) { Icon(Icons.Default.ContentCopy, "Copy") }
+                    IconButton(onClick = {
+                        executeCommand(CopyCommand(selectedItems.toList(), allLists))
+                    }) { Icon(Icons.Default.ContentCopy, "Copy") }
 
-                IconButton(onClick = {
-                    executeCommand(DeleteItemsCommand(selectedItems.toList(), allLists))
-                    onClearSelection()
-                }) { Icon(Icons.Default.Delete, "Delete", tint = Color.Red) }
+                    IconButton(onClick = {
+                        executeCommand(DeleteItemsCommand(selectedItems.toList(), allLists))
+                    }) { Icon(Icons.Default.Delete, "Delete", tint = Color.Red) }
+                }
             }
 
-            // Properti Khusus (misal: Warna)
-            if (selectedItems.all { it is Colorable }) {
+            val allColorables = selectedItems.filterIsInstance<Colorable>() + selectedPaths
+            if (allColorables.isNotEmpty()) {
                 Divider(modifier = Modifier.padding(vertical = 8.dp))
-                Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                    Icon(Icons.Default.Palette, contentDescription = "Color")
-                    colors.forEach { color ->
-                        Box(
-                            modifier = Modifier
-                                .size(24.dp)
-                                .background(color, CircleShape)
-                                .border(1.dp, Color.Gray, CircleShape)
-                                .clickable {
-                                    executeCommand(ChangeColorCommand(selectedItems.toList(), color))
-                                }
-                        )
-                    }
+                Button(onClick = {
+                    onShowColorPicker()
+                }) {
+                    Icon(Icons.Default.Palette, contentDescription = "Change Color")
+                    Spacer(modifier = Modifier.width(8.dp))
+                    Text("Change Color")
                 }
             }
         }
     }
 }
+
+/**
+ * A dialog that allows the user to pick a color using RGB sliders,
+ * based on the provided UI screenshot. It features a color preview,
+ * gradient sliders, and a text field for direct numeric input.
+ */
+@Composable
+fun ColorPickerDialog(
+    initialColor: Color,
+    onDismissRequest: () -> Unit,
+    onColorSelected: (Color) -> Unit
+) {
+    var red by remember { mutableFloatStateOf(initialColor.red * 255f) }
+    var green by remember { mutableFloatStateOf(initialColor.green * 255f) }
+    var blue by remember { mutableFloatStateOf(initialColor.blue * 255f) }
+
+    val currentColor = Color(red / 255f, green / 255f, blue / 255f)
+
+    AlertDialog(
+        onDismissRequest = onDismissRequest,
+        title = { Text("Select Color") },
+        text = {
+            Column(verticalArrangement = Arrangement.spacedBy(16.dp)) {
+                // Preview Box
+                Box(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(100.dp)
+                        .clip(RoundedCornerShape(12.dp))
+                        .border(1.dp, Color.Gray, RoundedCornerShape(12.dp))
+                        .background(currentColor)
+                )
+                // Color Sliders
+                ColorInputRow(label = "R", sliderColor = Color.Red, value = red, onValueChange = { red = it })
+                ColorInputRow(label = "G", sliderColor = Color.Green, value = green, onValueChange = { green = it })
+                ColorInputRow(label = "B", sliderColor = Color.Blue, value = blue, onValueChange = { blue = it })
+            }
+        },
+        confirmButton = {
+            Button(onClick = { onColorSelected(currentColor) }) { Text("OK") }
+        },
+        dismissButton = {
+            TextButton(onClick = onDismissRequest) { Text("Cancel") }
+        }
+    )
+}
+
+/**
+ * A helper Composable for a single color input row (e.g., for Red).
+ * It contains a label, a custom gradient slider, and an OutlinedTextField
+ * for direct numeric input (0-255).
+ */
+@OptIn(ExperimentalMaterial3Api::class) // ✅ FIX 1: Corrected typo from ...3ai to ...3Api
+@Composable
+private fun ColorInputRow(
+    label: String,
+    sliderColor: Color,
+    value: Float,
+    onValueChange: (Float) -> Unit
+) {
+    var textValue by remember { mutableStateOf(value.toInt().toString()) }
+
+    // Update text when the slider value changes (e.g., from dragging)
+    LaunchedEffect(value) {
+        if (value.toInt().toString() != textValue.ifEmpty { "0" }) {
+            textValue = value.toInt().toString()
+        }
+    }
+
+    Row(
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.spacedBy(16.dp)
+    ) {
+        Text(label, color = sliderColor, fontWeight = FontWeight.Bold)
+
+        // Custom Slider with Gradient Background
+        Box(
+            modifier = Modifier.weight(1f),
+            contentAlignment = Alignment.Center
+        ) {
+            // 1. The gradient background track
+            Box(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(8.dp)
+                    .clip(CircleShape)
+                    .background(
+                        Brush.horizontalGradient(
+                            colors = listOf(Color.Black, sliderColor)
+                        )
+                    )
+            )
+            // 2. The invisible slider on top that provides the thumb and logic
+            Slider(
+                value = value,
+                onValueChange = onValueChange,
+                valueRange = 0f..255f,
+                steps = 254,
+                colors = SliderDefaults.colors(
+                    thumbColor = Color.White,
+                    activeTrackColor = Color.Transparent,
+                    inactiveTrackColor = Color.Transparent
+                ),
+                modifier = Modifier.fillMaxWidth()
+            )
+        }
+
+        // Text Field for numeric input
+        OutlinedTextField(
+            value = textValue,
+            onValueChange = { newText: String ->
+                if (newText.isEmpty()) {
+                    textValue = ""
+                    onValueChange(0f)
+                }
+                else if (newText.all { it.isDigit() }) {
+                    val intValue = newText.toInt()
+                    val clampedValue = intValue.coerceIn(0, 255)
+                    textValue = if (intValue != clampedValue) {
+                        clampedValue.toString()
+                    } else {
+                        newText
+                    }
+                    onValueChange(clampedValue.toFloat())
+                }
+            },
+            modifier = Modifier.width(80.dp),
+            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
+            singleLine = true,
+            textStyle = LocalTextStyle.current.copy(textAlign = TextAlign.Center),
+            shape = RoundedCornerShape(8.dp)
+            // ✅ FIX 2: Removed the unsupported 'contentPadding' parameter
+        )
+    }
+}
+
 
 @RequiresApi(Build.VERSION_CODES.VANILLA_ICE_CREAM)
 @Preview

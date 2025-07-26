@@ -24,8 +24,9 @@ enum class ToolMode {
 data class DrawablePath(
     var offsets: List<Offset>,
     val toolMode: ToolMode,
-    val thickness: Float = 8f
-)
+    val thickness: Float = 8f,
+    override var color: Color = Color.Black // TAMBAHKAN properti warna
+) : Colorable
 
 data class ImageLayer(
     val uri: Uri,
