@@ -5,6 +5,12 @@ import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.Color
 
+
+sealed interface FillStyle
+data class SolidColor(val color: Color) : FillStyle
+data class LinearGradient(val colors: List<Color>) : FillStyle
+data class RadialGradient(val colors: List<Color>) : FillStyle
+
 // Interface untuk semua objek yang bisa dipindahkan
 interface Movable {
     var offset: Offset
@@ -12,7 +18,7 @@ interface Movable {
 }
 
 interface Colorable {
-    var color: Color
+    var fill: FillStyle
 }
 
 // Enum untuk mode alat gambar
@@ -25,7 +31,7 @@ data class DrawablePath(
     var offsets: List<Offset>,
     val toolMode: ToolMode,
     val thickness: Float = 8f,
-    override var color: Color = Color.Black // TAMBAHKAN properti warna
+    override var fill: FillStyle = SolidColor(Color.Black)
 ) : Colorable
 
 data class ImageLayer(
@@ -40,16 +46,17 @@ data class ShapeItem(
     val type: String,
     override var offset: Offset,
     override var rotation: Float = 0f,
-    var size: Size = Size(100f, 100f), // TAMBAHKAN ukuran
-    override var color: Color // TAMBAHKAN warna
-) : Movable, Colorable // Implementasikan Colorable
+    var size: Size = Size(100f, 100f),
+    override var fill: FillStyle, // <-- Diubah dari color
+    var cornerRadius: Float = 0f
+) : Movable, Colorable
 
 data class EditableText(
     var text: String,
     override var offset: Offset,
     override var rotation: Float = 0f,
     var isEditing: Boolean = false,
-    override var color: Color = Color.Black, // Jadikan override dari Colorable
+    override var fill: FillStyle = SolidColor(Color.Black), // <-- Diubah dari color
     var fontSize: Int = 18,
     var size: Size = Size.Zero
 ) : Movable, Colorable

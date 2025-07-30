@@ -91,20 +91,38 @@ class MoveCommand(private val target: Movable, private val from: Offset, private
     override fun undo() { target.offset = from }
 }
 
-class ChangeColorCommand(
-    private val targets: List<Any>, // <-- Ubah dari List<Movable> ke List<Any>
-    private val newColor: Color
+class ChangeFillStyleCommand(
+    private val targets: List<Any>,
+    private val newFill: FillStyle
 ) : Command {
-    // Logika di dalam sini tidak perlu diubah, karena sudah menggunakan filterIsInstance
-    private val oldColors = targets.filterIsInstance<Colorable>().associateWith { it.color }
+    private val oldFills = targets.filterIsInstance<Colorable>().associateWith { it.fill }
 
     override fun execute() {
-        targets.filterIsInstance<Colorable>().forEach { it.color = newColor }
+        targets.filterIsInstance<Colorable>().forEach { it.fill = newFill }
     }
 
     override fun undo() {
-        oldColors.forEach { (item, oldColor) ->
-            (item as Colorable).color = oldColor
+        oldFills.forEach { (item, oldFill) ->
+            (item as Colorable).fill = oldFill
+        }
+    }
+}
+
+class ChangeShapePropertyCommand(
+    private val target: ShapeItem,
+    private val propertyName: String,
+    private val fromValue: Float,
+    private val toValue: Float
+) : Command {
+    override fun execute() {
+        if (propertyName == "cornerRadius") {
+            target.cornerRadius = toValue
+        }
+    }
+
+    override fun undo() {
+        if (propertyName == "cornerRadius") {
+            target.cornerRadius = fromValue
         }
     }
 }
@@ -115,41 +133,29 @@ class GroupCommand(
     private val groups: MutableList<ItemGroup>
 ) : Command {
     private lateinit var newGroup: ItemGroup
-    // Simpan posisi absolut asli untuk proses undo
     private val originalOffsets = itemsToGroup.associateWith { it.offset }
 
     override fun execute() {
-        // Hitung titik tengah dari semua item yang dipilih
         val centerX = itemsToGroup.map { it.offset.x }.average().toFloat()
         val centerY = itemsToGroup.map { it.offset.y }.average().toFloat()
         val groupCenter = Offset(centerX, centerY)
 
-        // PENTING: Ubah offset setiap item menjadi RELATIF terhadap pusat grup
         itemsToGroup.forEach { item ->
             item.offset = item.offset - groupCenter
         }
 
         newGroup = ItemGroup(items = itemsToGroup.toMutableList(), offset = groupCenter)
 
-        // Hapus item dari list aslinya
         allLists.forEach { list ->
             list.removeAll(itemsToGroup)
         }
-        // Tambahkan grup baru
         groups.add(newGroup)
     }
 
     override fun undo() {
-        // Hapus grup
         groups.remove(newGroup)
-        // Kembalikan item ke list aslinya DAN kembalikan offset absolut aslinya
         newGroup.items.forEach { item ->
-            // SOLUSI: Hitung offset absolut baru dari item.
-            // Offset absolut = posisi terakhir grup + offset relatif item di dalam grup.
-            // Saat ini, `item.offset` adalah offset RELATIF karena sudah diubah di `execute()`.
-            item.offset = newGroup.offset + item.offset
-
-            // Kembalikan item ke list yang sesuai
+            item.offset = originalOffsets[item]!! // Kembali ke posisi absolut asli
             when (item) {
                 is EditableText -> (allLists[0] as MutableList<EditableText>).add(item)
                 is ShapeItem -> (allLists[1] as MutableList<ShapeItem>).add(item)
@@ -158,6 +164,7 @@ class GroupCommand(
         }
     }
 }
+
 
 // Command BARU untuk menyalin
 class CopyCommand(
