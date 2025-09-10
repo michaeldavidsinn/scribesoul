@@ -64,7 +64,7 @@ fun CalendarPage(currentToolMode: ToolMode){
     Box(
         modifier = Modifier
             .background(color, shape = RoundedCornerShape(size = 23.dp))
-            .height(600.dp)
+            .height(680.dp)
             .fillMaxWidth(fraction=0.8f)
 
             .clip(RoundedCornerShape(23.dp))
@@ -100,8 +100,8 @@ fun CalendarPage(currentToolMode: ToolMode){
             Image(
                 painter = painterResource(R.drawable.calendar),
                 contentDescription = null,
-                modifier = Modifier
-                    .size(350.dp),
+                contentScale = ContentScale.FillWidth,
+                modifier = Modifier.fillMaxWidth()
 
             )
 

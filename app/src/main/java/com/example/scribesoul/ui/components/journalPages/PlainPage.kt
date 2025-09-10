@@ -37,6 +37,7 @@ import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.example.scribesoul.ui.screens.ToolMode
+import kotlin.math.abs
 
 //(0XFFFFFEE4)
 
@@ -49,9 +50,8 @@ fun PlainPage(currentToolMode: ToolMode){
     Box(
         modifier = Modifier
             .background(color, shape = RoundedCornerShape(size = 23.dp))
-            .height(600.dp)
+            .height(680.dp)
             .fillMaxWidth(fraction=0.8f)
-
             .clip(RoundedCornerShape(23.dp))
             .clipToBounds()
 
@@ -97,17 +97,29 @@ private fun androidx.compose.ui.graphics.drawscope.DrawScope.drawPathFromOffsets
 ) {
     if (offsets.size < 2) return
 
-    val path = Path().apply {
+    val smoothedPath = Path().apply {
         moveTo(offsets.first().x, offsets.first().y)
+        val smoothness = 5
         for (i in 1 until offsets.size) {
-            lineTo(offsets[i].x, offsets[i].y)
+            val from = offsets[i -1]
+            val to = offsets[i]
+            val dx = abs(from.x - to.x)
+            val dy = abs(from.y - to.y)
+            if(dx >= smoothness || dy >= smoothness){
+                quadraticTo(
+                    x1 = (from.x + to.x) / 2f,
+                    y1 = (from.y + to.y) / 2f,
+                    x2 = to.x,
+                    y2 = to.y
+                )
+            }
         }
     }
 
     drawPath(
-        path = path,
+        path = smoothedPath,
         color = if (mode == ToolMode.DRAW) Color.Black else Color.Transparent,
-        style = Stroke(width = if (mode == ToolMode.DRAW) 4f else 36f, cap = StrokeCap.Round, join = StrokeJoin.Round)
+        style = Stroke(width = if (mode == ToolMode.DRAW) 8f else 36f, cap = StrokeCap.Round, join = StrokeJoin.Round)
         ,
         blendMode = if (mode == ToolMode.ERASE) BlendMode.Clear else BlendMode.SrcOver
     )

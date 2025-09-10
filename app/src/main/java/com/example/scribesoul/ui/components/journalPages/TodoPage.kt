@@ -37,8 +37,8 @@ fun TodoPage(){
     Column(
         modifier = Modifier
             .background(Color(0xFFFFFDB4), shape = RoundedCornerShape(size = 23.dp))
-            .height(600.dp)
-            .fillMaxWidth(fraction=0.8f)
+            .height(680.dp)
+            .fillMaxWidth(fraction=0.9f)
             .clip(RoundedCornerShape(23.dp))
             .clipToBounds()
             .padding(20.dp),

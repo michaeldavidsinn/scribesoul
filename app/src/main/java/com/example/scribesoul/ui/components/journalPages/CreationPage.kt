@@ -33,8 +33,7 @@ fun CreationPage(){
     Column(
         modifier = Modifier
             .background(Color(0xFF74A8FF), shape = RoundedCornerShape(size = 23.dp))
-            .height(600.dp)
-            .width(300.dp)
+            .height(680.dp)
             .fillMaxWidth(fraction=0.8f)
             .clip(RoundedCornerShape(23.dp))
             .clipToBounds()
