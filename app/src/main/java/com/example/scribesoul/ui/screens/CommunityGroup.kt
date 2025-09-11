@@ -1,5 +1,6 @@
 package com.example.scribesoul.ui.screens
 
+import com.example.scribesoul.ui.components.InputBar
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background

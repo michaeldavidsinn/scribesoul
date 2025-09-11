@@ -1,5 +1,6 @@
 package com.example.scribesoul.ui.screens
 
+import com.example.scribesoul.ui.components.InputBar
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.runtime.Composable
@@ -271,116 +272,6 @@ fun ChatCard(
                         )
                     }
                 }
-            }
-        }
-    }
-}
-@Composable
-fun InputBar(modifier: Modifier = Modifier) {
-    var inputText by remember { mutableStateOf("") }
-    var isToggled by remember { mutableStateOf(false) }
-
-    Box(
-        modifier = modifier
-            .padding(horizontal = 24.dp)
-            .fillMaxWidth()
-            .height(50.dp)
-            .clip(RoundedCornerShape(25.dp))
-            .background(Color.White)
-            .drawWithContent {
-                drawContent()
-
-                val shadowColor = Color.Black.copy(alpha = 0.08f)
-                val shadowSize = 10f
-
-                // Inner shadow effect
-                drawRect(
-                    brush = Brush.verticalGradient(
-                        colors = listOf(shadowColor, Color.Transparent),
-                    ),
-                    topLeft = Offset(0f, 0f),
-                    size = Size(size.width, shadowSize)
-                )
-                drawRect(
-                    brush = Brush.verticalGradient(
-                        colors = listOf(Color.Transparent, shadowColor),
-                    ),
-                    topLeft = Offset(0f, size.height - shadowSize),
-                    size = Size(size.width, shadowSize)
-                )
-                drawRect(
-                    brush = Brush.horizontalGradient(
-                        colors = listOf(shadowColor, Color.Transparent),
-                    ),
-                    topLeft = Offset(0f, 0f),
-                    size = Size(shadowSize, size.height)
-                )
-                drawRect(
-                    brush = Brush.horizontalGradient(
-                        colors = listOf(Color.Transparent, shadowColor),
-                    ),
-                    topLeft = Offset(size.width - shadowSize, 0f),
-                    size = Size(shadowSize, size.height)
-                )
-            }
-            .border(
-                width = 0.4.dp,
-                color = Color(0xFF2B395B),
-                shape = RoundedCornerShape(25.dp)
-            ),
-        contentAlignment = Alignment.CenterStart
-    ) {
-        Row(
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(start = 12.dp, end = 8.dp),
-            verticalAlignment = Alignment.CenterVertically
-        ) {
-            TextField(
-                value = inputText,
-                onValueChange = { inputText = it },
-                placeholder = {
-                    Text(
-                        text = "write yours",
-                        fontSize = 13.sp,
-                        color = Color(0xFF2B395B).copy(alpha = 0.6f)
-                    )
-                },
-                textStyle = LocalTextStyle.current.copy(fontSize = 13.sp),
-                modifier = Modifier
-                    .weight(1f)
-                    .padding(end = 4.dp),
-                colors = TextFieldDefaults.colors(
-                    focusedContainerColor = Color.Transparent,
-                    unfocusedContainerColor = Color.Transparent,
-                    disabledContainerColor = Color.Transparent,
-                    focusedIndicatorColor = Color.Transparent,
-                    unfocusedIndicatorColor = Color.Transparent,
-                    disabledIndicatorColor = Color.Transparent
-                ),
-                singleLine = true,
-                maxLines = 1
-            )
-
-            Switch(
-                checked = isToggled,
-                onCheckedChange = { isToggled = it },
-                colors = SwitchDefaults.colors(
-                    checkedThumbColor = Color(0xFF2B395B),
-                    uncheckedThumbColor = Color.LightGray,
-                    checkedTrackColor = Color(0xFF2B395B).copy(alpha = 0.5f),
-                    uncheckedTrackColor = Color.LightGray.copy(alpha = 0.5f)
-                )
-            )
-
-            IconButton(
-                onClick = { /* TODO: aksi ketika tombol + ditekan */ }
-            ) {
-                Icon(
-                    painter = painterResource(id = R.drawable.plus), // ganti dengan ikon plus kamu
-                    contentDescription = "Add",
-                    tint = Color(0xFF2B395B)
-                )
             }
         }
     }
