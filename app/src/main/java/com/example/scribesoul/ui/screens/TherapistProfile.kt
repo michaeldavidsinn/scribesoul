@@ -202,7 +202,7 @@ fun TherapistProfileScreen(navController: NavController) {
                                 Text(
                                     text = "4",
                                     style = MaterialTheme.typography.titleMedium.copy(
-                                        fontSize = 14.sp,
+                                        fontSize = 20.sp,
                                         fontWeight = FontWeight.Bold
                                     ),
                                     color = Color(0xFF2B395B)
@@ -238,7 +238,7 @@ fun TherapistProfileScreen(navController: NavController) {
                                 Text(
                                     text = "20",
                                     style = MaterialTheme.typography.titleMedium.copy(
-                                        fontSize = 14.sp,
+                                        fontSize = 20.sp,
                                         fontWeight = FontWeight.Bold
                                     ),
                                     color = Color(0xFF2B395B)
