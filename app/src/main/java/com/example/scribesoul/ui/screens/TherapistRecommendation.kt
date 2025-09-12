@@ -2,7 +2,6 @@ package com.example.scribesoul.ui.screens
 
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
-import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
@@ -16,17 +15,19 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
-import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.navigation.NavController
 import com.example.scribesoul.R
+import com.example.scribesoul.ui.navigation.BottomNavItem
 
 @Composable
-fun TherapistRecommendationScreen() {
+fun TherapistRecommendationScreen(navController: NavController) {
     val therapistList = listOf(
         Triple("Dr. Andini Pramudita", "Psikolog Klinis", "Depresi & Kecemasan"),
         Triple("Dr. Raka Mahendra", "Psikolog Anak", "Gangguan Perilaku & ADHD"),
@@ -97,7 +98,7 @@ fun TherapistRecommendationScreen() {
                 .align(Alignment.BottomCenter)
                 .padding(bottom = 20.dp)
         ) {
-            BottomBarTherapist()
+            BottomBarTherapist(navController = navController)
         }
     }
 }
@@ -155,15 +156,18 @@ fun TherapistCard(
                 Column {
                     Text(
                         text = name,
-                        style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold, fontSize = 12.sp)
+                        style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold, fontSize = 12.sp),
+                        color = Color(0xFF2B395B)
                     )
                     Text(
                         text = specialization,
-                        style = MaterialTheme.typography.bodySmall.copy(fontSize = 11.sp)
+                        style = MaterialTheme.typography.bodySmall.copy(fontSize = 11.sp),
+                        color = Color(0xFF2B395B)
                     )
                     Text(
                         text = "$issue",
-                        style = MaterialTheme.typography.bodySmall.copy(fontSize = 11.sp)
+                        style = MaterialTheme.typography.bodySmall.copy(fontSize = 11.sp),
+                        color = Color(0xFF2B395B)
                     )
                 }
 
@@ -235,7 +239,8 @@ fun TherapistCard(
                 ) {
                     Text(
                         text = price,
-                        style = MaterialTheme.typography.labelLarge.copy(fontWeight = FontWeight.SemiBold)
+                        style = MaterialTheme.typography.labelLarge.copy(fontWeight = FontWeight.SemiBold),
+                        color = Color(0xFF2B395B)
                     )
 
                     Box(
@@ -267,10 +272,10 @@ fun TherapistCard(
 }
 
 @Composable
-fun BottomBarTherapist(modifier: Modifier = Modifier) {
+fun BottomBarTherapist(navController: NavController, modifier: Modifier = Modifier) {
     Box(
         modifier = modifier
-            .padding(start = 24.dp, end = 24.dp, top = 6.dp, bottom = 40.dp)
+            .padding(start = 24.dp, end = 24.dp, top = 6.dp, bottom = 20.dp)
             .shadow(
                 elevation = 6.dp,
                 shape = RoundedCornerShape(30.dp),
@@ -289,40 +294,41 @@ fun BottomBarTherapist(modifier: Modifier = Modifier) {
             horizontalArrangement = Arrangement.SpaceBetween,
             verticalAlignment = Alignment.CenterVertically
         ) {
-            BottomNavItem(R.drawable.home_icon, "Home", 28.dp)
-            BottomNavItem(R.drawable.therapist_icon_clicked, "Therapist", 40.dp)
-            BottomNavItem(R.drawable.explore_icon, "Explore", 25.dp)
-            BottomNavItem(R.drawable.scribble_icon, "Scribble", 28.dp)
-            BottomNavItem(R.drawable.journal_icon, "Journal", 25.dp)
+            BottomNavItem(R.drawable.home_icon, "Home", 28.dp) {
+                navController.navigate("home") {
+                    launchSingleTop = true
+                }
+            }
+            BottomNavItem(R.drawable.therapist_icon_clicked, "Therapist", 40.dp) {
+                navController.navigate("therapist") {
+                    launchSingleTop = true
+                }
+            }
+            BottomNavItem(R.drawable.explore_icon, "Explore", 25.dp) {
+                navController.navigate("explore") {
+                    launchSingleTop = true
+                }
+            }
+            BottomNavItem(R.drawable.scribble_icon, "Scribble", 28.dp) {
+                navController.navigate("scribble") {
+                    launchSingleTop = true
+                }
+            }
+            BottomNavItem(R.drawable.journal_icon, "Journal", 25.dp) {
+                navController.navigate("journal") {
+                    launchSingleTop = true
+                }
+            }
         }
     }
 }
 
-@Composable
-fun BottomNavItem(iconRes: Int, label: String, iconSize: Dp, onClick: () -> Unit = {}) {
-    Column(
-        horizontalAlignment = Alignment.CenterHorizontally,
-        modifier = Modifier
-            .padding(vertical = 8.dp)
-            .clickable { onClick() }
-    ) {
-        Image(
-            painter = painterResource(id = iconRes), // Replace with your icons
-            contentDescription = label,
-            modifier = Modifier.size(iconSize)
-        )
-        Text(
-            text = label,
-            style = MaterialTheme.typography.labelSmall.copy(fontSize = 10.sp),
-            textAlign = TextAlign.Center
-        )
-    }
-}
 
 @Preview(showBackground = true)
 @Composable
 fun TherapistRecommendationPreview() {
+    val navController = NavController(LocalContext.current)
     Surface(modifier = Modifier.fillMaxSize()) {
-        TherapistRecommendationScreen()
+        TherapistRecommendationScreen(navController)
     }
 }

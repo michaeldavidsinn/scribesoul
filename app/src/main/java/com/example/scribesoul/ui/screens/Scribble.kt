@@ -1,7 +1,5 @@
 package com.example.scribesoul.ui.screens
 
-import androidx.compose.foundation.Canvas
-import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -15,10 +13,8 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
@@ -30,20 +26,20 @@ import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
-import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
+import androidx.navigation.compose.rememberNavController
 import com.example.scribesoul.R
+import com.example.scribesoul.ui.navigation.BottomNavItem
 
 @Composable
 fun ScribbleScreen(navController: NavController) {
+
     Box(
         modifier = Modifier
             .fillMaxSize()
@@ -174,17 +170,19 @@ fun ScribbleScreen(navController: NavController) {
             verticalArrangement = Arrangement.spacedBy(1.dp)
         ) {
 
-            BottomBarScribble()
+            BottomBarScribble(
+                navController = navController,
+            )
         }
     }
 }
 
 
 @Composable
-fun BottomBarScribble(modifier: Modifier = Modifier) {
+fun BottomBarScribble(navController: NavController, modifier: Modifier = Modifier) {
     Box(
         modifier = modifier
-            .padding(start = 24.dp, end = 24.dp, top = 6.dp, bottom = 40.dp)
+            .padding(start = 24.dp, end = 24.dp, top = 6.dp, bottom = 20.dp)
             .shadow(
                 elevation = 6.dp,
                 shape = RoundedCornerShape(30.dp),
@@ -203,11 +201,31 @@ fun BottomBarScribble(modifier: Modifier = Modifier) {
             horizontalArrangement = Arrangement.SpaceBetween,
             verticalAlignment = Alignment.CenterVertically
         ) {
-            BottomNavItem(R.drawable.home_icon, "Home", iconSize = 28.dp)
-            BottomNavItem(R.drawable.therapist_icon, "Therapist", iconSize = 25.dp)
-            BottomNavItem(R.drawable.explore_icon, "Explore", iconSize = 25.dp)
-            BottomNavItem(R.drawable.scribble_icon, "Scribble", iconSize = 43.dp)
-            BottomNavItem(R.drawable.journal_icon, "Journal", iconSize = 25.dp)
+            BottomNavItem(R.drawable.home_icon, "Home", iconSize = 28.dp) {
+                navController.navigate("home") {
+                    launchSingleTop = true
+                }
+            }
+            BottomNavItem(R.drawable.therapist_icon, "Therapist", iconSize = 25.dp) {
+                navController.navigate("therapist") {
+                    launchSingleTop = true
+                }
+            }
+            BottomNavItem(R.drawable.explore_icon, "Explore", iconSize = 25.dp) {
+                navController.navigate("explore") {
+                    launchSingleTop = true
+                }
+            }
+            BottomNavItem(R.drawable.scribble_icon, "Scribble", iconSize = 43.dp) {
+                navController.navigate("scribble") {
+                    launchSingleTop = true
+                }
+            }
+            BottomNavItem(R.drawable.journal_icon, "Journal", iconSize = 25.dp) {
+                navController.navigate("journal") {
+                    launchSingleTop = true
+                }
+            }
         }
     }
 }
@@ -215,7 +233,7 @@ fun BottomBarScribble(modifier: Modifier = Modifier) {
 
 @Preview(showBackground = true)
 @Composable
-fun Scribblereview() {
-    // Gunakan dummy NavController untuk preview
-    ScribbleScreen(navController = NavController(LocalContext.current))
+fun ScribblePreview() {
+    val dummyController = rememberNavController()
+    ScribbleScreen(navController = dummyController)
 }

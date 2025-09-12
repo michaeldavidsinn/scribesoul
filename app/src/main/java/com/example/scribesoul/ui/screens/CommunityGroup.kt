@@ -1,5 +1,6 @@
 package com.example.scribesoul.ui.screens
 
+import com.example.scribesoul.ui.components.InputBar
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
@@ -22,8 +23,11 @@ import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.Notes
 import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.material.icons.filled.MoreVert
+import androidx.compose.material.icons.filled.Notes
+import androidx.compose.material.icons.filled.Search
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.Icon
@@ -48,11 +52,11 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
 import com.example.scribesoul.R
-import com.example.scribesoul.ui.components.InputBar
+import com.example.scribesoul.ui.components.ChatBubble
 
 
 @Composable
-fun JoinChatScreen(navController: NavController) {
+fun CommunityGroupScreen(navController: NavController) {
     Box(
         modifier = Modifier
             .fillMaxSize()
@@ -85,8 +89,10 @@ fun JoinChatScreen(navController: NavController) {
             modifier = Modifier
                 .fillMaxWidth()
                 .padding(top = 16.dp),
-            horizontalArrangement = Arrangement.Start
+            horizontalArrangement = Arrangement.Start,
+            verticalAlignment = Alignment.CenterVertically
         ) {
+            // Back button
             Box(
                 modifier = Modifier
                     .clip(RoundedCornerShape(50))
@@ -100,96 +106,57 @@ fun JoinChatScreen(navController: NavController) {
                     modifier = Modifier.size(20.dp)
                 )
             }
-        }
 
-        // Konten utama di tengah vertikal
-        Column(
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(horizontal = 16.dp)
-                .align(Alignment.Center), // INI YANG MEMBUAT TENGAH VERTIKAL
-            horizontalAlignment = Alignment.CenterHorizontally
-        ) {
-
-            Spacer(modifier = Modifier.height(230.dp))
-
+            // Title
             Text(
-                text = "Wanna join our",
+                text = "Community Group",
                 style = MaterialTheme.typography.titleLarge.copy(
                     fontWeight = FontWeight(650),
-                    fontSize = 32.sp
+                    fontSize = 20.sp
                 ),
                 color = Color(0xFF2B395B),
-                textAlign = TextAlign.Center
+                textAlign = TextAlign.Start,
+                modifier = Modifier.padding(start = 8.dp)
             )
 
-            Spacer(modifier = Modifier.height(2.dp))
+            // Spacer biar icon kanan nempel ke ujung
+            Spacer(modifier = Modifier.weight(1f))
 
-            Text(
-                text = "community?",
-                style = MaterialTheme.typography.titleLarge.copy(
-                    fontWeight = FontWeight(650),
-                    fontSize = 32.sp
-                ),
-                color = Color(0xFF2B395B),
-                textAlign = TextAlign.Center
-            )
-
-            Spacer(modifier = Modifier.height(24.dp))
-
+            // Right action icons
             Row(
-                horizontalArrangement = Arrangement.spacedBy(16.dp),
                 verticalAlignment = Alignment.CenterVertically
             ) {
-                Box(
-                    modifier = Modifier
-                        .width(140.dp)
-                        .height(50.dp)
-                        .clip(RoundedCornerShape(8.dp))
-                        .background(
-                            brush = Brush.horizontalGradient(
-                                colors = listOf(
-                                    Color(0xFF82D9D2),
-                                    Color(0xFF7CC3E6),
-                                    Color(0xFF74A8FF)
-                                )
-                            ),
-                            shape = RoundedCornerShape(50)
-                        ),
-                    contentAlignment = Alignment.Center
+                IconButton(
+                    onClick = { /* TODO: Search action */ },
+                    modifier = Modifier.size(36.dp) // lebih kecil dari default
                 ) {
-                    Text(
-                        text = "YES",
-                        color = Color.White,
-                        fontSize = 18.sp,
-                        fontWeight = FontWeight.Bold
+                    Icon(
+                        imageVector = Icons.Default.Search,
+                        contentDescription = "Search",
+                        tint = Color.Black,
+                        modifier = Modifier.size(20.dp) // biar proporsional
                     )
                 }
-
-                Spacer(modifier = Modifier.width(1.dp))
-
-                Box(
-                    modifier = Modifier
-                        .width(140.dp)
-                        .height(50.dp)
-//                        .clip(RoundedCornerShape(8.dp))
-                        .background(
-                            brush = Brush.horizontalGradient(
-                                colors = listOf(
-                                    Color(0xFF82D9D2),
-                                    Color(0xFF7CC3E6),
-                                    Color(0xFF74A8FF)
-                                )
-                            ),
-                            shape = RoundedCornerShape(50)
-                        ),
-                    contentAlignment = Alignment.Center
+                IconButton(
+                    onClick = { /* TODO: Notes action */ },
+                    modifier = Modifier.size(36.dp)
                 ) {
-                    Text(
-                        text = "NO",
-                        color = Color.White,
-                        fontSize = 18.sp,
-                        fontWeight = FontWeight.Bold
+                    Icon(
+                        imageVector = Icons.Default.Notes,
+                        contentDescription = "Notes",
+                        tint = Color.Black,
+                        modifier = Modifier.size(20.dp)
+                    )
+                }
+                IconButton(
+                    onClick = { /* TODO: More options action */ },
+                    modifier = Modifier.size(36.dp)
+                ) {
+                    Icon(
+                        imageVector = Icons.Default.MoreVert,
+                        contentDescription = "More",
+                        tint = Color.Black,
+                        modifier = Modifier.size(20.dp)
                     )
                 }
             }
@@ -201,6 +168,24 @@ fun JoinChatScreen(navController: NavController) {
                 .padding(bottom = 20.dp),
             verticalArrangement = Arrangement.spacedBy(1.dp)
         ) {
+
+            ChatBubble(
+                message = "Hi, I'm Clara. I've been working",
+                sender = "anonymous 1",
+                isMine = false,
+                modifier = Modifier.padding(start = 12.dp, end = 48.dp) // margin kiri kecil, kanan lebih besar
+            )
+
+            ChatBubble(
+                message = "Hi Clara! Same here 👋",
+                sender = "Me",
+                isMine = true,
+                modifier = Modifier.padding(start = 48.dp, end = 12.dp) // margin kanan kecil, kiri lebih besar
+            )
+
+
+            Spacer(modifier = Modifier.height(15.dp))
+
             InputBar()
             BottomBarAnonymous(navController = navController)
         }
@@ -209,7 +194,7 @@ fun JoinChatScreen(navController: NavController) {
 
 @Preview(showBackground = true)
 @Composable
-fun JoinChatPreview() {
+fun CommunityGroupPreview() {
     // Gunakan dummy NavController untuk preview
-    JoinChatScreen(navController = NavController(LocalContext.current))
+    CommunityGroupScreen(navController = NavController(LocalContext.current))
 }

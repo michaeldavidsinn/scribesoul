@@ -1,6 +1,6 @@
 package com.example.scribesoul.ui.screens
 
-import com.example.scribesoul.ui.theme.Typography
+import com.example.scribesoul.ui.components.InputBar
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.runtime.Composable
@@ -14,26 +14,18 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.RadialGradientShader
-import androidx.compose.ui.graphics.drawscope.drawIntoCanvas
-import androidx.compose.ui.graphics.drawscope.withTransform
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
-import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.verticalScroll
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.res.painterResource
 import com.example.scribesoul.R
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.MoreVert
 
-import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.Image
-import androidx.compose.foundation.background
 import androidx.compose.foundation.border
-import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.runtime.getValue
@@ -43,16 +35,14 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.graphics.*
-import androidx.compose.ui.graphics.drawscope.drawIntoCanvas
-import androidx.compose.ui.graphics.drawscope.DrawScope
-import androidx.compose.ui.unit.dp
-import androidx.compose.ui.graphics.Path
 import androidx.compose.ui.graphics.drawscope.Stroke
-import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.sp
 
 import androidx.compose.ui.draw.drawWithContent
 import androidx.compose.ui.geometry.Size
+import androidx.navigation.compose.rememberNavController
+import com.example.scribesoul.ui.navigation.BottomNavItem
+
 
 @Composable
 fun AnonymousChatScreen(navController: NavController) {
@@ -149,7 +139,7 @@ fun AnonymousChatScreen(navController: NavController) {
             verticalArrangement = Arrangement.spacedBy(1.dp)
         ) {
             InputBar()
-            BottomBarAnonymous()
+            BottomBarAnonymous(navController = navController)
         }
     }
 }
@@ -286,122 +276,12 @@ fun ChatCard(
         }
     }
 }
-@Composable
-fun InputBar(modifier: Modifier = Modifier) {
-    var inputText by remember { mutableStateOf("") }
-    var isToggled by remember { mutableStateOf(false) }
-
-    Box(
-        modifier = modifier
-            .padding(horizontal = 24.dp)
-            .fillMaxWidth()
-            .height(50.dp)
-            .clip(RoundedCornerShape(25.dp))
-            .background(Color.White)
-            .drawWithContent {
-                drawContent()
-
-                val shadowColor = Color.Black.copy(alpha = 0.08f)
-                val shadowSize = 10f
-
-                // Inner shadow effect
-                drawRect(
-                    brush = Brush.verticalGradient(
-                        colors = listOf(shadowColor, Color.Transparent),
-                    ),
-                    topLeft = Offset(0f, 0f),
-                    size = Size(size.width, shadowSize)
-                )
-                drawRect(
-                    brush = Brush.verticalGradient(
-                        colors = listOf(Color.Transparent, shadowColor),
-                    ),
-                    topLeft = Offset(0f, size.height - shadowSize),
-                    size = Size(size.width, shadowSize)
-                )
-                drawRect(
-                    brush = Brush.horizontalGradient(
-                        colors = listOf(shadowColor, Color.Transparent),
-                    ),
-                    topLeft = Offset(0f, 0f),
-                    size = Size(shadowSize, size.height)
-                )
-                drawRect(
-                    brush = Brush.horizontalGradient(
-                        colors = listOf(Color.Transparent, shadowColor),
-                    ),
-                    topLeft = Offset(size.width - shadowSize, 0f),
-                    size = Size(shadowSize, size.height)
-                )
-            }
-            .border(
-                width = 0.4.dp,
-                color = Color(0xFF2B395B),
-                shape = RoundedCornerShape(25.dp)
-            ),
-        contentAlignment = Alignment.CenterStart
-    ) {
-        Row(
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(start = 12.dp, end = 8.dp),
-            verticalAlignment = Alignment.CenterVertically
-        ) {
-            TextField(
-                value = inputText,
-                onValueChange = { inputText = it },
-                placeholder = {
-                    Text(
-                        text = "write yours",
-                        fontSize = 13.sp,
-                        color = Color(0xFF2B395B).copy(alpha = 0.6f)
-                    )
-                },
-                textStyle = LocalTextStyle.current.copy(fontSize = 13.sp),
-                modifier = Modifier
-                    .weight(1f)
-                    .padding(end = 4.dp),
-                colors = TextFieldDefaults.colors(
-                    focusedContainerColor = Color.Transparent,
-                    unfocusedContainerColor = Color.Transparent,
-                    disabledContainerColor = Color.Transparent,
-                    focusedIndicatorColor = Color.Transparent,
-                    unfocusedIndicatorColor = Color.Transparent,
-                    disabledIndicatorColor = Color.Transparent
-                ),
-                singleLine = true,
-                maxLines = 1
-            )
-
-            Switch(
-                checked = isToggled,
-                onCheckedChange = { isToggled = it },
-                colors = SwitchDefaults.colors(
-                    checkedThumbColor = Color(0xFF2B395B),
-                    uncheckedThumbColor = Color.LightGray,
-                    checkedTrackColor = Color(0xFF2B395B).copy(alpha = 0.5f),
-                    uncheckedTrackColor = Color.LightGray.copy(alpha = 0.5f)
-                )
-            )
-
-            IconButton(
-                onClick = { /* TODO: aksi ketika tombol + ditekan */ }
-            ) {
-                Icon(
-                    painter = painterResource(id = R.drawable.plus), // ganti dengan ikon plus kamu
-                    contentDescription = "Add",
-                    tint = Color(0xFF2B395B)
-                )
-            }
-        }
-    }
-}
 
 @Composable
-fun BottomBarAnonymous(modifier: Modifier = Modifier) {
+fun BottomBarAnonymous(navController: NavController, modifier: Modifier = Modifier) {
     Box(
         modifier = modifier
-            .padding(start = 24.dp, end = 24.dp, top = 6.dp, bottom = 40.dp)
+            .padding(start = 24.dp, end = 24.dp, top = 6.dp, bottom = 20.dp)
             .shadow(
                 elevation = 6.dp,
                 shape = RoundedCornerShape(30.dp),
@@ -420,48 +300,38 @@ fun BottomBarAnonymous(modifier: Modifier = Modifier) {
             horizontalArrangement = Arrangement.SpaceBetween,
             verticalAlignment = Alignment.CenterVertically
         ) {
-            BottomNavItem(R.drawable.home_icon, "Home", iconSize = 28.dp)
-            BottomNavItem(R.drawable.therapist_icon, "Therapist", iconSize = 25.dp)
-            BottomNavItem(R.drawable.explore_icon_clicked, "Explore", iconSize = 40.dp)
-            BottomNavItem(R.drawable.scribble_icon, "Scribble", iconSize = 28.dp)
-            BottomNavItem(R.drawable.journal_icon, "Journal", iconSize = 25.dp)
+            BottomNavItem(R.drawable.home_icon, "Home", iconSize = 28.dp) {
+                navController.navigate("home") {
+                    launchSingleTop = true
+                }
+            }
+            BottomNavItem(R.drawable.therapist_icon, "Therapist", iconSize = 25.dp) {
+                navController.navigate("therapist") {
+                    launchSingleTop = true
+                }
+            }
+            BottomNavItem(R.drawable.explore_icon_clicked, "Explore", iconSize = 40.dp) {
+                navController.navigate("explore") {
+                    launchSingleTop = true
+                }
+            }
+            BottomNavItem(R.drawable.scribble_icon, "Scribble", iconSize = 28.dp) {
+                navController.navigate("scribble") {
+                    launchSingleTop = true
+                }
+            }
+            BottomNavItem(R.drawable.journal_icon, "Journal", iconSize = 25.dp) {
+                navController.navigate("journal") {
+                    launchSingleTop = true
+                }
+            }
         }
     }
 }
-
-@Composable
-fun BottomNavItem(iconId: Int, label: String, iconSize: Dp) {
-    Column(
-        modifier = Modifier.padding(horizontal = 4.dp), // Jarak antar item
-        horizontalAlignment = Alignment.CenterHorizontally,
-        verticalArrangement = Arrangement.Center
-    ) {
-        Box(
-            modifier = Modifier
-                .height(40.dp)
-                .width(40.dp),
-            contentAlignment = Alignment.Center
-        ) {
-            Image(
-                painter = painterResource(id = iconId),
-                contentDescription = label,
-                modifier = Modifier.size(iconSize)
-            )
-        }
-        Spacer(modifier = Modifier.height(2.dp))
-        Text(
-            text = label,
-            fontSize = 10.sp, // Ukuran lebih kecil
-            color = Color(0xFF2B395B),
-            textAlign = TextAlign.Center
-        )
-    }
-}
-
 
 @Preview(showBackground = true)
 @Composable
 fun AnonymousChatPreview() {
-    // Gunakan dummy NavController untuk preview
-    AnonymousChatScreen(navController = NavController(LocalContext.current))
+    val dummyController = rememberNavController()
+    AnonymousChatScreen(navController = dummyController)
 }
