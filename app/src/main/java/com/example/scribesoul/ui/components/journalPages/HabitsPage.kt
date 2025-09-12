@@ -52,7 +52,7 @@ fun HabitsPage(){
         modifier = Modifier
             .background(Color(0xFFFFFDB4), shape = RoundedCornerShape(size = 23.dp))
             .height(680.dp)
-            .fillMaxWidth(fraction=0.8f)
+            .fillMaxWidth(fraction=0.9f)
             .clip(RoundedCornerShape(23.dp))
             .clipToBounds()
             .padding(top = 20.dp),

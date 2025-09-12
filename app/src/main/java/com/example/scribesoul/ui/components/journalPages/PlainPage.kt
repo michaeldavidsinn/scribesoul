@@ -5,6 +5,7 @@ import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
 import androidx.compose.foundation.gestures.detectDragGestures
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
@@ -51,14 +52,14 @@ fun PlainPage(currentToolMode: ToolMode){
         modifier = Modifier
             .background(color, shape = RoundedCornerShape(size = 23.dp))
             .height(680.dp)
-            .fillMaxWidth(fraction=0.8f)
+            .fillMaxWidth(fraction=0.9f)
             .clip(RoundedCornerShape(23.dp))
             .clipToBounds()
 
     ){
 
         Canvas(modifier = Modifier
-            .height(600.dp)
+            .fillMaxHeight()
             .fillMaxWidth()
             .pointerInput(currentToolMode) {
                 detectDragGestures(
@@ -123,4 +124,11 @@ private fun androidx.compose.ui.graphics.drawscope.DrawScope.drawPathFromOffsets
         ,
         blendMode = if (mode == ToolMode.ERASE) BlendMode.Clear else BlendMode.SrcOver
     )
+}
+
+
+@Preview(showBackground = true, showSystemUi = true)
+@Composable
+fun PlainPageView(){
+    PlainPage(currentToolMode = ToolMode.DRAW)
 }

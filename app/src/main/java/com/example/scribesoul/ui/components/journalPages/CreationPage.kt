@@ -34,7 +34,7 @@ fun CreationPage(){
         modifier = Modifier
             .background(Color(0xFF74A8FF), shape = RoundedCornerShape(size = 23.dp))
             .height(680.dp)
-            .fillMaxWidth(fraction=0.8f)
+            .fillMaxWidth(fraction=0.9f)
             .clip(RoundedCornerShape(23.dp))
             .clipToBounds()
             .padding(20.dp),
@@ -90,7 +90,7 @@ fun CreationPage(){
                 horizontalAlignment = Alignment.CenterHorizontally
             )  {
                 Image(
-                    painter = painterResource(R.drawable.wide_lined),
+                    painter = painterResource(R.drawable.wide_lined_small_margins),
                     contentDescription = null,
                     modifier = Modifier
                         .width(60.dp)
@@ -112,7 +112,7 @@ fun CreationPage(){
                 horizontalAlignment = Alignment.CenterHorizontally
             )  {
                 Image(
-                    painter = painterResource(R.drawable.wide_lined),
+                    painter = painterResource(R.drawable.wide_lined_large_margins),
                     contentDescription = null,
                     modifier = Modifier
                         .width(60.dp)
@@ -139,7 +139,7 @@ fun CreationPage(){
                 horizontalAlignment = Alignment.CenterHorizontally
             )  {
                 Image(
-                    painter = painterResource(R.drawable.plain_page),
+                    painter = painterResource(R.drawable.narrow_lined),
                     contentDescription = null,
                     modifier = Modifier
                         .width(60.dp)
@@ -160,7 +160,7 @@ fun CreationPage(){
                 horizontalAlignment = Alignment.CenterHorizontally
             ) {
                 Image(
-                    painter = painterResource(R.drawable.wide_lined),
+                    painter = painterResource(R.drawable.narrow_lined_small_margins),
                     contentDescription = null,
                     modifier = Modifier
                         .width(60.dp)
@@ -182,7 +182,7 @@ fun CreationPage(){
                 horizontalAlignment = Alignment.CenterHorizontally
             )  {
                 Image(
-                    painter = painterResource(R.drawable.wide_lined),
+                    painter = painterResource(R.drawable.narrow_lined_large_margins),
                     contentDescription = null,
                     modifier = Modifier
                         .width(60.dp)
@@ -204,7 +204,7 @@ fun CreationPage(){
                 horizontalAlignment = Alignment.CenterHorizontally
             )  {
                 Image(
-                    painter = painterResource(R.drawable.wide_lined),
+                    painter = painterResource(R.drawable.small_grid),
                     contentDescription = null,
                     modifier = Modifier
                         .width(60.dp)
@@ -231,7 +231,7 @@ fun CreationPage(){
                 horizontalAlignment = Alignment.CenterHorizontally
             )  {
                 Image(
-                    painter = painterResource(R.drawable.plain_page),
+                    painter = painterResource(R.drawable.large_grid),
                     contentDescription = null,
                     modifier = Modifier
                         .width(60.dp)
@@ -252,13 +252,13 @@ fun CreationPage(){
                 horizontalAlignment = Alignment.CenterHorizontally
             )  {
                 Image(
-                    painter = painterResource(R.drawable.wide_lined),
+                    painter = painterResource(R.drawable.dotted),
                     contentDescription = null,
                     modifier = Modifier
                         .width(60.dp)
                         .height(80.dp),
                 )
-                Text("Wide Lined",
+                Text("DOTTED",
                     style = TextStyle(
                         fontSize = 8.sp,
                         fontFamily = FontFamily(Font(R.font.poppins_bold)),
@@ -294,6 +294,55 @@ fun CreationPage(){
                 horizontalAlignment = Alignment.CenterHorizontally
             )  {
                 Image(
+                    painter = painterResource(R.drawable.mood_tracker),
+                    contentDescription = null,
+                    modifier = Modifier
+                        .width(60.dp)
+                        .height(80.dp),
+                )
+                Text("MOOD\r\nTRACKER",
+                    style = TextStyle(
+                        fontSize = 7.sp,
+                        fontFamily = FontFamily(Font(R.font.poppins_bold)),
+                        fontWeight = FontWeight(600),
+                        color = Color.White,
+                        letterSpacing = 1.sp,
+                        textAlign = TextAlign.Center
+                    ),
+                    modifier = Modifier.padding(top = 2.dp)
+                )
+            }
+        }
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.SpaceBetween
+        ){
+            Column(
+                horizontalAlignment = Alignment.CenterHorizontally
+            )  {
+                Image(
+                    painter = painterResource(R.drawable.habit_tracker),
+                    contentDescription = null,
+                    modifier = Modifier
+                        .width(60.dp)
+                        .height(80.dp),
+                )
+                Text("HABIT\r\nTRACKER",
+                    style = TextStyle(
+                        fontSize = 8.sp,
+                        fontFamily = FontFamily(Font(R.font.poppins_bold)),
+                        fontWeight = FontWeight(600),
+                        color = Color.White,
+                        letterSpacing = 1.sp,
+                        textAlign = TextAlign.Center
+                    ),
+                    modifier = Modifier.padding(top = 2.dp)
+                )
+            }
+            Column(
+                horizontalAlignment = Alignment.CenterHorizontally
+            )  {
+                Image(
                     painter = painterResource(R.drawable.wide_lined),
                     contentDescription = null,
                     modifier = Modifier
@@ -301,6 +350,48 @@ fun CreationPage(){
                         .height(80.dp),
                 )
                 Text("Wide Lined",
+                    style = TextStyle(
+                        fontSize = 8.sp,
+                        fontFamily = FontFamily(Font(R.font.poppins_bold)),
+                        fontWeight = FontWeight(600),
+                        color = Color.White,
+                        letterSpacing = 1.sp,
+                    ),
+                    modifier = Modifier.padding(top = 2.dp)
+                )
+            }
+            Column(
+                horizontalAlignment = Alignment.CenterHorizontally
+            )  {
+                Image(
+                    painter = painterResource(R.drawable.wide_lined),
+                    contentDescription = null,
+                    modifier = Modifier
+                        .width(60.dp)
+                        .height(80.dp),
+                )
+                Text("HABIT TRACKER",
+                    style = TextStyle(
+                        fontSize = 8.sp,
+                        fontFamily = FontFamily(Font(R.font.poppins_bold)),
+                        fontWeight = FontWeight(600),
+                        color = Color.White,
+                        letterSpacing = 1.sp,
+                    ),
+                    modifier = Modifier.padding(top = 2.dp)
+                )
+            }
+            Column(
+                horizontalAlignment = Alignment.CenterHorizontally
+            )  {
+                Image(
+                    painter = painterResource(R.drawable.todo_list),
+                    contentDescription = null,
+                    modifier = Modifier
+                        .width(60.dp)
+                        .height(80.dp),
+                )
+                Text("TO DO LIST",
                     style = TextStyle(
                         fontSize = 8.sp,
                         fontFamily = FontFamily(Font(R.font.poppins_bold)),
@@ -341,102 +432,13 @@ fun CreationPage(){
                 horizontalAlignment = Alignment.CenterHorizontally
             )  {
                 Image(
-                    painter = painterResource(R.drawable.wide_lined),
+                    painter = painterResource(R.drawable.todo_list),
                     contentDescription = null,
                     modifier = Modifier
                         .width(60.dp)
                         .height(80.dp),
                 )
-                Text("Wide Lined",
-                    style = TextStyle(
-                        fontSize = 8.sp,
-                        fontFamily = FontFamily(Font(R.font.poppins_bold)),
-                        fontWeight = FontWeight(600),
-                        color = Color.White,
-                        letterSpacing = 1.sp,
-                    ),
-                    modifier = Modifier.padding(top = 2.dp)
-                )
-            }
-            Column(
-                horizontalAlignment = Alignment.CenterHorizontally
-            )  {
-                Image(
-                    painter = painterResource(R.drawable.wide_lined),
-                    contentDescription = null,
-                    modifier = Modifier
-                        .width(60.dp)
-                        .height(80.dp),
-                )
-                Text("Wide Lined",
-                    style = TextStyle(
-                        fontSize = 8.sp,
-                        fontFamily = FontFamily(Font(R.font.poppins_bold)),
-                        fontWeight = FontWeight(600),
-                        color = Color.White,
-                        letterSpacing = 1.sp,
-                    ),
-                    modifier = Modifier.padding(top = 2.dp)
-                )
-            }
-            Column(
-                horizontalAlignment = Alignment.CenterHorizontally
-            )  {
-                Image(
-                    painter = painterResource(R.drawable.wide_lined),
-                    contentDescription = null,
-                    modifier = Modifier
-                        .width(60.dp)
-                        .height(80.dp),
-                )
-                Text("Wide Lined",
-                    style = TextStyle(
-                        fontSize = 8.sp,
-                        fontFamily = FontFamily(Font(R.font.poppins_bold)),
-                        fontWeight = FontWeight(600),
-                        color = Color.White,
-                        letterSpacing = 1.sp,
-                    ),
-                    modifier = Modifier.padding(top = 2.dp)
-                )
-            }
-        }
-        Row(
-            modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.SpaceBetween
-        ){
-            Column(
-                horizontalAlignment = Alignment.CenterHorizontally
-            )  {
-                Image(
-                    painter = painterResource(R.drawable.plain_page),
-                    contentDescription = null,
-                    modifier = Modifier
-                        .width(60.dp)
-                        .height(80.dp),
-                )
-                Text("Wide Lined",
-                    style = TextStyle(
-                        fontSize = 8.sp,
-                        fontFamily = FontFamily(Font(R.font.poppins_bold)),
-                        fontWeight = FontWeight(600),
-                        color = Color.White,
-                        letterSpacing = 1.sp,
-                    ),
-                    modifier = Modifier.padding(top = 2.dp)
-                )
-            }
-            Column(
-                horizontalAlignment = Alignment.CenterHorizontally
-            )  {
-                Image(
-                    painter = painterResource(R.drawable.wide_lined),
-                    contentDescription = null,
-                    modifier = Modifier
-                        .width(60.dp)
-                        .height(80.dp),
-                )
-                Text("Wide Lined",
+                Text("TO DO LIST",
                     style = TextStyle(
                         fontSize = 8.sp,
                         fontFamily = FontFamily(Font(R.font.poppins_bold)),
@@ -493,7 +495,7 @@ fun CreationPage(){
     }
 }
 
-@Preview(showBackground = true)
+@Preview(showBackground = true, showSystemUi = true)
 @Composable
 fun CreationPageView(){
     CreationPage()
