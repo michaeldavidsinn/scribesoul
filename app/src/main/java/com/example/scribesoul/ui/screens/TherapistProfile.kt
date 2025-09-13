@@ -196,13 +196,14 @@ fun TherapistProfileScreen(navController: NavController) {
                                     // Padding vertikal sedikit ditambah agar ada ruang untuk 2 baris
                                     .padding(horizontal = 18.dp, vertical = 6.dp),
                                 // Menengahkan kedua teks secara horizontal
-                                horizontalAlignment = Alignment.CenterHorizontally
+                                horizontalAlignment = Alignment.CenterHorizontally,
+                                verticalArrangement = Arrangement.spacedBy((-5).dp)
                             ) {
                                 // Teks baru yang lebih besar
                                 Text(
                                     text = "4",
                                     style = MaterialTheme.typography.titleMedium.copy(
-                                        fontSize = 20.sp,
+                                        fontSize = 25.sp,
                                         fontWeight = FontWeight.Bold
                                     ),
                                     color = Color(0xFF2B395B)
@@ -232,13 +233,14 @@ fun TherapistProfileScreen(navController: NavController) {
                                     // Padding vertikal sedikit ditambah agar ada ruang untuk 2 baris
                                     .padding(horizontal = 18.dp, vertical = 6.dp),
                                 // Menengahkan kedua teks secara horizontal
-                                horizontalAlignment = Alignment.CenterHorizontally
+                                horizontalAlignment = Alignment.CenterHorizontally,
+                                verticalArrangement = Arrangement.spacedBy((-5).dp)
                             ) {
                                 // Teks baru yang lebih besar
                                 Text(
                                     text = "20",
                                     style = MaterialTheme.typography.titleMedium.copy(
-                                        fontSize = 20.sp,
+                                        fontSize = 25.sp,
                                         fontWeight = FontWeight.Bold
                                     ),
                                     color = Color(0xFF2B395B)
@@ -287,9 +289,8 @@ fun TherapistProfileScreen(navController: NavController) {
                                         .clip(RoundedCornerShape(50))
                                         .background(Color.White)
                                         .padding(horizontal = 24.dp, vertical = 20.dp),
-                                    // Menyusun item secara horizontal dengan jarak di antaranya
+
                                     horizontalArrangement = Arrangement.SpaceBetween,
-                                    // Menyelaraskan item di tengah secara vertikal
                                     verticalAlignment = Alignment.CenterVertically
                                 ) {
                                     Text(

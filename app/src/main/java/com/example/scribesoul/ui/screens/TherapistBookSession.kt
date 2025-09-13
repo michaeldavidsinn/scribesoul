@@ -71,7 +71,7 @@ fun TherapistBookSessionScreen(navController: NavController) {
             .background(
                 brush = Brush.verticalGradient(
                     colors = listOf(
-                        Color.Black.copy(alpha = 0.25f),
+                        Color(0xFFE7DBFC),
                         Color(0xFFE7DBFC),
                         Color(0xFFFFFFFF),
                         Color(0xFFE7DBFC),
@@ -219,9 +219,11 @@ fun TherapistBookSessionScreen(navController: NavController) {
                                     .clip(RoundedCornerShape(50))
                                     .background(Color.White)
                                     .padding(horizontal = 18.dp, vertical = 6.dp),
-                                horizontalAlignment = Alignment.CenterHorizontally
+                                horizontalAlignment = Alignment.CenterHorizontally,
+                                verticalArrangement = Arrangement.spacedBy((-5).dp)
+
                             ) {
-                                Text(text = "8+ Yrs", style = MaterialTheme.typography.titleMedium.copy(fontSize = 20.sp, fontWeight = FontWeight.Bold), color = Color(0xFF2B395B))
+                                Text(text = "8+ Yrs", style = MaterialTheme.typography.titleMedium.copy(fontSize = 23.sp, fontWeight = FontWeight.Bold), color = Color(0xFF2B395B))
                                 Text(text = "Experience", style = MaterialTheme.typography.labelSmall.copy(fontSize = 9.sp), color = Color(0xFF2B395B))
                             }
                         }
@@ -238,9 +240,10 @@ fun TherapistBookSessionScreen(navController: NavController) {
                                     .clip(RoundedCornerShape(50))
                                     .background(Color.White)
                                     .padding(horizontal = 18.dp, vertical = 6.dp),
-                                horizontalAlignment = Alignment.CenterHorizontally
+                                horizontalAlignment = Alignment.CenterHorizontally,
+                                verticalArrangement = Arrangement.spacedBy((-5).dp)
                             ) {
-                                Text(text = "20", style = MaterialTheme.typography.titleMedium.copy(fontSize = 20.sp, fontWeight = FontWeight.Bold), color = Color(0xFF2B395B))
+                                Text(text = "20", style = MaterialTheme.typography.titleMedium.copy(fontSize = 23.sp, fontWeight = FontWeight.Bold), color = Color(0xFF2B395B))
                                 Text(text = "Total Client", style = MaterialTheme.typography.labelSmall.copy(fontSize = 9.sp), color = Color(0xFF2B395B))
                             }
                         }
@@ -257,9 +260,10 @@ fun TherapistBookSessionScreen(navController: NavController) {
                                     .clip(RoundedCornerShape(50))
                                     .background(Color.White)
                                     .padding(horizontal = 18.dp, vertical = 6.dp),
-                                horizontalAlignment = Alignment.CenterHorizontally
+                                horizontalAlignment = Alignment.CenterHorizontally,
+                                verticalArrangement = Arrangement.spacedBy((-5).dp)
                             ) {
-                                Text(text = "8k+", style = MaterialTheme.typography.titleMedium.copy(fontSize = 20.sp, fontWeight = FontWeight.Bold), color = Color(0xFF2B395B))
+                                Text(text = "8k+", style = MaterialTheme.typography.titleMedium.copy(fontSize = 23.sp, fontWeight = FontWeight.Bold), color = Color(0xFF2B395B))
                                 Text(text = "Reviews", style = MaterialTheme.typography.labelSmall.copy(fontSize = 9.sp), color = Color(0xFF2B395B))
                             }
                         }
