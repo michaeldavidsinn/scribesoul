@@ -371,7 +371,7 @@ fun InfoCard(
     ) {
         Text(
             text = title,
-            fontSize = 22.sp,
+            fontSize = 18.sp,
             fontWeight = FontWeight.Bold,
             color = Color(0xFF2B395B)
         )

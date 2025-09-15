@@ -1,4 +1,5 @@
 package com.example.scribesoul.ui.screens
+
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -52,7 +53,7 @@ import com.google.accompanist.flowlayout.FlowRow
 
 @OptIn(ExperimentalLayoutApi::class)
 @Composable
-fun TherapistProfileScreen(navController: NavController) {
+fun TherapistCustomerServiceScreen(navController: NavController) {
 
     val gradientBrushs = Brush.horizontalGradient(
         colors = listOf(
@@ -69,7 +70,7 @@ fun TherapistProfileScreen(navController: NavController) {
                     colors = listOf(
                         Color(0xFFFFFDE6), // Hitam dengan transparansi ~50%
                         Color(0xFFFFFDE6), // Krem Sangat Muda
-                        Color(0xFFFFFFFF), // Putih
+
                         Color(0xFFFFFABE), // Krem Sangat Muda
                         Color(0xFFFFFDE6), // Hitam dengan transparansi ~50%
                     )
@@ -108,7 +109,7 @@ fun TherapistProfileScreen(navController: NavController) {
 
                 // Teks Judul (otomatis di tengah karena contentAlignment Box)
                 Text(
-                    text = "Profile",
+                    text = "Customer Service",
                     style = MaterialTheme.typography.titleLarge.copy(
                         fontWeight = FontWeight(650),
                         fontSize = 25.sp
@@ -133,136 +134,15 @@ fun TherapistProfileScreen(navController: NavController) {
                     modifier = Modifier.fillMaxSize()
                 ) {
 
-                    Box(
-                        modifier = Modifier
-                            // Menggunakan .size() agar lebar & tinggi sama untuk lingkaran sempurna
-                            .size(220.dp)
-                            .border(
-                                // --- MODIFIKASI DI SINI ---
-                                width = 2.dp, // Lebar border ditipiskan dari 3.dp menjadi 2.dp
-                                brush = Brush.linearGradient(
-                                    colors = listOf(Color(0xFF74A8FF), Color(0xFF82D9D2))
-                                ),
-                                shape = CircleShape
-                            )
-                            .clip(CircleShape) // Memotong konten di dalam (background & image) menjadi lingkaran
-                            .background(Color.White), // Background di dalam box menjadi putih polos
-                        contentAlignment = Alignment.Center // Atribut ini sudah membuat gambar di tengah lingkaran
-                    ) {
-                        Image(
-                            painter = painterResource(id = R.drawable.cat2),
-                            contentDescription = "Avatar Dokter",
-                            modifier = Modifier.size(150.dp) // ukuran gambar di dalam avatar
-                        )
-                    }
-
-                    Spacer(modifier = Modifier.height(16.dp))
-
-                    Text(
-                        text = "Eloise Hamilton",
-                        fontSize = 20.sp,
-                        fontWeight = FontWeight.Bold,
-                        color = Color(0xFF2B395B),
-                        textAlign = TextAlign.Center
-                    )
 
                     Spacer(modifier = Modifier.height(10.dp))
 
-                    Row(
-                        modifier = Modifier.fillMaxWidth(),
-                        horizontalArrangement = Arrangement.Center
-                    ) {
-                        val gradientBrush = Brush.horizontalGradient(
-                            colors = listOf(
-                                Color(0xFF74A8FF), // Warna awal
-                                Color(0xFF82D9D2)  // Warna akhir
-                            )
-                        )
-
-                        // Experience
-                        Box(
-                            modifier = Modifier
-                                // 1. Tambahkan shadow SEBELUM background
-                                // 'elevation' mengontrol ukuran dan kelembutan bayangan
-                                .shadow(elevation = 8.dp, shape = RoundedCornerShape(50))
-                                // 2. Modifier selanjutnya tetap sama
-                                .background(brush = gradientBrush, shape = RoundedCornerShape(50))
-                                .padding(1.dp) // Border thickness
-                        ) {
-                            Column(
-                                modifier = Modifier
-                                    .clip(RoundedCornerShape(50))
-                                    .background(Color.White)
-                                    // Padding vertikal sedikit ditambah agar ada ruang untuk 2 baris
-                                    .padding(horizontal = 18.dp, vertical = 6.dp),
-                                // Menengahkan kedua teks secara horizontal
-                                horizontalAlignment = Alignment.CenterHorizontally,
-                                verticalArrangement = Arrangement.spacedBy((-5).dp)
-                            ) {
-                                // Teks baru yang lebih besar
-                                Text(
-                                    text = "4",
-                                    style = MaterialTheme.typography.titleMedium.copy(
-                                        fontSize = 25.sp,
-                                        fontWeight = FontWeight.Bold
-                                    ),
-                                    color = Color(0xFF2B395B)
-                                )
-                                // Teks original
-                                Text(
-                                    text = "Therapy Session",
-                                    style = MaterialTheme.typography.labelSmall.copy(fontSize = 9.sp),
-                                    color = Color(0xFF2B395B)
-                                )
-                            }
-                        }
-
-                        Spacer(modifier = Modifier.width(10.dp))
-
-                        // Compatibility
-                        Box(
-                            modifier = Modifier
-                                .background(brush = gradientBrush, shape = RoundedCornerShape(50))
-                                .shadow(elevation = 8.dp, shape = RoundedCornerShape(50))
-                                .padding(1.dp) // Border thickness
-                        ) {
-                            Column(
-                                modifier = Modifier
-                                    .clip(RoundedCornerShape(50))
-                                    .background(Color.White)
-                                    // Padding vertikal sedikit ditambah agar ada ruang untuk 2 baris
-                                    .padding(horizontal = 18.dp, vertical = 6.dp),
-                                // Menengahkan kedua teks secara horizontal
-                                horizontalAlignment = Alignment.CenterHorizontally,
-                                verticalArrangement = Arrangement.spacedBy((-5).dp)
-                            ) {
-                                // Teks baru yang lebih besar
-                                Text(
-                                    text = "20",
-                                    style = MaterialTheme.typography.titleMedium.copy(
-                                        fontSize = 25.sp,
-                                        fontWeight = FontWeight.Bold
-                                    ),
-                                    color = Color(0xFF2B395B)
-                                )
-                                // Teks original
-                                Text(
-                                    text = "Completed Task",
-                                    style = MaterialTheme.typography.labelSmall.copy(fontSize = 9.sp),
-                                    color = Color(0xFF2B395B)
-                                )
-                            }
-                        }
-                    }
-
-
-                    Spacer(modifier = Modifier.height(20.dp))
-
                     FlowRow(
                         modifier = Modifier.fillMaxWidth(),
-                        mainAxisSpacing = 2.dp, // jarak horizontal antar chip
-                        crossAxisSpacing = 6.dp // jarak vertikal antar baris
+                        mainAxisSpacing = 2.dp,
+                        crossAxisSpacing = 6.dp
                     ) {
+
                         val gradientBrush = Brush.horizontalGradient(
                             colors = listOf(
                                 Color(0xFFFFF47A),
@@ -272,7 +152,7 @@ fun TherapistProfileScreen(navController: NavController) {
                         )
 
                         val chipTexts = listOf(
-                            "Account Info", "Therapy History", "Achievement Unlock", "Customer Service"
+                            "Feedback", "FAQ", "Privacy Policy", "Terms and Conditions"
                         )
 
                         chipTexts.forEach { text ->
@@ -325,44 +205,16 @@ fun TherapistProfileScreen(navController: NavController) {
                 }
             }
         }
-
-        Column(
-            modifier = Modifier
-                .align(Alignment.BottomCenter)
-                .padding(bottom = 80.dp)
-        ) {
-            Box(
-                modifier = Modifier
-                    .background(
-                        brush = Brush.horizontalGradient(
-                            colors = listOf(
-                                Color(0xFF82D9D2),
-                                Color(0xFF7CC3E6),
-                                Color(0xFF74A8FF)
-                            )
-                        ),
-                        shape = RoundedCornerShape(50)
-                    )
-                    .padding(horizontal = 50.dp, vertical = 13.dp)
-            ) {
-                Text(
-                    text = "LOG OUT",
-                    modifier = Modifier.padding(horizontal = 20.dp),
-                    color = Color.White,
-                    style = MaterialTheme.typography.labelMedium.copy(fontWeight = FontWeight.Bold)
-                )
-            }
-        }
     }
 }
 
 @Preview(showBackground = true)
 @Composable
-fun TherapistProfilePreview() {
+fun TherapistCustomerServicePreview() {
     val context = LocalContext.current
     val navController = remember { NavController(context) }
 
     Surface(modifier = Modifier.fillMaxSize()) {
-        TherapistProfileScreen(navController = navController)
+        TherapistCustomerServiceScreen(navController = navController)
     }
 }
