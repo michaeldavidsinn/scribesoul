@@ -1,6 +1,7 @@
 package com.example.scribesoul.ui.screens
 
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -105,6 +106,9 @@ fun ScribbleScreen(navController: NavController) {
                                     radius = 500f // Sesuaikan agar menyebar dengan baik di ukuran box
                                 )
                             )
+                            .clickable{
+                                navController.navigate("addScribble")
+                            }
                             .shadow(elevation = 4.dp, shape = RoundedCornerShape(16.dp)),
                         contentAlignment = Alignment.Center
                     ) {
@@ -222,7 +226,7 @@ fun BottomBarScribble(navController: NavController, modifier: Modifier = Modifie
                 }
             }
             BottomNavItem(R.drawable.journal_icon, "Journal", iconSize = 25.dp) {
-                navController.navigate("journal") {
+                navController.navigate("journalList") {
                     launchSingleTop = true
                 }
             }

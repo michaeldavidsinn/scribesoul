@@ -51,7 +51,7 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.scribesoul.R
-import com.example.scribesoul.ui.screens.ToolMode
+import com.example.scribesoul.models.ToolMode
 
 //(0XFFFFFEE4)
 
@@ -64,8 +64,8 @@ fun CalendarPage(currentToolMode: ToolMode){
     Box(
         modifier = Modifier
             .background(color, shape = RoundedCornerShape(size = 23.dp))
-            .height(680.dp)
-            .fillMaxWidth(fraction=0.9f)
+            .height(640.dp)
+            .fillMaxWidth(fraction=0.8f)
 
             .clip(RoundedCornerShape(23.dp))
             .clipToBounds()

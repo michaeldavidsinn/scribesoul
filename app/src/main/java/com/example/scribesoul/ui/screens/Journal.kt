@@ -3,8 +3,16 @@ package com.example.scribesoul.ui.screens
 
 
 import HabitCalendar
+import android.net.Uri
 import android.os.Build
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.annotation.RequiresApi
+import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.expandVertically
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.animation.shrinkVertically
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
@@ -23,11 +31,19 @@ import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyRow
+import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material3.DropdownMenu
+import androidx.compose.material3.DropdownMenuItem
+import androidx.compose.material3.Icon
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Slider
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableFloatStateOf
 import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -35,6 +51,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.draw.rotate
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.toRect
 import androidx.compose.ui.graphics.BlendMode
@@ -50,10 +67,6 @@ import androidx.compose.ui.graphics.drawscope.drawIntoCanvas
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
-import androidx.compose.ui.text.TextStyle
-import androidx.compose.ui.text.font.Font
-import androidx.compose.ui.text.font.FontFamily
-import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -65,15 +78,89 @@ import com.example.scribesoul.ui.components.journalPages.PlainPage
 import com.example.scribesoul.ui.components.splitWords
 import com.example.scribesoul.viewModels.JournalViewModel
 import androidx.lifecycle.viewmodel.compose.viewModel
+import com.example.scribesoul.commands.AddImageCommand
+import com.example.scribesoul.commands.AddShapeCommand
+import com.example.scribesoul.commands.ChangeFillStyleCommand
+import com.example.scribesoul.commands.Command
+import com.example.scribesoul.commands.LayerDirection
+import com.example.scribesoul.commands.LayeringCommand
+import com.example.scribesoul.models.Colorable
+import com.example.scribesoul.models.DrawablePath
+import com.example.scribesoul.models.EditableText
+import com.example.scribesoul.models.ImageLayer
+import com.example.scribesoul.models.ItemGroup
+import com.example.scribesoul.models.LinearGradient as LinearGradientFill
+import com.example.scribesoul.models.Movable
+import com.example.scribesoul.models.ShapeItem
+import com.example.scribesoul.models.*
+import com.example.scribesoul.models.SolidColor as SolidColorFill
+import com.example.scribesoul.models.ToolMode
+import com.example.scribesoul.ui.components.journalPages.CalendarPage
 import com.example.scribesoul.ui.components.journalPages.HabitsPage
 
+//fix undo redo to implement for each pages, scribble still needs revamping
 
 @RequiresApi(Build.VERSION_CODES.O)
 @Composable
 fun JournalScreen(navController: NavController, journalViewModel: JournalViewModel){
-    val paths = remember { mutableStateListOf<Pair<List<Offset>, ToolMode>>() }
-    var toolMode by remember { mutableStateOf(ToolMode.DRAW) }
-    var currentPath by remember { mutableStateOf<List<Offset>>(emptyList()) }
+    val section = journalViewModel.sections.getOrNull(journalViewModel.selectedSectionIndex)
+    val page = section?.pages?.getOrNull(journalViewModel.selectedPageIndex)
+
+
+    val imagePickerLauncher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.GetContent()
+    ) { uri: Uri? ->
+        uri?.let {
+            journalViewModel.executeCommand(AddImageCommand(ImageLayer(uri = it, offset = journalViewModel.canvasCenter.value), journalViewModel.imageLayers))
+        }
+    }
+
+    if (journalViewModel.colorPickerTarget != null) {
+        val initialColor = when (journalViewModel.colorPickerTarget) {
+            ColorPickerTarget.DRAW_STROKE -> journalViewModel.drawColor
+            ColorPickerTarget.EDIT_SELECTION -> {
+                val firstSelected = (journalViewModel.selectedItems.firstOrNull() as? Colorable)
+                    ?: journalViewModel.selectedPaths.firstOrNull()
+                (firstSelected?.fill as? SolidColorFill)?.color ?: Color.Black
+            }
+            ColorPickerTarget.ADD_SHAPE -> Color.Red
+            else -> Color.Black
+        }
+
+        ColorPickerDialog(
+            initialColor = initialColor,
+            onDismissRequest = { journalViewModel.colorPickerTarget = null },
+            onColorSelected = { selectedColor ->
+                when (journalViewModel.colorPickerTarget) {
+                    ColorPickerTarget.DRAW_STROKE -> journalViewModel.drawColor = selectedColor
+                    ColorPickerTarget.EDIT_SELECTION -> {
+                        val allTargets = journalViewModel.selectedItems.toList() + journalViewModel.selectedPaths.toList()
+                        journalViewModel.executeCommand(ChangeFillStyleCommand(allTargets, SolidColorFill(selectedColor)))
+                    }
+                    ColorPickerTarget.ADD_SHAPE -> {
+                        journalViewModel.pendingShapeType?.let { shapeType ->
+                            journalViewModel.executeCommand(AddShapeCommand(ShapeItem(shapeType, journalViewModel.canvasCenter.value, fill = SolidColorFill(selectedColor)), journalViewModel.shapes))
+                        }
+                    }
+                    null -> {}
+                }
+                journalViewModel.colorPickerTarget = null
+                journalViewModel.pendingShapeType = null
+            }
+        )
+    }
+
+    if (journalViewModel.showGradientPicker) {
+        GradientPickerDialog(
+            onDismissRequest = { journalViewModel.showGradientPicker = false },
+            onGradientSelected = { colors ->
+                val allTargets = journalViewModel.selectedItems.toList() + journalViewModel.selectedPaths.toList()
+                journalViewModel.executeCommand(ChangeFillStyleCommand(allTargets, LinearGradientFill(colors))
+                journalViewModel.showGradientPicker = false
+            }
+        )
+    }
+
 
     Box(
         modifier = Modifier
@@ -89,73 +176,153 @@ fun JournalScreen(navController: NavController, journalViewModel: JournalViewMod
         ,
         contentAlignment = Alignment.TopCenter
     ){
-        Row(
-            modifier = Modifier
-                .align(Alignment.TopEnd)
-                .padding(top = 20.dp, end = 20.dp),
-            horizontalArrangement = Arrangement.spacedBy(16.dp)
-        ) {
-            Image(
-                painter = painterResource(id = R.drawable.pencil),
-                contentDescription = "Pencil",
-                modifier = Modifier
-                    .size(36.dp)
-                    .clickable { toolMode = ToolMode.DRAW }
-            )
-            Image(
-                painter = painterResource(id = R.drawable.eraser),
-                contentDescription = "Eraser",
-                modifier = Modifier
-                    .size(36.dp)
-                    .clickable { toolMode = ToolMode.ERASE }
-            )
+        Row(modifier = Modifier.fillMaxWidth().padding(horizontal = 15.dp).offset(y = 40.dp), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.CenterVertically){
+            Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
+                // -- FIX: Logika Undo/Redo yang benar --
+                Image(painter = painterResource(id = R.drawable.arrow_left), contentDescription = "Undo",
+                    modifier = Modifier.size(20.dp).clickable(enabled = journalViewModel.undoStack.isNotEmpty()) {
+                        val commandToUndo = journalViewModel.undoStack.removeLastOrNull()
+                        commandToUndo?.let {
+                            it.undo()
+                            journalViewModel.redoStack.add(it)
+                        }
+                    })
+                Image(painter = painterResource(id = R.drawable.arrow_right), contentDescription = "Redo",
+                    modifier = Modifier.size(20.dp).clickable(enabled = journalViewModel.redoStack.isNotEmpty()) {
+                        val commandToRedo = journalViewModel.redoStack.removeLastOrNull()
+                        commandToRedo?.let {
+                            it.execute()
+                            journalViewModel.undoStack.add(it)
+                        }
+                    })
+            }
+
+            Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
+                Image(painter = painterResource(id = R.drawable.text), contentDescription = "Text", modifier = Modifier.size(18.dp).clickable { journalViewModel.isAddingText = true })
+                Image(painter = painterResource(id = R.drawable.lassotool), contentDescription = "Lasso", modifier = Modifier.size(22.dp).clickable { journalViewModel.toolMode = ToolMode.Lasso })
+                Image(painter = painterResource(id = R.drawable.image), contentDescription = "Image", modifier = Modifier.size(22.dp).clickable { imagePickerLauncher.launch("image/*") })
+                Box {
+                    Image(painter = painterResource(id = R.drawable.shapeasset), contentDescription = "Shape", modifier = Modifier.size(22.dp).clickable { journalViewModel.showShapeMenu.value = true })
+                    DropdownMenu(expanded = journalViewModel.showShapeMenu.value, onDismissRequest = { journalViewModel.showShapeMenu.value = false }) {
+                        DropdownMenuItem(onClick = { journalViewModel.pendingShapeType = "Circle"; journalViewModel.colorPickerTarget = ColorPickerTarget.ADD_SHAPE; journalViewModel.showShapeMenu.value = false }, text = { Text("Circle") })
+                        DropdownMenuItem(onClick = { journalViewModel.pendingShapeType = "Rectangle"; journalViewModel.colorPickerTarget = ColorPickerTarget.ADD_SHAPE; journalViewModel.showShapeMenu.value = false }, text = { Text("Rectangle") })
+                        DropdownMenuItem(onClick = { journalViewModel.pendingShapeType = "Star"; journalViewModel.colorPickerTarget = ColorPickerTarget.ADD_SHAPE; journalViewModel.showShapeMenu.value = false }, text = { Text("Star") })
+                        DropdownMenuItem(onClick = { journalViewModel.pendingShapeType = "Triangle"; journalViewModel.colorPickerTarget = ColorPickerTarget.ADD_SHAPE; journalViewModel.showShapeMenu.value = false }, text = { Text("Triangle") })
+                        DropdownMenuItem(onClick = { journalViewModel.pendingShapeType = "Hexagon"; journalViewModel.colorPickerTarget = ColorPickerTarget.ADD_SHAPE; journalViewModel.showShapeMenu.value = false }, text = { Text("Hexagon") })
+                    }
+                }
+                Image(painter = painterResource(id = R.drawable.pencil), contentDescription = "Pencil", modifier = Modifier.size(22.dp).clickable {
+                    journalViewModel.toolMode = ToolMode.DRAW; journalViewModel.colorPickerTarget = ColorPickerTarget.DRAW_STROKE
+                })
+                Image(painter = painterResource(id = R.drawable.eraser), contentDescription = "Eraser", modifier = Modifier.size(22.dp).clickable { journalViewModel.toolMode = ToolMode.ERASE })
+                Box {
+                    val isLayerMenuEnabled = journalViewModel.selectedItems.size == 1
+                    Image(
+                        painter = painterResource(id = R.drawable.layer), contentDescription = "Layer",
+                        modifier = Modifier.size(22.dp).clickable(enabled = isLayerMenuEnabled) { journalViewModel.showLayerMenu.value = true },
+                        alpha = if (isLayerMenuEnabled) 1f else 0.4f
+                    )
+                    DropdownMenu(expanded = journalViewModel.showLayerMenu.value, onDismissRequest = { journalViewModel.showLayerMenu.value = false }) {
+                        DropdownMenuItem(text = { Text("Bring to Front") }, onClick = {
+                            if (isLayerMenuEnabled) {
+                                journalViewModel.executeCommand(LayeringCommand(journalViewModel.selectedItems.first(), listOf(journalViewModel.texts, journalViewModel.shapes, journalViewModel.imageLayers, journalViewModel.groups), LayerDirection.TO_FRONT))
+                            }; journalViewModel.showLayerMenu.value = false
+                        })
+                        DropdownMenuItem(text = { Text("Send to Back") }, onClick = {
+                            if (isLayerMenuEnabled) {
+                                journalViewModel.executeCommand(LayeringCommand(journalViewModel.selectedItems.first(), listOf(journalViewModel.texts, journalViewModel.shapes, journalViewModel.imageLayers, journalViewModel.groups), LayerDirection.TO_BACK))
+                            }; journalViewModel.showLayerMenu.value = false
+                        })
+                    }
+                }
+                Image(painter = painterResource(id = R.drawable.dot3), contentDescription = "More", modifier = Modifier.size(22.dp))
         }
+
+        }
+
+
 
         Box(
             modifier = Modifier
                 .align(Alignment.Center)
-                .offset(x = -20.dp)
+                .offset(x = -5.dp, y= -20.dp)
         ) {
             Column(
                 modifier = Modifier.fillMaxWidth(fraction = 0.75f).offset(250.dp)
             ) {
-                Row(
-                    modifier = Modifier
 
-                        .width(94.dp)
-                        .height(59.dp)
-                        .background(color = Color(0xFF9DF7FF), shape = RoundedCornerShape(size = 23.dp))
-                        .clickable(onClick = {
-                            journalViewModel.changeSelectedSection(1)
-                        })
-                ){
+                    LazyColumn {
+                        itemsIndexed(journalViewModel.sections){ index, section ->
+                                Row(
+                                    modifier = Modifier
+
+                                        .width(94.dp)
+                                        .height(59.dp)
+                                        .background(color = section.color, shape = RoundedCornerShape(size = 23.dp))
+                                        .clickable(onClick = {
+                                            journalViewModel.changeSelectedSection(index)
+                                        })
+                                ) {
+
+                                }
+                        }
+
 
                 }
-                Row(
-                    modifier = Modifier
 
-                        .width(94.dp)
-                        .height(59.dp)
-                        .background(color = Color(0xFF74A8FF), shape = RoundedCornerShape(size = 23.dp))
-                        .clickable(onClick = {
-                            journalViewModel.changeSelectedSection(0)
-                        })
-                ) {
 
+            }
+            val section = journalViewModel.sections.getOrNull(journalViewModel.selectedSectionIndex)
+            val page = section?.pages?.getOrNull(journalViewModel.selectedPageIndex)
+            if (section?.type == SectionType.Creation) {
+                CreationPage(
+                    onAddPlainPage = { journalViewModel.addSection(SectionType.Plain) },
+                    onAddHabitsPage = { journalViewModel.addSection(SectionType.Habits) },
+                    onAddCalendarPage = { journalViewModel.addSection(SectionType.Calendar) }
+                )
+            } else if (page != null) {
+                when (page) {
+                    is JournalPage.PlainPage -> PlainPage(journalViewModel, page, section.color)
+                    is JournalPage.HabitsPage -> HabitsPage()
+                    is JournalPage.CalendarPage -> CalendarPage(ToolMode.DRAW)
                 }
             }
 
-            if(journalViewModel.selectedSectionID == 0){
-                CreationPage()
-            }else{
-                PlainPage(toolMode)
-            }
 
 
 
 
         }
 
+        AnimatedVisibility(
+            visible = journalViewModel.toolMode == ToolMode.DRAW || journalViewModel.toolMode == ToolMode.ERASE,
+            enter = expandVertically(expandFrom = Alignment.Top) + fadeIn(),
+            exit = shrinkVertically(shrinkTowards = Alignment.Top) + fadeOut(),
+            modifier = Modifier.align(Alignment.CenterStart).padding(start = 16.dp)
+        ) {
+            Column(
+                modifier = Modifier.background(MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.8f), RoundedCornerShape(8.dp)).padding(horizontal = 8.dp, vertical = 12.dp),
+                horizontalAlignment = Alignment.CenterHorizontally,
+                verticalArrangement = Arrangement.spacedBy(12.dp)
+            ) {
+                if (journalViewModel.toolMode == ToolMode.DRAW) {
+                    Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                        Icon(painterResource(id = R.drawable.pencil), contentDescription = "Pencil", Modifier.size(24.dp))
+                        Text("Draw", fontSize = 12.sp)
+                        Slider(value = journalViewModel.drawThickness, onValueChange = { journalViewModel.drawThickness = it }, valueRange = 1f..50f, modifier = Modifier.width(80.dp).height(150.dp).rotate(270f))
+                        Text("${journalViewModel.drawThickness.toInt()}", fontSize = 12.sp, color = MaterialTheme.colorScheme.primary)
+                    }
+                }
+                if (journalViewModel.toolMode == ToolMode.ERASE) {
+                    Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                        Icon(painterResource(id = R.drawable.eraser), contentDescription = "Eraser", Modifier.size(24.dp))
+                        Text("Erase", fontSize = 12.sp)
+                        Slider(value = journalViewModel.eraseThickness, onValueChange = { journalViewModel.eraseThickness = it }, valueRange = 10f..100f, modifier = Modifier.width(70.dp).height(150.dp).rotate(270f))
+                        Text("${journalViewModel.eraseThickness.toInt()}", fontSize = 12.sp, color = MaterialTheme.colorScheme.primary)
+                    }
+                }
+            }
+        }
 
         Column(
             modifier = Modifier
@@ -164,7 +331,7 @@ fun JournalScreen(navController: NavController, journalViewModel: JournalViewMod
             verticalArrangement = Arrangement.spacedBy(1.dp)
         ) {
 
-            BottomBarHome()
+            BottomBarJournal(navController)
         }
 
     }

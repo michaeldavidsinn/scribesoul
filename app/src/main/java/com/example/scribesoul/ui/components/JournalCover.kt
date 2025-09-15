@@ -1,6 +1,7 @@
 package com.example.scribesoul.ui.components
 
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -50,6 +51,9 @@ fun splitWords(sentence: String): Array<String>{
 @Composable
 fun JournalCover(navController: NavController, journalTitle: String, journalDate: String, journalId: String){
     Column(
+        modifier = Modifier.clickable{
+            navController.navigate("journal")
+        },
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
         Box(

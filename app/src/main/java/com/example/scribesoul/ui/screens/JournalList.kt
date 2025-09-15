@@ -5,8 +5,10 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
@@ -17,6 +19,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
@@ -30,6 +33,7 @@ import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
 import com.example.scribesoul.R
 import com.example.scribesoul.ui.components.JournalCover
+import com.example.scribesoul.ui.navigation.BottomNavItem
 
 @Composable
 fun JournalListScreen(navController: NavController){
@@ -135,12 +139,64 @@ fun JournalListScreen(navController: NavController){
             verticalArrangement = Arrangement.spacedBy(1.dp)
         ) {
 
-            BottomBarHome()
+            BottomBarJournal(navController)
         }
 
     }
 
 
+}
+
+@Composable
+fun BottomBarJournal(navController: NavController, modifier: Modifier = Modifier) {
+    Box(
+        modifier = modifier
+            .padding(start = 24.dp, end = 24.dp, top = 6.dp, bottom = 40.dp)
+            .shadow(
+                elevation = 6.dp,
+                shape = RoundedCornerShape(30.dp),
+                clip = false
+            )
+            .clip(RoundedCornerShape(30.dp))
+            .background(Color.White)
+            .height(70.dp)
+            .fillMaxWidth(),
+        contentAlignment = Alignment.Center
+    ) {
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(horizontal = 12.dp),
+            horizontalArrangement = Arrangement.SpaceBetween,
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            BottomNavItem(R.drawable.home_icon, "Home", 28.dp) {
+                navController.navigate("home") {
+                    launchSingleTop = true
+                }
+            }
+            BottomNavItem(R.drawable.therapist_icon, "Therapist", 25.dp) {
+                navController.navigate("therapist") {
+                    launchSingleTop = true
+                }
+            }
+            BottomNavItem(R.drawable.explore_icon, "Explore", 25.dp) {
+                navController.navigate("explore") {
+                    launchSingleTop = true
+                }
+            }
+            BottomNavItem(R.drawable.scribble_icon, "Scribble", 28.dp) {
+                navController.navigate("scribble") {
+                    launchSingleTop = true
+                }
+            }
+            BottomNavItem(R.drawable.journal_icon_clicked, "Journal", 25.dp) {
+                navController.navigate("journalList") {
+                    launchSingleTop = true
+                }
+            }
+        }
+    }
 }
 
 

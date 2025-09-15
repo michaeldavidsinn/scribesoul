@@ -40,8 +40,6 @@ android {
 }
 
 dependencies {
-    // Compose BOM
-    implementation(platform("androidx.compose:compose-bom:2024.05.00"))
 
     // Compose
     implementation("androidx.compose.ui:ui")
@@ -53,9 +51,7 @@ dependencies {
     // Coil
     implementation("io.coil-kt:coil-compose:2.4.0")
 
-    implementation("androidx.compose.material3:material3:1.2.0")
     implementation("androidx.lifecycle:lifecycle-viewmodel-compose:2.8.6")
-    implementation("androidx.navigation:navigation-compose:2.9.0")
     implementation("com.squareup.retrofit2:retrofit:2.9.0")
     implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:1.5.1")
     implementation("androidx.datastore:datastore-preferences:1.0.0")
@@ -76,7 +72,8 @@ dependencies {
     implementation(libs.androidx.ui.tooling.preview)
     implementation(libs.androidx.material3)
     implementation(libs.androidx.navigation.runtime.android)
-    implementation(libs.androidx.navigation.compose.jvmstubs)
+//    implementation(libs.androidx.navigation.compose.jvmstubs)
+    implementation("androidx.navigation:navigation-compose:2.8.3")
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.junit)
     androidTestImplementation(libs.androidx.espresso.core)

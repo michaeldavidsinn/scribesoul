@@ -56,8 +56,8 @@ fun MoodPage(list: List<Float> = listOf(4f, 2f, 3f, 1f, 5f,2f)){
     Column(
         modifier = Modifier
             .background(Color(0xFFFFFDB4), shape = RoundedCornerShape(size = 23.dp))
-            .height(680.dp)
-            .fillMaxWidth(fraction=0.9f)
+            .height(640.dp)
+            .fillMaxWidth(fraction=0.8f)
             .clip(RoundedCornerShape(23.dp))
             .clipToBounds()
             .padding(top = 20.dp),

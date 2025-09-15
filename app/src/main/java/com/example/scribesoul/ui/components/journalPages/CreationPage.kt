@@ -2,6 +2,7 @@ package com.example.scribesoul.ui.components.journalPages
 
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -29,12 +30,16 @@ import androidx.compose.ui.unit.sp
 import com.example.scribesoul.R
 
 @Composable
-fun CreationPage(){
+fun CreationPage(
+    onAddPlainPage: () -> Unit,
+    onAddHabitsPage: () -> Unit,
+    onAddCalendarPage: () -> Unit
+){
     Column(
         modifier = Modifier
             .background(Color(0xFF74A8FF), shape = RoundedCornerShape(size = 23.dp))
-            .height(680.dp)
-            .fillMaxWidth(fraction=0.9f)
+            .height(640.dp)
+            .fillMaxWidth(fraction=0.8f)
             .clip(RoundedCornerShape(23.dp))
             .clipToBounds()
             .padding(20.dp),
@@ -45,7 +50,8 @@ fun CreationPage(){
             horizontalArrangement = Arrangement.SpaceBetween
         ){
             Column(
-                horizontalAlignment = Alignment.CenterHorizontally
+                horizontalAlignment = Alignment.CenterHorizontally,
+                modifier = Modifier.clickable{onAddPlainPage()}
             )  {
                 Image(
                     painter = painterResource(R.drawable.plain_page),
@@ -493,10 +499,4 @@ fun CreationPage(){
             }
         }
     }
-}
-
-@Preview(showBackground = true, showSystemUi = true)
-@Composable
-fun CreationPageView(){
-    CreationPage()
 }

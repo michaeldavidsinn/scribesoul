@@ -321,7 +321,7 @@ fun BottomBarAnonymous(navController: NavController, modifier: Modifier = Modifi
                 }
             }
             BottomNavItem(R.drawable.journal_icon, "Journal", iconSize = 25.dp) {
-                navController.navigate("journal") {
+                navController.navigate("journalList") {
                     launchSingleTop = true
                 }
             }

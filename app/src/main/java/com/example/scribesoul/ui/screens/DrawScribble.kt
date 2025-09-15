@@ -81,7 +81,7 @@ import kotlin.math.sin
 
 data class GuideLine(val start: Offset, val end: Offset)
 
-private enum class ColorPickerTarget {
+enum class ColorPickerTarget {
     DRAW_STROKE,
     EDIT_SELECTION,
     ADD_SHAPE
@@ -888,7 +888,7 @@ private fun ColorInputRow(label: String, sliderColor: Color, value: Float, onVal
     }
 }
 
-private fun DrawScope.drawPathFromFill(offsets: List<Offset>, fill: FillStyle, mode: ToolMode, thickness: Float) {
+fun DrawScope.drawPathFromFill(offsets: List<Offset>, fill: FillStyle, mode: ToolMode, thickness: Float) {
     if (offsets.size < 2) return
     val path = Path().apply {
         moveTo(offsets.first().x, offsets.first().y)

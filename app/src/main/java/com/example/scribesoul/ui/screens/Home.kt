@@ -61,6 +61,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
 import com.example.scribesoul.R
+import com.example.scribesoul.ui.navigation.BottomNavItem
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 
@@ -273,7 +274,7 @@ fun HomeScreen(navController: NavController) {
 
                         Column (
                             modifier = Modifier.clickable(onClick = {
-
+                                navController.navigate("mental")
                             }),
                             horizontalAlignment = Alignment.CenterHorizontally
                         ){
@@ -950,7 +951,7 @@ fun HomeScreen(navController: NavController) {
             verticalArrangement = Arrangement.spacedBy(1.dp)
         ) {
 
-            BottomBarHome()
+            BottomBarHome(navController)
         }
     }
 }
@@ -959,7 +960,7 @@ fun HomeScreen(navController: NavController) {
 
 
 @Composable
-fun BottomBarHome(modifier: Modifier = Modifier) {
+fun BottomBarHome(navController: NavController, modifier: Modifier = Modifier) {
     Box(
         modifier = modifier
             .padding(start = 24.dp, end = 24.dp, top = 6.dp, bottom = 40.dp)
@@ -981,11 +982,33 @@ fun BottomBarHome(modifier: Modifier = Modifier) {
             horizontalArrangement = Arrangement.SpaceBetween,
             verticalAlignment = Alignment.CenterVertically
         ) {
-            BottomNavItem(R.drawable.home_icon_clicked, "Home", iconSize = 46.dp)
-            BottomNavItem(R.drawable.therapist_icon, "Therapist", iconSize = 25.dp)
-            BottomNavItem(R.drawable.explore_icon, "Explore", iconSize = 25.dp)
-            BottomNavItem(R.drawable.scribble_icon, "Scribble", iconSize = 25.dp)
-            BottomNavItem(R.drawable.journal_icon, "Journal", iconSize = 25.dp)
+            BottomNavItem(
+                R.drawable.home_icon_clicked, "Home", iconSize = 46.dp, onClick = {
+                navController.navigate("home") {
+                    launchSingleTop = true
+                }
+
+            })
+            BottomNavItem(R.drawable.therapist_icon, "Therapist", iconSize = 25.dp, onClick = {
+                navController.navigate("therapist") {
+                    launchSingleTop = true
+                }
+            })
+            BottomNavItem(R.drawable.explore_icon, "Explore", iconSize = 25.dp, onClick = {
+                navController.navigate("explore") {
+                    launchSingleTop = true
+                }
+            })
+            BottomNavItem(R.drawable.scribble_icon, "Scribble", iconSize = 25.dp, onClick = {
+                navController.navigate("scribble") {
+                    launchSingleTop = true
+                }
+            })
+            BottomNavItem(R.drawable.journal_icon, "Journal", iconSize = 25.dp, onClick = {
+                navController.navigate("journalList") {
+                    launchSingleTop = true
+                }
+            })
         }
     }
 }

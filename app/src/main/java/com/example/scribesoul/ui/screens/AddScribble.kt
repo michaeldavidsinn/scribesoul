@@ -4,6 +4,7 @@ package com.example.scribesoul.ui.screens
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -66,7 +67,7 @@ fun AddScribbleScreen(navController: NavController) {
                 .fillMaxSize(),
             contentAlignment = Alignment.Center
         ) {
-            GradientCard(modifier = Modifier.offset(y = (-32).dp)) // naik 32dp
+            GradientCard(modifier = Modifier.offset(y = (-32).dp), navController) // naik 32dp
         }
 
         // Bottom bar tetap di bawah
@@ -82,9 +83,12 @@ fun AddScribbleScreen(navController: NavController) {
 }
 
 @Composable
-fun GradientCard(modifier: Modifier = Modifier) {
+fun GradientCard(modifier: Modifier = Modifier, navController: NavController) {
     Box(
         modifier = modifier
+            .clickable{
+                navController.navigate("scribbleDraw")
+            }
             .width(200.dp)
             .height(300.dp)
             .clip(RoundedCornerShape(16.dp))

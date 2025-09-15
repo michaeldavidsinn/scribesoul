@@ -315,7 +315,7 @@ fun BottomBarTherapist(navController: NavController, modifier: Modifier = Modifi
                 }
             }
             BottomNavItem(R.drawable.journal_icon, "Journal", 25.dp) {
-                navController.navigate("journal") {
+                navController.navigate("journalList") {
                     launchSingleTop = true
                 }
             }
