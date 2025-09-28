@@ -142,7 +142,8 @@ fun TherapistChangePasswordScreen(navController: NavController) {
 @Composable
 fun RequirementItem(text: String, satisfied: Boolean) {
     Row(
-        verticalAlignment = Alignment.CenterVertically
+        verticalAlignment = Alignment.CenterVertically,
+        modifier = Modifier.padding(start = 40.dp)
     ) {
         Box(
             modifier = Modifier
