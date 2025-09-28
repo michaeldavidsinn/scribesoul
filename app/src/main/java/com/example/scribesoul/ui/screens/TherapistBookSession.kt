@@ -71,11 +71,9 @@ fun TherapistBookSessionScreen(navController: NavController) {
             .background(
                 brush = Brush.verticalGradient(
                     colors = listOf(
-                        Color(0xFFE7DBFC),
-                        Color(0xFFE7DBFC),
-                        Color(0xFFFFFFFF),
-                        Color(0xFFE7DBFC),
-                        Color.Black.copy(alpha = 0.25f),
+                        Color(0xFFF6F6F6), // Putih
+                        Color(0xFFFFFFFF), // Putih
+                        Color(0xFFF6F6F6), // Putih
                     )
                 )
             )

@@ -42,7 +42,15 @@ fun TherapistChangePasswordScreen(navController: NavController) {
     Box(
         modifier = Modifier
             .fillMaxSize()
-            .background(Color(0xFFFFFDE6))
+            .background(
+                brush = Brush.verticalGradient(
+                    colors = listOf(
+                        Color(0xFFF6F6F6), // Putih
+                        Color(0xFFFFFFFF), // Putih
+                        Color(0xFFF6F6F6), // Putih
+                    )
+                )
+            )
             .padding(20.dp)
     ) {
         Column(

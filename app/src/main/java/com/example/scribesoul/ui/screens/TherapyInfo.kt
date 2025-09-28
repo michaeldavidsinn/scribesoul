@@ -43,10 +43,9 @@ fun TherapyInfoScreen(navController: NavController) {
             .background(
                 brush = Brush.verticalGradient(
                     colors = listOf(
-                        Color(0xFFFFFDE6),
-                        Color(0xFFFFFDE6),
-                        Color(0xFFFFFABE),
-                        Color(0xFFFFFDE6),
+                        Color(0xFFF6F6F6), // Putih
+                        Color(0xFFFFFFFF), // Putih
+                        Color(0xFFF6F6F6), // Putih
                     )
                 )
             )
