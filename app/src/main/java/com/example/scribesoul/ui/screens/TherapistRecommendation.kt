@@ -43,11 +43,13 @@ fun TherapistRecommendationScreen(navController: NavController) {
         modifier = Modifier
             .fillMaxSize()
             .background(
-                brush = Brush.verticalGradient(
+                brush = Brush.radialGradient(
                     colors = listOf(
-                        Color.White,
-                        Color(0xFFFFFDE6)
-                    )
+                        Color(0xFFE0ECFF), // biru muda
+                        Color(0xFFE1F9DF)  // hijau muda
+                    ),
+                    // pusat radial di tengah layar
+                    radius = 1000f            // atur besar radius
                 )
             )
     ) {
