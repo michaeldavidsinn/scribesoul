@@ -2,7 +2,6 @@ package com.example.scribesoul.ui.screens
 
 
 
-import HabitCalendar
 import android.net.Uri
 import android.os.Build
 import androidx.activity.compose.rememberLauncherForActivityResult
@@ -13,17 +12,13 @@ import androidx.compose.animation.expandVertically
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.animation.shrinkVertically
-import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
-import androidx.compose.foundation.gestures.detectDragGestures
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
@@ -32,7 +27,6 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.DropdownMenu
@@ -42,29 +36,17 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Slider
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableFloatStateOf
-import androidx.compose.runtime.mutableStateListOf
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.rotate
 import androidx.compose.ui.geometry.Offset
-import androidx.compose.ui.geometry.toRect
 import androidx.compose.ui.graphics.BlendMode
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.Paint
 import androidx.compose.ui.graphics.Path
-import androidx.compose.ui.graphics.RectangleShape
 import androidx.compose.ui.graphics.StrokeCap
 import androidx.compose.ui.graphics.StrokeJoin
 import androidx.compose.ui.graphics.drawscope.Stroke
-import androidx.compose.ui.graphics.drawscope.drawIntoCanvas
-import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.tooling.preview.Preview
@@ -72,25 +54,18 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
 import com.example.scribesoul.R
-import com.example.scribesoul.ui.components.JournalCover
 import com.example.scribesoul.ui.components.journalPages.CreationPage
 import com.example.scribesoul.ui.components.journalPages.PlainPage
-import com.example.scribesoul.ui.components.splitWords
 import com.example.scribesoul.viewModels.JournalViewModel
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.scribesoul.commands.AddImageCommand
 import com.example.scribesoul.commands.AddShapeCommand
 import com.example.scribesoul.commands.ChangeFillStyleCommand
-import com.example.scribesoul.commands.Command
 import com.example.scribesoul.commands.LayerDirection
 import com.example.scribesoul.commands.LayeringCommand
 import com.example.scribesoul.models.Colorable
-import com.example.scribesoul.models.DrawablePath
-import com.example.scribesoul.models.EditableText
 import com.example.scribesoul.models.ImageLayer
-import com.example.scribesoul.models.ItemGroup
 import com.example.scribesoul.models.LinearGradient as LinearGradientFill
-import com.example.scribesoul.models.Movable
 import com.example.scribesoul.models.ShapeItem
 import com.example.scribesoul.models.*
 import com.example.scribesoul.models.SolidColor as SolidColorFill
@@ -111,7 +86,7 @@ fun JournalScreen(navController: NavController, journalViewModel: JournalViewMod
         contract = ActivityResultContracts.GetContent()
     ) { uri: Uri? ->
         uri?.let {
-            journalViewModel.executeCommand(AddImageCommand(ImageLayer(uri = it, offset = journalViewModel.canvasCenter.value), journalViewModel.imageLayers))
+            journalViewModel.executeCommand(AddImageCommand(ImageLayer(uri = it, offset = journalViewModel.canvasCenter.value), journalViewModel.imageLayers), page)
         }
     }
 
@@ -135,11 +110,11 @@ fun JournalScreen(navController: NavController, journalViewModel: JournalViewMod
                     ColorPickerTarget.DRAW_STROKE -> journalViewModel.drawColor = selectedColor
                     ColorPickerTarget.EDIT_SELECTION -> {
                         val allTargets = journalViewModel.selectedItems.toList() + journalViewModel.selectedPaths.toList()
-                        journalViewModel.executeCommand(ChangeFillStyleCommand(allTargets, SolidColorFill(selectedColor)))
+                        journalViewModel.executeCommand(ChangeFillStyleCommand(allTargets, SolidColorFill(selectedColor)), page)
                     }
                     ColorPickerTarget.ADD_SHAPE -> {
                         journalViewModel.pendingShapeType?.let { shapeType ->
-                            journalViewModel.executeCommand(AddShapeCommand(ShapeItem(shapeType, journalViewModel.canvasCenter.value, fill = SolidColorFill(selectedColor)), journalViewModel.shapes))
+                            journalViewModel.executeCommand(AddShapeCommand(ShapeItem(shapeType, journalViewModel.canvasCenter.value, fill = SolidColorFill(selectedColor)), journalViewModel.shapes), page)
                         }
                     }
                     null -> {}
@@ -155,7 +130,7 @@ fun JournalScreen(navController: NavController, journalViewModel: JournalViewMod
             onDismissRequest = { journalViewModel.showGradientPicker = false },
             onGradientSelected = { colors ->
                 val allTargets = journalViewModel.selectedItems.toList() + journalViewModel.selectedPaths.toList()
-                journalViewModel.executeCommand(ChangeFillStyleCommand(allTargets, LinearGradientFill(colors))
+                journalViewModel.executeCommand(ChangeFillStyleCommand(allTargets, LinearGradientFill(colors)),page)
                 journalViewModel.showGradientPicker = false
             }
         )
@@ -179,20 +154,23 @@ fun JournalScreen(navController: NavController, journalViewModel: JournalViewMod
         Row(modifier = Modifier.fillMaxWidth().padding(horizontal = 15.dp).offset(y = 40.dp), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.CenterVertically){
             Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
                 // -- FIX: Logika Undo/Redo yang benar --
-                Image(painter = painterResource(id = R.drawable.arrow_left), contentDescription = "Undo",
-                    modifier = Modifier.size(20.dp).clickable(enabled = journalViewModel.undoStack.isNotEmpty()) {
-                        val commandToUndo = journalViewModel.undoStack.removeLastOrNull()
+                Image(
+                    painter = painterResource(id = R.drawable.arrow_left),
+                    contentDescription = "Undo",
+                    modifier = Modifier.size(20.dp).clickable(enabled = page?.undoStack?.isNotEmpty()==true) {
+                        val commandToUndo = page?.undoStack?.removeLastOrNull()
                         commandToUndo?.let {
                             it.undo()
-                            journalViewModel.redoStack.add(it)
+                            page.redoStack.add(it)
                         }
-                    })
+                    }
+                )
                 Image(painter = painterResource(id = R.drawable.arrow_right), contentDescription = "Redo",
-                    modifier = Modifier.size(20.dp).clickable(enabled = journalViewModel.redoStack.isNotEmpty()) {
-                        val commandToRedo = journalViewModel.redoStack.removeLastOrNull()
+                    modifier = Modifier.size(20.dp).clickable(enabled = page?.redoStack?.isNotEmpty() == true) {
+                        val commandToRedo = page?.redoStack?.removeLastOrNull()
                         commandToRedo?.let {
                             it.execute()
-                            journalViewModel.undoStack.add(it)
+                            page.undoStack.add(it)
                         }
                     })
             }
@@ -225,12 +203,12 @@ fun JournalScreen(navController: NavController, journalViewModel: JournalViewMod
                     DropdownMenu(expanded = journalViewModel.showLayerMenu.value, onDismissRequest = { journalViewModel.showLayerMenu.value = false }) {
                         DropdownMenuItem(text = { Text("Bring to Front") }, onClick = {
                             if (isLayerMenuEnabled) {
-                                journalViewModel.executeCommand(LayeringCommand(journalViewModel.selectedItems.first(), listOf(journalViewModel.texts, journalViewModel.shapes, journalViewModel.imageLayers, journalViewModel.groups), LayerDirection.TO_FRONT))
+                                journalViewModel.executeCommand(LayeringCommand(journalViewModel.selectedItems.first(), listOf(journalViewModel.texts, journalViewModel.shapes, journalViewModel.imageLayers, journalViewModel.groups), LayerDirection.TO_FRONT), page)
                             }; journalViewModel.showLayerMenu.value = false
                         })
                         DropdownMenuItem(text = { Text("Send to Back") }, onClick = {
                             if (isLayerMenuEnabled) {
-                                journalViewModel.executeCommand(LayeringCommand(journalViewModel.selectedItems.first(), listOf(journalViewModel.texts, journalViewModel.shapes, journalViewModel.imageLayers, journalViewModel.groups), LayerDirection.TO_BACK))
+                                journalViewModel.executeCommand(LayeringCommand(journalViewModel.selectedItems.first(), listOf(journalViewModel.texts, journalViewModel.shapes, journalViewModel.imageLayers, journalViewModel.groups), LayerDirection.TO_BACK), page)
                             }; journalViewModel.showLayerMenu.value = false
                         })
                     }
@@ -245,7 +223,7 @@ fun JournalScreen(navController: NavController, journalViewModel: JournalViewMod
         Box(
             modifier = Modifier
                 .align(Alignment.Center)
-                .offset(x = -5.dp, y= -20.dp)
+                .offset(x = 5.dp, y= -20.dp)
         ) {
             Column(
                 modifier = Modifier.fillMaxWidth(fraction = 0.75f).offset(250.dp)
@@ -260,6 +238,7 @@ fun JournalScreen(navController: NavController, journalViewModel: JournalViewMod
                                         .height(59.dp)
                                         .background(color = section.color, shape = RoundedCornerShape(size = 23.dp))
                                         .clickable(onClick = {
+                                            journalViewModel.changeSelectedPageIndex(0)
                                             journalViewModel.changeSelectedSection(index)
                                         })
                                 ) {
@@ -272,8 +251,7 @@ fun JournalScreen(navController: NavController, journalViewModel: JournalViewMod
 
 
             }
-            val section = journalViewModel.sections.getOrNull(journalViewModel.selectedSectionIndex)
-            val page = section?.pages?.getOrNull(journalViewModel.selectedPageIndex)
+
             if (section?.type == SectionType.Creation) {
                 CreationPage(
                     onAddPlainPage = { journalViewModel.addSection(SectionType.Plain) },
@@ -283,7 +261,7 @@ fun JournalScreen(navController: NavController, journalViewModel: JournalViewMod
             } else if (page != null) {
                 when (page) {
                     is JournalPage.PlainPage -> PlainPage(journalViewModel, page, section.color)
-                    is JournalPage.HabitsPage -> HabitsPage()
+                    is JournalPage.HabitsPage -> HabitsPage(section.color)
                     is JournalPage.CalendarPage -> CalendarPage(ToolMode.DRAW)
                 }
             }
@@ -298,10 +276,10 @@ fun JournalScreen(navController: NavController, journalViewModel: JournalViewMod
             visible = journalViewModel.toolMode == ToolMode.DRAW || journalViewModel.toolMode == ToolMode.ERASE,
             enter = expandVertically(expandFrom = Alignment.Top) + fadeIn(),
             exit = shrinkVertically(shrinkTowards = Alignment.Top) + fadeOut(),
-            modifier = Modifier.align(Alignment.CenterStart).padding(start = 16.dp)
+            modifier = Modifier.align(Alignment.CenterStart).padding(start = 5.dp)
         ) {
             Column(
-                modifier = Modifier.background(MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.8f), RoundedCornerShape(8.dp)).padding(horizontal = 8.dp, vertical = 12.dp),
+                modifier = Modifier.background(MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.8f), RoundedCornerShape(8.dp)).padding(horizontal = 0.dp, vertical = 12.dp),
                 horizontalAlignment = Alignment.CenterHorizontally,
                 verticalArrangement = Arrangement.spacedBy(12.dp)
             ) {
@@ -309,7 +287,7 @@ fun JournalScreen(navController: NavController, journalViewModel: JournalViewMod
                     Column(horizontalAlignment = Alignment.CenterHorizontally) {
                         Icon(painterResource(id = R.drawable.pencil), contentDescription = "Pencil", Modifier.size(24.dp))
                         Text("Draw", fontSize = 12.sp)
-                        Slider(value = journalViewModel.drawThickness, onValueChange = { journalViewModel.drawThickness = it }, valueRange = 1f..50f, modifier = Modifier.width(80.dp).height(150.dp).rotate(270f))
+                        Slider(value = journalViewModel.drawThickness, onValueChange = { journalViewModel.drawThickness = it }, valueRange = 1f..50f, modifier = Modifier.width(60.dp).height(150.dp).rotate(270f))
                         Text("${journalViewModel.drawThickness.toInt()}", fontSize = 12.sp, color = MaterialTheme.colorScheme.primary)
                     }
                 }
@@ -317,7 +295,7 @@ fun JournalScreen(navController: NavController, journalViewModel: JournalViewMod
                     Column(horizontalAlignment = Alignment.CenterHorizontally) {
                         Icon(painterResource(id = R.drawable.eraser), contentDescription = "Eraser", Modifier.size(24.dp))
                         Text("Erase", fontSize = 12.sp)
-                        Slider(value = journalViewModel.eraseThickness, onValueChange = { journalViewModel.eraseThickness = it }, valueRange = 10f..100f, modifier = Modifier.width(70.dp).height(150.dp).rotate(270f))
+                        Slider(value = journalViewModel.eraseThickness, onValueChange = { journalViewModel.eraseThickness = it }, valueRange = 10f..100f, modifier = Modifier.width(60.dp).height(150.dp).rotate(270f))
                         Text("${journalViewModel.eraseThickness.toInt()}", fontSize = 12.sp, color = MaterialTheme.colorScheme.primary)
                     }
                 }

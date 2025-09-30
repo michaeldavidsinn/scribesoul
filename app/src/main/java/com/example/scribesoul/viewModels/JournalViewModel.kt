@@ -9,7 +9,6 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableFloatStateOf
 import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Color
@@ -18,7 +17,6 @@ import androidx.lifecycle.ViewModelProvider
 //import androidx.lifecycle.ViewModelProvider.AndroidViewModelFactory.Companion.APPLICATION_KEY
 import androidx.lifecycle.viewmodel.initializer
 import androidx.lifecycle.viewmodel.viewModelFactory
-import com.example.scribesoul.commands.AddImageCommand
 import com.example.scribesoul.commands.Command
 import com.example.scribesoul.models.DrawablePath
 import com.example.scribesoul.models.EditableText
@@ -27,7 +25,6 @@ import com.example.scribesoul.models.ItemGroup
 import com.example.scribesoul.models.Movable
 import com.example.scribesoul.models.ShapeItem
 import com.example.scribesoul.models.ToolMode
-import com.example.scribesoul.ui.components.journalPages.CreationPage
 import com.example.scribesoul.ui.screens.ColorPickerTarget
 import com.example.scribesoul.ui.screens.GuideLine
 
@@ -41,10 +38,13 @@ class JournalViewModel : ViewModel() {
     var selectedSectionIndex by mutableStateOf(0)
         private set
     var selectedPageIndex by mutableStateOf(0)
+        private set
+
+    fun changeSelectedPageIndex(page: Int){
+        selectedPageIndex = page
+    }
 
     // --- Drawing State ---
-    val undoStack = mutableStateListOf<Command>()
-    val redoStack = mutableStateListOf<Command>()
     val selectedPaths = mutableStateListOf<DrawablePath>()
     val paths = mutableStateListOf<DrawablePath>()
     var toolMode by mutableStateOf(ToolMode.DRAW)
@@ -88,16 +88,16 @@ class JournalViewModel : ViewModel() {
             JournalSection(
                 id = 0,
                 type = SectionType.Creation,
-                pages = mutableListOf(),
+                pages = mutableStateListOf(),
                 Color(0xFF74A8FF)
             )
         )
     }
 
     // --- Commands ---
-    fun executeCommand(command: Command, page: JournalPage) {
+    fun executeCommand(command: Command, page: JournalPage?) {
         command.execute()
-        if(page is JournalPage.PlainPage){
+        if(page is PlainPage){
             page.undoStack.add(command)
             page.redoStack.clear()
             selectedItems.clear()
@@ -113,9 +113,12 @@ class JournalViewModel : ViewModel() {
         val newSection = JournalSection(
             id = _sections.size,
             type = type,
-            pages = mutableListOf(
+            pages = mutableStateListOf(
                 when (type) {
-                    SectionType.Plain -> PlainPage(0)
+                    SectionType.Plain -> PlainPage(
+                        0,
+                        name = ""
+                    )
                     SectionType.Habits -> HabitsPage(0)
                     SectionType.Calendar -> CalendarPage(0)
                     SectionType.Creation -> TODO()
@@ -142,6 +145,7 @@ class JournalViewModel : ViewModel() {
         section.pages.add(newPage)
         selectedPageIndex = section.pages.lastIndex
     }
+
 
     fun pickImage(uri: Uri) {
 //        executeCommand(AddImageCommand(ImageLayer(uri = uri, offset = canvasCenter.value), imageLayers))

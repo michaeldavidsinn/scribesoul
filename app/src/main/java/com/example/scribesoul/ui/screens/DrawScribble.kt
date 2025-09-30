@@ -415,10 +415,10 @@ fun DrawScribbleScreen(navController: NavController) {
             visible = toolMode == ToolMode.DRAW || toolMode == ToolMode.ERASE,
             enter = expandVertically(expandFrom = Alignment.Top) + fadeIn(),
             exit = shrinkVertically(shrinkTowards = Alignment.Top) + fadeOut(),
-            modifier = Modifier.align(Alignment.CenterStart).padding(start = 16.dp)
+            modifier = Modifier.align(Alignment.CenterStart).padding(start = 10.dp)
         ) {
             Column(
-                modifier = Modifier.background(MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.8f), RoundedCornerShape(8.dp)).padding(horizontal = 8.dp, vertical = 12.dp),
+                modifier = Modifier.background(MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.8f), RoundedCornerShape(8.dp)).padding(horizontal = 0.dp, vertical = 12.dp),
                 horizontalAlignment = Alignment.CenterHorizontally,
                 verticalArrangement = Arrangement.spacedBy(12.dp)
             ) {
@@ -426,7 +426,7 @@ fun DrawScribbleScreen(navController: NavController) {
                     Column(horizontalAlignment = Alignment.CenterHorizontally) {
                         Icon(painterResource(id = R.drawable.pencil), contentDescription = "Pencil", Modifier.size(24.dp))
                         Text("Draw", fontSize = 12.sp)
-                        Slider(value = drawThickness, onValueChange = { drawThickness = it }, valueRange = 1f..50f, modifier = Modifier.width(80.dp).height(150.dp).rotate(270f))
+                        Slider(value = drawThickness, onValueChange = { drawThickness = it }, valueRange = 1f..50f, modifier = Modifier.width(70.dp).height(150.dp).rotate(270f))
                         Text("${drawThickness.toInt()}", fontSize = 12.sp, color = MaterialTheme.colorScheme.primary)
                     }
                 }

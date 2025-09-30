@@ -1,3 +1,5 @@
+import androidx.compose.runtime.mutableStateListOf
+import androidx.compose.runtime.snapshots.SnapshotStateList
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Color
 import com.example.scribesoul.models.DrawablePath
@@ -14,16 +16,19 @@ sealed class SectionType {
 data class JournalSection(
     val id: Int,
     val type: SectionType,
-    val pages: MutableList<JournalPage> = mutableListOf(),
+    val pages: SnapshotStateList<JournalPage> = mutableStateListOf(),
     val color: Color,
 )
 
-sealed class JournalPage {
+sealed class JournalPage(
+    val undoStack: SnapshotStateList<Command> = mutableStateListOf(),
+    val redoStack: SnapshotStateList<Command> = mutableStateListOf()
+) {
     data class PlainPage(
         val id: Int,
-        val paths: MutableList<DrawablePath> = mutableListOf(),
-        val undoStack: MutableList<Command> = mutableListOf(),
-        val redoStack: MutableList<Command> = mutableListOf()
+        val name: String = "",
+        val paths: SnapshotStateList<DrawablePath> = mutableStateListOf(),
+
     ) : JournalPage()
 
     data class HabitsPage(val id: Int) : JournalPage()

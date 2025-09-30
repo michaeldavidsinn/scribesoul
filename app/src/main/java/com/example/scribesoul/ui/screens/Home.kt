@@ -545,30 +545,24 @@ fun HomeScreen(navController: NavController) {
             LazyVerticalGrid (
                 modifier = Modifier
                     .fillMaxSize()
-                    .padding(16.dp)
-
-                    ,
-                contentPadding = PaddingValues(vertical = 12.dp),
-                verticalArrangement = Arrangement.spacedBy(5.dp),
+                    .padding(16.dp),
+                horizontalArrangement = Arrangement.spacedBy(10.dp),
+                verticalArrangement = Arrangement.spacedBy(10.dp),
                 columns = GridCells.Adaptive(minSize = 175.dp)
             ) {
                 item {
-                    Box(
+                    Column(
                         modifier = Modifier
-                            .width(175.dp)
-                            .height(155.dp)
-                            .aspectRatio(1f)
+                            .width(120.dp)
+                            .height(160.dp)
+
                             .clip(RoundedCornerShape(16.dp))
                             .background(
-                                brush = Brush.radialGradient(
-                                    colors = listOf(Color(0xFFE0ECFF), Color.White),
-                                    center = Offset.Unspecified, // Defaultnya di tengah
-                                    radius = 200f // Sesuaikan agar menyebar dengan baik di ukuran box
-                                )
+                                color = Color(0XFFE1F9DF)
                             )
-                            .shadow(elevation = 4.dp, spotColor = Color(0x26000000), ambientColor = Color(0x26000000))
                             .padding(20.dp),
-                        contentAlignment = Alignment.Center
+                        horizontalAlignment = Alignment.CenterHorizontally,
+                        verticalArrangement = Arrangement.Center
                     ) {
                         Column{
                             Box(
@@ -588,7 +582,7 @@ fun HomeScreen(navController: NavController) {
                                     fontSize = 12.sp,
                                     fontFamily = FontFamily(Font(R.font.poppins_regular)),
                                     fontWeight = FontWeight(400),
-                                    color = Color(0xFFA6A9A6),
+                                    color = Color(0xFF313632),
                                     letterSpacing = 1.sp,
                                 ),
                                 modifier = Modifier.padding(top = 5.dp)
@@ -608,7 +602,7 @@ fun HomeScreen(navController: NavController) {
                             LinearProgressIndicator(
                                 progress = { 1F },
                                 modifier = Modifier.fillMaxWidth().height(8.dp).clip(RoundedCornerShape(3.dp)).padding(top = 2.dp),
-                                color = Color(0XFF6436E2),
+                                color = Color(0XFF40B490),
                                 trackColor = Color(0XFFF9F9F9)
                             )
                         }
@@ -617,22 +611,20 @@ fun HomeScreen(navController: NavController) {
 
                 }
                 item {
-                    Box(
+                    Column(
                         modifier = Modifier
-                            .width(175.dp)
-                            .height(155.dp)
-                            .aspectRatio(1f)
+                            .width(120.dp)
+                            .height(160.dp)
+
+
                             .clip(RoundedCornerShape(16.dp))
                             .background(
-                                brush = Brush.radialGradient(
-                                    colors = listOf(Color(0xFFEBDEFF), Color.White),
-                                    center = Offset.Unspecified, // Defaultnya di tengah
-                                    radius = 200f // Sesuaikan agar menyebar dengan baik di ukuran box
-                                )
+                                color = Color(0XFFE0ECFF)
                             )
-                            .shadow(elevation = 4.dp, spotColor = Color(0x26000000), ambientColor = Color(0x26000000))
-                            .padding(20.dp),
-                        contentAlignment = Alignment.Center
+                            .padding(20.dp)
+                            ,
+                        horizontalAlignment = Alignment.CenterHorizontally,
+                        verticalArrangement = Arrangement.Center
                     ) {
                         Column{
                             Box(
@@ -652,7 +644,7 @@ fun HomeScreen(navController: NavController) {
                                     fontSize = 12.sp,
                                     fontFamily = FontFamily(Font(R.font.poppins_regular)),
                                     fontWeight = FontWeight(400),
-                                    color = Color(0xFFA6A9A6),
+                                    color = Color(0xFF313632),
                                     letterSpacing = 1.sp,
                                 ),
                                 modifier = Modifier.padding(top = 5.dp)
@@ -672,7 +664,7 @@ fun HomeScreen(navController: NavController) {
                             LinearProgressIndicator(
                                 progress = { 1F },
                                 modifier = Modifier.fillMaxWidth().height(8.dp).clip(RoundedCornerShape(3.dp)).padding(top = 2.dp),
-                                color = Color(0XFFDC30AD),
+                                color = Color(0XFF5373FF),
                                 trackColor = Color(0XFFF9F9F9)
                             )
                         }
@@ -681,22 +673,17 @@ fun HomeScreen(navController: NavController) {
 
                 }
                 item {
-                    Box(
+                    Column(
                         modifier = Modifier
-                            .width(175.dp)
-                            .height(155.dp)
-                            .aspectRatio(1f)
+                            .width(120.dp)
+                            .height(160.dp)
                             .clip(RoundedCornerShape(16.dp))
                             .background(
-                                brush = Brush.radialGradient(
-                                    colors = listOf(Color(0xFFFFE6ED), Color.White),
-                                    center = Offset.Unspecified, // Defaultnya di tengah
-                                    radius = 200f // Sesuaikan agar menyebar dengan baik di ukuran box
-                                )
+                                color = Color(0XFFEEE3FF)
                             )
-                            .shadow(elevation = 4.dp, spotColor = Color(0x26000000), ambientColor = Color(0x26000000))
                             .padding(20.dp),
-                        contentAlignment = Alignment.Center
+                        horizontalAlignment = Alignment.CenterHorizontally,
+                        verticalArrangement = Arrangement.Center
                     ) {
                         Column{
                             Box(
@@ -716,7 +703,7 @@ fun HomeScreen(navController: NavController) {
                                     fontSize = 12.sp,
                                     fontFamily = FontFamily(Font(R.font.poppins_regular)),
                                     fontWeight = FontWeight(400),
-                                    color = Color(0xFFA6A9A6),
+                                    color = Color(0xFF313632),
                                     letterSpacing = 1.sp,
                                 ),
                                 modifier = Modifier.padding(top = 5.dp)
@@ -736,7 +723,7 @@ fun HomeScreen(navController: NavController) {
                             LinearProgressIndicator(
                                 progress = { 1F },
                                 modifier = Modifier.fillMaxWidth().height(8.dp).clip(RoundedCornerShape(3.dp)).padding(top = 2.dp),
-                                color = Color(0XFF2B0F6B),
+                                color = Color(0XFF9747FF),
                                 trackColor = Color(0XFFF9F9F9)
                             )
                         }
@@ -746,22 +733,17 @@ fun HomeScreen(navController: NavController) {
 
                 }
                 item {
-                    Box(
+                    Column(
                         modifier = Modifier
-                            .width(175.dp)
-                            .height(155.dp)
-                            .aspectRatio(1f)
+                            .width(120.dp)
+                            .height(160.dp)
                             .clip(RoundedCornerShape(16.dp))
                             .background(
-                                brush = Brush.radialGradient(
-                                    colors = listOf(Color(0xFFFFFDE6), Color.White),
-                                    center = Offset.Unspecified, // Defaultnya di tengah
-                                    radius = 200f // Sesuaikan agar menyebar dengan baik di ukuran box
-                                )
+                                color = Color(0XFFFFE6F7)
                             )
-                            .shadow(elevation = 4.dp, spotColor = Color(0x26000000), ambientColor = Color(0x26000000))
                             .padding(20.dp),
-                        contentAlignment = Alignment.Center
+                        horizontalAlignment = Alignment.CenterHorizontally,
+                        verticalArrangement = Arrangement.Center
                     ) {
                         Column{
                             Box(
@@ -781,7 +763,7 @@ fun HomeScreen(navController: NavController) {
                                     fontSize = 12.sp,
                                     fontFamily = FontFamily(Font(R.font.poppins_regular)),
                                     fontWeight = FontWeight(400),
-                                    color = Color(0xFFA6A9A6),
+                                    color = Color(0xFF313632),
                                     letterSpacing = 1.sp,
                                 ),
                                 modifier = Modifier.padding(top = 5.dp)
@@ -801,7 +783,7 @@ fun HomeScreen(navController: NavController) {
                             LinearProgressIndicator(
                                 progress = { 1F },
                                 modifier = Modifier.fillMaxWidth().height(8.dp).clip(RoundedCornerShape(3.dp)).padding(top = 2.dp),
-                                color = Color(0XFF64C0D8),
+                                color = Color(0XFFDC30AD),
                                 trackColor = Color(0XFFF9F9F9)
                             )
                         }
@@ -810,22 +792,17 @@ fun HomeScreen(navController: NavController) {
 
                 }
                 item {
-                    Box(
+                    Column(
                         modifier = Modifier
-                            .width(175.dp)
-                            .height(155.dp)
-                            .aspectRatio(1f)
+                            .width(120.dp)
+                            .height(160.dp)
                             .clip(RoundedCornerShape(16.dp))
                             .background(
-                                brush = Brush.radialGradient(
-                                    colors = listOf(Color(0xFFE0FFFC), Color.White),
-                                    center = Offset.Unspecified, // Defaultnya di tengah
-                                    radius = 200f // Sesuaikan agar menyebar dengan baik di ukuran box
-                                )
+                                color = Color(0XFFFFB4B4)
                             )
-                            .shadow(elevation = 4.dp, spotColor = Color(0x26000000), ambientColor = Color(0x26000000))
                             .padding(20.dp),
-                        contentAlignment = Alignment.Center
+                        horizontalAlignment = Alignment.CenterHorizontally,
+                        verticalArrangement = Arrangement.Center
                     ) {
                         Column{
                             Box(
@@ -845,7 +822,7 @@ fun HomeScreen(navController: NavController) {
                                     fontSize = 12.sp,
                                     fontFamily = FontFamily(Font(R.font.poppins_regular)),
                                     fontWeight = FontWeight(400),
-                                    color = Color(0xFFA6A9A6),
+                                    color = Color(0xFF313632),
                                     letterSpacing = 1.sp,
                                 ),
                                 modifier = Modifier.padding(top = 5.dp)
@@ -865,7 +842,7 @@ fun HomeScreen(navController: NavController) {
                             LinearProgressIndicator(
                                 progress = { 1F },
                                 modifier = Modifier.fillMaxWidth().height(8.dp).clip(RoundedCornerShape(3.dp)).padding(top = 2.dp),
-                                color = Color(0XFFE67B74),
+                                color = Color(0XFFDC30AD),
                                 trackColor = Color(0XFFF9F9F9)
                             )
                         }
@@ -874,22 +851,17 @@ fun HomeScreen(navController: NavController) {
 
                 }
                 item {
-                    Box(
+                    Column(
                         modifier = Modifier
-                            .width(175.dp)
-                            .height(155.dp)
-                            .aspectRatio(1f)
+                            .width(120.dp)
+                            .height(160.dp)
                             .clip(RoundedCornerShape(16.dp))
                             .background(
-                                brush = Brush.radialGradient(
-                                    colors = listOf(Color(0xFFE0ECFF), Color.White),
-                                    center = Offset.Unspecified, // Defaultnya di tengah
-                                    radius = 200f // Sesuaikan agar menyebar dengan baik di ukuran box
-                                )
+                                color = Color(0XFFFFD6B4)
                             )
-                            .shadow(elevation = 4.dp, spotColor = Color(0x26000000), ambientColor = Color(0x26000000))
-                            .padding(20.dp),
-                        contentAlignment = Alignment.Center
+                         .padding(20.dp),
+                        horizontalAlignment = Alignment.CenterHorizontally,
+                        verticalArrangement = Arrangement.Center
                     ) {
                         Column{
                             Box(
@@ -899,7 +871,7 @@ fun HomeScreen(navController: NavController) {
                                     painter = painterResource(R.drawable.read_icon),
                                     contentDescription = null,
                                     modifier = Modifier
-                                        .width(18.dp)
+                                        .width(37.dp)
                                         .height(37.dp),
                                 )
                             }
@@ -909,7 +881,7 @@ fun HomeScreen(navController: NavController) {
                                     fontSize = 12.sp,
                                     fontFamily = FontFamily(Font(R.font.poppins_regular)),
                                     fontWeight = FontWeight(400),
-                                    color = Color(0xFFA6A9A6),
+                                    color = Color(0xFF313632),
                                     letterSpacing = 1.sp,
                                 ),
                                 modifier = Modifier.padding(top = 5.dp)
@@ -929,7 +901,7 @@ fun HomeScreen(navController: NavController) {
                             LinearProgressIndicator(
                                 progress = { 1F },
                                 modifier = Modifier.fillMaxWidth().height(8.dp).clip(RoundedCornerShape(3.dp)).padding(top = 2.dp),
-                                color = Color(0XFF8433D1),
+                                color = Color(0XFFFD7A16),
                                 trackColor = Color(0XFF8433D1)
                             )
                         }

@@ -1,48 +1,52 @@
 package com.example.scribesoul.ui.components.journalPages
 
-import android.util.MutableFloat
-import android.widget.Toast
+import JournalPage
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.gestures.detectDragGestures
+import androidx.compose.foundation.gestures.detectTapGestures
+import androidx.compose.foundation.gestures.draggable
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material3.Button
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateListOf
-import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.clipToBounds
 import androidx.compose.ui.geometry.Offset
-import androidx.compose.ui.geometry.toRect
 import androidx.compose.ui.graphics.BlendMode
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.Paint
 import androidx.compose.ui.graphics.Path
 import androidx.compose.ui.graphics.PathEffect
 import androidx.compose.ui.graphics.StrokeCap
 import androidx.compose.ui.graphics.StrokeJoin
 import androidx.compose.ui.graphics.drawscope.Stroke
-import androidx.compose.ui.graphics.drawscope.drawIntoCanvas
-import androidx.compose.ui.graphics.vector.PathData
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.text.TextStyle
+import androidx.compose.ui.text.font.Font
+import androidx.compose.ui.text.font.FontFamily
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
+import androidx.lifecycle.viewmodel.compose.viewModel
+import com.example.scribesoul.R
 import com.example.scribesoul.commands.AddDrawableCommand
+import com.example.scribesoul.commands.AddTextCommand
 import com.example.scribesoul.commands.EraseCommand
-import com.example.scribesoul.models.SolidColor
 import com.example.scribesoul.models.ToolMode
 import com.example.scribesoul.utils.distance
 import com.example.scribesoul.utils.isMovableInPolygon
@@ -115,7 +119,7 @@ fun PlainPage(journalViewModel: JournalViewModel, page: JournalPage.PlainPage, c
                                           journalViewModel.selectedItems.add(item)
                                         }
                                     }
-                                    journalViewModel.paths.forEach { path ->
+                                    page.paths.forEach { path ->
                                         if (path.offsets.any { point -> isPointInPolygon(point, polygon) }) {
                                            journalViewModel.selectedPaths.add(path)
                                         }
@@ -151,7 +155,7 @@ fun PlainPage(journalViewModel: JournalViewModel, page: JournalPage.PlainPage, c
                     onDragEnd = {
                         when (journalViewModel.toolMode) {
                             ToolMode.ERASE -> {
-                                val originalPaths = journalViewModel.paths.toList()
+                                val originalPaths = page.paths.toList()
                                 val pathsAfterErase = mutableListOf<DrawablePath>()
                                 originalPaths.forEach { drawablePath ->
                                     if (drawablePath.toolMode == ToolMode.Highlighter) {
@@ -191,7 +195,7 @@ fun PlainPage(journalViewModel: JournalViewModel, page: JournalPage.PlainPage, c
                                            journalViewModel.selectedItems.add(item)
                                         }
                                     }
-                                   journalViewModel.paths.forEach { path ->
+                                   page.paths.forEach { path ->
                                         if (path.offsets.any { point -> isPointInPolygon(point, polygon) }) {
                                             journalViewModel.selectedPaths.add(path)
                                         }
@@ -213,7 +217,21 @@ fun PlainPage(journalViewModel: JournalViewModel, page: JournalPage.PlainPage, c
                         currentPath.clear()
                     }
                 )
-            }) {
+            }
+            .pointerInput(journalViewModel.isAddingText) {
+//                detectTapGestures { offset ->
+//                    if (journalViewModel.isAddingText) {
+//                        journalViewModel.executeCommand(journalViewModel.AddTextCommand(EditableText(text = "New Text", offset = offset), texts))
+//                        isAddingText = false
+//                    }
+//                    texts.forEach { it.isEditing = false }
+//                }
+            }
+        )
+        {
+
+
+
            page.paths.forEach { path ->
                 drawPathFromFill(path.offsets, path.fill, path.toolMode, path.thickness)
             }
@@ -227,6 +245,72 @@ fun PlainPage(journalViewModel: JournalViewModel, page: JournalPage.PlainPage, c
                 drawLine(color = Color.Cyan, start = line.start, end = line.end, strokeWidth = 1.5f, pathEffect = PathEffect.dashPathEffect(floatArrayOf(10f, 10f)))
             }
         }
+        Row(
+            modifier = Modifier.fillMaxWidth().padding(horizontal = 20.dp),
+            horizontalArrangement = Arrangement.SpaceBetween,
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Text("S Project",
+                style = TextStyle(
+                    fontSize = 30.sp,
+                    fontFamily = FontFamily(Font(R.font.poppins_bold)),
+                    fontWeight = FontWeight(600),
+                    color = Color(0XFF2B395B),
+                    letterSpacing = 1.sp,
+                )
+                )
+
+            Text("+",
+                modifier = Modifier.clickable{
+                    journalViewModel.addPageToSection(journalViewModel.selectedSectionIndex)
+                },
+                style = TextStyle(
+                    fontSize = 50.sp,
+                    fontFamily = FontFamily(Font(R.font.poppins_bold)),
+                    fontWeight = FontWeight(600),
+                    color = Color(0XFF2B395B),
+                    letterSpacing = 1.sp,
+                )
+            )
+        }
+
+        Row(
+            modifier = Modifier.fillMaxSize().padding(horizontal = 20.dp),
+            horizontalArrangement = Arrangement.SpaceBetween,
+            verticalAlignment = Alignment.CenterVertically
+        ){
+            Text("<",
+                modifier = Modifier.clickable{
+                    if(journalViewModel.selectedPageIndex==0){
+                        journalViewModel.changeSelectedPageIndex(0)
+                    }else{
+                        journalViewModel.changeSelectedPageIndex(journalViewModel.selectedPageIndex-1)
+                    }
+                },
+                style = TextStyle(
+                    fontSize = 30.sp,
+                    fontFamily = FontFamily(Font(R.font.poppins_bold)),
+                    fontWeight = FontWeight(600),
+                    color = Color(0XFF2B395B),
+                    letterSpacing = 1.sp,
+                ))
+            Text(">",
+                modifier = Modifier.clickable{
+                    if(journalViewModel.selectedPageIndex==(journalViewModel.sections[journalViewModel.selectedSectionIndex].pages.size-1)){
+                        journalViewModel.changeSelectedPageIndex(journalViewModel.selectedPageIndex)
+                    }else{
+                        journalViewModel.changeSelectedPageIndex(journalViewModel.selectedPageIndex+1)
+                    }
+                },
+                style = TextStyle(
+                    fontSize = 30.sp,
+                    fontFamily = FontFamily(Font(R.font.poppins_bold)),
+                    fontWeight = FontWeight(600),
+                    color = Color(0XFF2B395B),
+                    letterSpacing = 1.sp,
+                ))
+        }
+            
 
     }
 
@@ -271,5 +355,5 @@ private fun androidx.compose.ui.graphics.drawscope.DrawScope.drawPathFromOffsets
 //@Preview(showBackground = true, showSystemUi = true)
 //@Composable
 //fun PlainPageView(){
-//    PlainPage(currentToolMode = ToolMode.DRAW)
+//    PlainPage(journalViewModel = viewModel(factory = JournalViewModel.Factory),page = JournalPage.PlainPage(id = 0, paths = mutableListOf(), undoStack = mutableListOf(), redoStack = mutableListOf(), name = "hi"), color = Color.Cyan)
 //}

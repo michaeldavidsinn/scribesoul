@@ -324,7 +324,10 @@ fun CreationPage(
             horizontalArrangement = Arrangement.SpaceBetween
         ){
             Column(
-                horizontalAlignment = Alignment.CenterHorizontally
+                horizontalAlignment = Alignment.CenterHorizontally,
+                modifier = Modifier.clickable{
+                    onAddHabitsPage()
+                }
             )  {
                 Image(
                     painter = painterResource(R.drawable.habit_tracker),

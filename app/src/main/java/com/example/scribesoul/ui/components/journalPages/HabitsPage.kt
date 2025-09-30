@@ -45,12 +45,12 @@ import java.util.Locale
 
 @RequiresApi(Build.VERSION_CODES.O)
 @Composable
-fun HabitsPage(){
+fun HabitsPage(color: Color){
     var currentMonth by remember { mutableStateOf(YearMonth.now()) }
 
     Column(
         modifier = Modifier
-            .background(Color(0xFFFFFDB4), shape = RoundedCornerShape(size = 23.dp))
+            .background(color, shape = RoundedCornerShape(size = 23.dp))
             .height(640.dp)
             .fillMaxWidth(fraction=0.8f)
             .clip(RoundedCornerShape(23.dp))
@@ -147,5 +147,5 @@ public fun CalendarHeader(
 @Preview(showSystemUi = true, showBackground = true)
 @Composable
 fun HabitsPagePreview() {
-    HabitsPage()
+    HabitsPage(Color.Red)
 }
