@@ -94,7 +94,7 @@ fun TherapistCustomerServiceScreen(navController: NavController) {
                     modifier = Modifier
                         .align(Alignment.CenterStart) // << PENTING: Menyelaraskan item ini ke kiri tengah
                         .clip(RoundedCornerShape(50))
-                        .clickable { /* TODO: action back */ }
+                        .clickable { navController.popBackStack() }
                         .padding(horizontal = 16.dp, vertical = 8.dp)
                 ) {
                     Icon(
@@ -166,6 +166,13 @@ fun TherapistCustomerServiceScreen(navController: NavController) {
                                         .fillMaxWidth()
                                         .clip(RoundedCornerShape(50))
                                         .background(Color.White)
+                                        .clickable {
+                                            when (text) {
+                                                "FAQ" -> navController.navigate("therapist_faq")
+                                                "Terms and Conditions" -> navController.navigate("therapist_pro_and_cons")
+                                                "Privacy Policy" -> navController.navigate("therapist_privacy_policy")
+                                            }
+                                        }
                                         .padding(horizontal = 24.dp, vertical = 20.dp),
 
                                     horizontalArrangement = Arrangement.SpaceBetween,

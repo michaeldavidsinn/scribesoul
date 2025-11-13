@@ -1,6 +1,7 @@
 package com.example.scribesoul.ui.screens
 
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -98,6 +99,7 @@ fun ScribbleScreen(navController: NavController) {
                             .width(275.dp)
                             .aspectRatio(1f)
                             .clip(RoundedCornerShape(16.dp))
+                            .clickable { navController.navigate("add_scribble") }
                             .background(
                                 brush = Brush.radialGradient(
                                     colors = listOf(Color(0xFFE0ECFF), Color.White),

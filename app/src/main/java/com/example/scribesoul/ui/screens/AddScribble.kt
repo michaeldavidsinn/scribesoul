@@ -4,6 +4,7 @@ package com.example.scribesoul.ui.screens
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -44,6 +45,7 @@ import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
+import androidx.navigation.compose.rememberNavController
 import com.example.scribesoul.R
 
 @Composable
@@ -66,7 +68,10 @@ fun AddScribbleScreen(navController: NavController) {
                 .fillMaxSize(),
             contentAlignment = Alignment.Center
         ) {
-            GradientCard(modifier = Modifier.offset(y = (-32).dp)) // naik 32dp
+            GradientCard(
+                modifier = Modifier.offset(y = (-32).dp),
+                onClick = { navController.navigate("draw_scribble") } // <-- TAMBAHKAN INI
+            )
         }
 
         // Bottom bar tetap di bawah
@@ -82,12 +87,13 @@ fun AddScribbleScreen(navController: NavController) {
 }
 
 @Composable
-fun GradientCard(modifier: Modifier = Modifier) {
+fun GradientCard(modifier: Modifier = Modifier, onClick: () -> Unit) {
     Box(
         modifier = modifier
             .width(200.dp)
             .height(300.dp)
             .clip(RoundedCornerShape(16.dp))
+            .clickable { onClick() }
             .background(
                 brush = Brush.linearGradient(
                     colorStops = arrayOf(
@@ -115,6 +121,6 @@ fun GradientCard(modifier: Modifier = Modifier) {
 @Preview(showBackground = true)
 @Composable
 fun AddScribblereview() {
-    // Gunakan dummy NavController untuk preview
-    AddScribbleScreen(navController = NavController(LocalContext.current))
+    val dummyController = rememberNavController()
+    AddScribbleScreen(navController = dummyController)
 }

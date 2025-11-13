@@ -83,7 +83,7 @@ fun TherapistRecommendationScreen(navController: NavController) {
                     experienceYears = (5..15).random(),
                     compatibility = (90..100).random(),
                     price = "Rp 250.000,00",
-                    onChatClick = { /* Action placeholder */ }
+                    onChatClick = { navController.navigate("therapist_detail") } // <--- SEPERTI INI
                 )
             }
 

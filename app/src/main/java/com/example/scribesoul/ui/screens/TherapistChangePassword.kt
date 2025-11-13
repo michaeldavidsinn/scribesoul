@@ -2,6 +2,7 @@ package com.example.scribesoul.ui.screens
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -34,6 +35,11 @@ fun TherapistChangePasswordScreen(navController: NavController) {
     val hasLowercase = newPassword.any { it.isLowerCase() }
     val hasNumber = newPassword.any { it.isDigit() }
     val hasSpecial = newPassword.any { !it.isLetterOrDigit() }
+
+    val allRequirementsMet = hasUppercase && hasLowercase && hasNumber && hasSpecial
+    val passwordsMatch = newPassword.isNotEmpty() && newPassword == confirmPassword
+
+    val isButtonEnabled = allRequirementsMet && passwordsMatch // Tombol aktif jika semua terpenuhi
 
     val gradientBorder = Brush.horizontalGradient(
         colors = listOf(Color(0xFFFFF47A), Color(0xFFFFA8CF), Color(0xFFA774FF))
@@ -114,6 +120,7 @@ fun TherapistChangePasswordScreen(navController: NavController) {
                 RequirementItem("Lowercase letter", hasLowercase)
                 RequirementItem("Number", hasNumber)
                 RequirementItem("Special character", hasSpecial)
+                RequirementItem("Passwords match", passwordsMatch)
             }
         }
 
@@ -128,6 +135,12 @@ fun TherapistChangePasswordScreen(navController: NavController) {
                     ),
                     shape = RoundedCornerShape(50)
                 )
+                .clickable(enabled = isButtonEnabled) { // Hanya bisa diklik jika enabled
+                    navController.navigate("therapist_account_info") {
+                        // Opsi: Hapus halaman ini dari back stack setelah berhasil ganti password
+                        popUpTo("therapist_account_info") { inclusive = true }
+                    }
+                }
                 .padding(horizontal = 50.dp, vertical = 14.dp)
         ) {
             Text(

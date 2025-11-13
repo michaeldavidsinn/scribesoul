@@ -53,7 +53,7 @@ import com.google.accompanist.flowlayout.FlowRow
 
 @OptIn(ExperimentalLayoutApi::class)
 @Composable
-fun TherapistAccountInfoScreen(navController: NavController) {
+fun TherapistPrivacyPolicyScreen(navController: NavController) {
 
     val gradientBrushs = Brush.horizontalGradient(
         colors = listOf(
@@ -107,7 +107,7 @@ fun TherapistAccountInfoScreen(navController: NavController) {
 
                 // Teks Judul (otomatis di tengah karena contentAlignment Box)
                 Text(
-                    text = "Account Info",
+                    text = "Privacy Policy",
                     style = MaterialTheme.typography.titleLarge.copy(
                         fontWeight = FontWeight(650),
                         fontSize = 25.sp
@@ -137,9 +137,10 @@ fun TherapistAccountInfoScreen(navController: NavController) {
 
                     FlowRow(
                         modifier = Modifier.fillMaxWidth(),
-                        mainAxisSpacing = 2.dp, // jarak horizontal antar chip
-                        crossAxisSpacing = 6.dp // jarak vertikal antar baris
+                        mainAxisSpacing = 2.dp,
+                        crossAxisSpacing = 6.dp
                     ) {
+
                         val gradientBrush = Brush.horizontalGradient(
                             colors = listOf(
                                 Color(0xFFFFF47A),
@@ -148,67 +149,53 @@ fun TherapistAccountInfoScreen(navController: NavController) {
                             )
                         )
 
-                        val chipItems = listOf(
-                            "E-mail" to "scribesoul@gmail.com",
-                            "Birthday" to "December 25, 2004",
-                            "Password" to "Change password"
+                        val chipTexts = listOf(
+                            "Feedback", "FAQ", "Privacy Policy", "Terms and Conditions"
                         )
 
-                        chipItems.forEach { (title, subtitle) ->
+                        chipTexts.forEach { text ->
                             Box(
                                 modifier = Modifier
-                                    .background(brush = gradientBrush, shape = RoundedCornerShape(25))
+                                    .background(brush = gradientBrush, shape = RoundedCornerShape(50))
                                     .padding(1.dp)
+
+
                             ) {
                                 Row(
                                     modifier = Modifier
                                         .fillMaxWidth()
-                                        .clip(RoundedCornerShape(25))
+                                        .clip(RoundedCornerShape(50))
                                         .background(Color.White)
                                         .clickable {
-                                            when (title) {
-                                                "Birthday" -> navController.navigate("therapist_birthday")
-                                                "Password" -> navController.navigate("therapist_change_password")
+                                            when (text) {
+                                                "FAQ" -> navController.navigate("therapist_faq")
+                                                "Terms and Conditions" -> navController.navigate("therapist_pro_and_cons")
+                                                "Privacy Policy" -> navController.navigate("therapist_privacy_policy")
                                             }
                                         }
                                         .padding(horizontal = 24.dp, vertical = 20.dp),
+
                                     horizontalArrangement = Arrangement.SpaceBetween,
                                     verticalAlignment = Alignment.CenterVertically
                                 ) {
-                                    Column(
-                                        verticalArrangement = Arrangement.Center
-                                    ) {
+                                    Text(
+                                        text = text,
+                                        style = MaterialTheme.typography.labelSmall.copy(
+                                            fontSize = 14.sp,
+                                            fontWeight = FontWeight.SemiBold
+                                        ),
+                                        color = Color(0xFF2B395B),
+                                        maxLines = 1
+                                    )
 
-                                        Text(
-                                            text = title,
-                                            style = MaterialTheme.typography.labelSmall.copy(
-                                                fontSize = 14.sp,
-                                                fontWeight = FontWeight.ExtraBold
-                                            ),
-                                            color = Color(0xFF2B395B),
-                                            maxLines = 1
-                                        )
-
-
-                                        Text(
-                                            text = subtitle,
-                                            style = MaterialTheme.typography.labelSmall.copy(
-                                                fontSize = 11.sp,
-                                                fontWeight = FontWeight.Normal
-                                            ),
-                                            color = Color.Black,
-                                            maxLines = 1
-                                        )
-                                    }
-
-
+                                    // Ikon tidak perlu modifier align lagi karena sudah diatur oleh Row
                                     Icon(
                                         imageVector = Icons.AutoMirrored.Filled.ArrowForwardIos,
                                         contentDescription = "Arrow Icon",
-                                        tint = Color.Unspecified,
+                                        tint = Color.Unspecified, // Tint di-override oleh brush
                                         modifier = Modifier
                                             .size(18.dp)
-                                            .graphicsLayer(alpha = 0.99f)
+                                            .graphicsLayer(alpha = 0.99f) // Diperlukan agar brush berfungsi
                                             .drawWithCache {
                                                 onDrawWithContent {
                                                     drawContent()
@@ -228,11 +215,11 @@ fun TherapistAccountInfoScreen(navController: NavController) {
 
 @Preview(showBackground = true)
 @Composable
-fun TherapistAccountInfoPreview() {
+fun TherapistPrivacyPolicyScreen() {
     val context = LocalContext.current
     val navController = remember { NavController(context) }
 
     Surface(modifier = Modifier.fillMaxSize()) {
-        TherapistAccountInfoScreen(navController = navController)
+        TherapistPrivacyPolicyScreen(navController = navController)
     }
 }

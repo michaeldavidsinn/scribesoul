@@ -236,7 +236,14 @@ fun TherapistProfileScreen(navController: NavController) {
                             .padding(1.dp)
                             .clip(RoundedCornerShape(50))
                             .background(Color.White)
-                            .clickable { /* TODO: Add navigation logic */ }
+                            .clickable {
+                                when (text) {
+                                    "Account Info" -> navController.navigate("therapist_account_info")
+                                    "Therapy History" -> navController.navigate("therapist_history")
+                                    "Customer Service" -> navController.navigate("therapist_customer_service")
+                                    // Anda bisa menambahkan case lain di sini jika perlu
+                                }
+                            }
                     ) {
                         Row(
                             modifier = Modifier
