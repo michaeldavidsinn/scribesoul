@@ -105,6 +105,7 @@ fun ScribbleScreen(navController: NavController) {
                             )
                             .aspectRatio(1f)
                             .clip(RoundedCornerShape(16.dp))
+                            .clickable { navController.navigate("add_scribble") }
                             .background(
                                 brush = Brush.radialGradient(
                                     colors = listOf(Color(0xFFE0ECFF), Color.White),

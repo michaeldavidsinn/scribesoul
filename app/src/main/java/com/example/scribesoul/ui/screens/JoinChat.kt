@@ -90,7 +90,7 @@ fun JoinChatScreen(navController: NavController) {
             Box(
                 modifier = Modifier
                     .clip(RoundedCornerShape(50))
-                    .clickable { /* TODO: Back action */ }
+                    .clickable { navController.popBackStack() }
                     .padding(horizontal = 16.dp, vertical = 8.dp)
             ) {
                 Icon(
@@ -146,6 +146,7 @@ fun JoinChatScreen(navController: NavController) {
                         .width(140.dp)
                         .height(50.dp)
                         .clip(RoundedCornerShape(8.dp))
+                        .clickable { navController.navigate("community_group") }
                         .background(
                             brush = Brush.horizontalGradient(
                                 colors = listOf(
@@ -172,7 +173,7 @@ fun JoinChatScreen(navController: NavController) {
                     modifier = Modifier
                         .width(140.dp)
                         .height(50.dp)
-//                        .clip(RoundedCornerShape(8.dp))
+                        .clickable { navController.navigate("explore") }
                         .background(
                             brush = Brush.horizontalGradient(
                                 colors = listOf(

@@ -37,15 +37,22 @@ import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.graphics.*
 import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.unit.sp
+import androidx.compose.material.icons.filled.Person
+import androidx.compose.material.icons.filled.Search
 
 import androidx.compose.ui.draw.drawWithContent
 import androidx.compose.ui.geometry.Size
 import androidx.navigation.compose.rememberNavController
 import com.example.scribesoul.ui.navigation.BottomNavItem
+import androidx.compose.material.icons.filled.Close
 
 
 @Composable
 fun AnonymousChatScreen(navController: NavController) {
+
+    var isSearchActive by remember { mutableStateOf(false) }
+    var searchQuery by remember { mutableStateOf("") }
+
     Box(
         modifier = Modifier
             .fillMaxSize()
@@ -87,17 +94,90 @@ fun AnonymousChatScreen(navController: NavController) {
                         .fillMaxWidth(),
                     horizontalAlignment = Alignment.CenterHorizontally
                 ) {
-                    Spacer(modifier = Modifier.height(20.dp))
+                    if (isSearchActive) {
+                        // --- TAMPILAN SEARCH BAR ---
+                        Row(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(top = 16.dp), // Samakan padding atas
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            // TextField untuk input pencarian
+                            TextField(
+                                value = searchQuery,
+                                onValueChange = { searchQuery = it },
+                                placeholder = { Text("Cari di SoulFess...") },
+                                modifier = Modifier.weight(1f),
+                                colors = TextFieldDefaults.colors(
+                                    focusedContainerColor = Color.Transparent,
+                                    unfocusedContainerColor = Color.Transparent,
+                                    disabledContainerColor = Color.Transparent,
+                                    focusedIndicatorColor = Color(0xFF2B395B),
+                                    unfocusedIndicatorColor = Color.Gray
+                                ),
+                                maxLines = 1,
+                                singleLine = true
+                            )
+                            // Tombol close untuk menutup search bar
+                            IconButton(onClick = {
+                                isSearchActive = false
+                                searchQuery = "" // Reset teks pencarian
+                            }) {
+                                Icon(
+                                    imageVector = Icons.Default.Close,
+                                    contentDescription = "Close Search",
+                                    tint = Color(0xFF2B395B)
+                                )
+                            }
+                        }
+                    } else {
+                        // --- TAMPILAN HEADER ASLI ---
+                        Box(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(top = 16.dp, start = 4.dp, end = 4.dp),
+                            contentAlignment = Alignment.Center
+                        ) {
+                            // Ikon Kiri (Search)
+                            IconButton(
+                                onClick = { isSearchActive = true }, // <-- MODIFIKASI Aksi
+                                modifier = Modifier.align(Alignment.CenterStart)
+                            ) {
+                                Icon(
+                                    imageVector = Icons.Default.Search,
+                                    contentDescription = "Search",
+                                    tint = Color(0xFF2B395B),
+                                    modifier = Modifier.size(28.dp)
+                                )
+                            }
 
-                    Text(
-                        text = "SoulFess",
-                        style = MaterialTheme.typography.titleLarge.copy(
-                            fontWeight = FontWeight(650),
-                            fontSize = 32.sp // Sesuaikan ukuran yang lebih besar dari default
-                        ),
-                        color = Color(0xFF2B395B),
-                        textAlign = TextAlign.Center
-                    )
+                            // Judul
+                            Text(
+                                text = "SoulFess",
+                                style = MaterialTheme.typography.titleLarge.copy(
+                                    fontWeight = FontWeight(650),
+                                    fontSize = 32.sp
+                                ),
+                                color = Color(0xFF2B395B),
+                                textAlign = TextAlign.Center,
+                                modifier = Modifier.align(Alignment.Center)
+                            )
+
+                            // Ikon Kanan (Profile)
+                            IconButton(
+                                onClick = { navController.navigate("join_chat") }, // <-- MODIFIKASI Aksi
+                                modifier = Modifier.align(Alignment.CenterEnd)
+                            ) {
+                                Icon(
+                                    imageVector = Icons.Default.Person,
+                                    contentDescription = "Profile",
+                                    tint = Color(0xFF2B395B),
+                                    modifier = Modifier.size(28.dp)
+                                )
+                            }
+                        }
+                    }
+                    // --- AKHIR HEADER BARU ---
 
                     Text(
                         text = "Share your story anonymously",
@@ -131,7 +211,14 @@ fun AnonymousChatScreen(navController: NavController) {
                     }
                 }
             }
+
+            // Spacer untuk memberi ruang agar item terakhir tidak tertutup BottomBar
+            item {
+                Spacer(modifier = Modifier.height(120.dp))
+            }
         }
+
+        // Konten yang menempel di bawah (InputBar + BottomBar)
         Column(
             modifier = Modifier
                 .align(Alignment.BottomCenter)

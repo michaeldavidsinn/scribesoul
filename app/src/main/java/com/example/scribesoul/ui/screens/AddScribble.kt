@@ -45,6 +45,7 @@ import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
+import androidx.navigation.compose.rememberNavController
 import com.example.scribesoul.R
 import com.example.scribesoul.utils.softShadow
 
@@ -98,6 +99,7 @@ fun GradientCard(modifier: Modifier = Modifier, navController: NavController) {
                 alpha = 0.18f
             )
             .clip(RoundedCornerShape(16.dp))
+            .clickable { onClick() }
             .background(
                 brush = Brush.linearGradient(
                     colorStops = arrayOf(
@@ -125,6 +127,6 @@ fun GradientCard(modifier: Modifier = Modifier, navController: NavController) {
 @Preview(showBackground = true)
 @Composable
 fun AddScribblereview() {
-    // Gunakan dummy NavController untuk preview
-    AddScribbleScreen(navController = NavController(LocalContext.current))
+    val dummyController = rememberNavController()
+    AddScribbleScreen(navController = dummyController)
 }
