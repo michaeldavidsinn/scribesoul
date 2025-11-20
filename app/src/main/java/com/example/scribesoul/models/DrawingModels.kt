@@ -2,6 +2,7 @@ package com.example.scribesoul.models // Sesuaikan dengan nama package Anda
 
 import android.net.Uri
 import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.geometry.Rect
 import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.Color
 
@@ -23,7 +24,7 @@ interface Colorable {
 
 // Enum untuk mode alat gambar
 enum class ToolMode {
-    DRAW, ERASE, Highlighter, Lasso
+    DRAW, ERASE, Highlighter, Lasso, SHAPE, TEXT
 }
 
 // Data class untuk setiap jenis objek di kanvas
@@ -59,7 +60,15 @@ data class EditableText(
     override var fill: FillStyle = SolidColor(Color.Black), // <-- Diubah dari color
     var fontSize: Int = 18,
     var size: Size = Size.Zero
-) : Movable, Colorable
+) : Movable, Colorable{
+    val bounds: Rect
+        get() = Rect(
+            offset.x,
+            offset.y,
+            offset.x + size.width,
+            offset.y + size.height
+        )
+}
 
 data class ItemGroup(
     val items: MutableList<Movable> = mutableListOf(),

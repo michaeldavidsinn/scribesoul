@@ -29,6 +29,7 @@ import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
 import com.example.scribesoul.R
 import com.example.scribesoul.ui.screens.HomeScreen
+import com.example.scribesoul.utils.softShadow
 import java.nio.file.WatchEvent
 
 fun splitWords(sentence: String): Array<String>{
@@ -49,10 +50,11 @@ fun splitWords(sentence: String): Array<String>{
 }
 
 @Composable
-fun JournalCover(navController: NavController, journalTitle: String, journalDate: String, journalId: String){
+fun JournalCover(navController: NavController, journalTitle: String, journalDate: String, journalId: String, onClick: () -> Unit){
     Column(
         modifier = Modifier.clickable{
-            navController.navigate("journal")
+            onClick()
+//            navController.navigate("journal")
         },
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
@@ -61,6 +63,11 @@ fun JournalCover(navController: NavController, journalTitle: String, journalDate
                 Modifier
                     .width(190.dp)
                     .height(250.dp)
+                    .softShadow(
+                        radius = 20f,
+                        offsetY = 12f,
+                        alpha = 0.18f
+                    )
                     .align(alignment = Alignment.CenterHorizontally)
                     .clip(RoundedCornerShape(16.dp))
                     .background(
@@ -119,6 +126,7 @@ fun JournalCover(navController: NavController, journalTitle: String, journalDate
             }
         }
         Text(text = journalTitle,
+            modifier = Modifier.padding(top = 8.dp),
             style = TextStyle(
                 fontSize = 9.sp,
                 fontFamily = FontFamily(Font(R.font.poppins_medium)),
@@ -131,7 +139,7 @@ fun JournalCover(navController: NavController, journalTitle: String, journalDate
         Text(text = journalDate,
                 style = TextStyle(
                 fontSize = 7.sp,
-                fontFamily = FontFamily(Font(R.font.poppins_regular)),
+                fontFamily = FontFamily(Font(R.font.verdana)),
                 fontWeight = FontWeight(400),
                 color = Color(0XFF2B395B),
 
@@ -144,5 +152,5 @@ fun JournalCover(navController: NavController, journalTitle: String, journalDate
 @Composable
 fun JournalCoverView() {
     // Gunakan dummy NavController untuk preview
-    JournalCover(navController = NavController(LocalContext.current), journalTitle = "Rex's Mental Journal", journalDate = "21-11-2024", journalId = "123")
+    JournalCover(navController = NavController(LocalContext.current), journalTitle = "Rex's Mental Journal", journalDate = "21-11-2024", journalId = "123", onClick = {})
 }

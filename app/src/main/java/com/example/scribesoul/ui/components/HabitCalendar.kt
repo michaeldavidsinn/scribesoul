@@ -1,5 +1,6 @@
 import android.os.Build
 import androidx.annotation.RequiresApi
+import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
@@ -21,6 +22,7 @@ import androidx.compose.ui.graphics.BlendMode
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.graphicsLayer
+import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.Font
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
@@ -28,18 +30,24 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.scribesoul.R
+import com.example.scribesoul.utils.DrawCanvas
+import com.example.scribesoul.viewModels.DrawingViewModel
 import java.time.DayOfWeek
 import java.time.LocalDate
 import java.time.YearMonth
 import java.time.format.DateTimeFormatter
-import java.time.format.TextStyle
 import java.util.Locale
 
 @RequiresApi(Build.VERSION_CODES.O)
 @Composable
 fun HabitCalendar(
-    currentMonth: YearMonth
+    currentMonth: YearMonth,
+    habits: List<String> = emptyList(),
+    onAddHabit: () -> Unit = {},
+    drawingViewModel: DrawingViewModel,
+    page: JournalPage
 ) {
 
 
@@ -47,99 +55,102 @@ fun HabitCalendar(
         generateCalendarDays(currentMonth)
     }
 
-    Column {
+    Box {
 
             LazyColumn(
                 contentPadding = PaddingValues(bottom = 20.dp)
             ) {
-                item{
-                    Surface(
-                        modifier = Modifier.fillMaxWidth().padding(16.dp),
-                        shape = MaterialTheme.shapes.medium,
-                        shadowElevation = 4.dp,
-                        color = Color.White
-                    ) {
-                        Column(
-                            modifier = Modifier.padding(16.dp),
-                            horizontalAlignment = Alignment.CenterHorizontally
+                habits.forEach { habit->
+                    item{
+                        Surface(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(16.dp),
+                            shape = MaterialTheme.shapes.medium,
+                            shadowElevation = 4.dp,
+                            color = Color.White
                         ) {
-                            Text("SKINCARE",
-                                style = androidx.compose.ui.text.TextStyle(
+                            Column(
+                                modifier = Modifier.padding(16.dp),
+                                horizontalAlignment = Alignment.CenterHorizontally
+                            ) {
+                                Text(habit,
+                                    style = androidx.compose.ui.text.TextStyle(
 
-                                    fontSize = 19.sp,
-                                    fontFamily = FontFamily(Font(R.font.poppins_bold)),
-                                    fontWeight = FontWeight(800),
-                                    color = Color(0xFFFFF47A),
+                                        fontSize = 19.sp,
+                                        fontFamily = FontFamily(Font(R.font.verdana_bold)),
+                                        fontWeight = FontWeight(800),
+                                        color = Color(0xFFFFF47A),
 
-                                    textAlign = TextAlign.Center,
-                                    letterSpacing = 13.3.sp,
+                                        textAlign = TextAlign.Center,
+                                        letterSpacing = 13.3.sp,
 
-                                    ),
-                                modifier = Modifier.graphicsLayer(alpha = 0.99f)
-                                    .drawWithCache {
-                                        val brush = Brush.horizontalGradient(listOf(Color(0XFFFFF47A),Color(0XFFFFA8CF), Color(0XFFA774FF)))
-                                        onDrawWithContent {
-                                            drawContent()
-                                            drawRect(brush, blendMode = BlendMode.SrcAtop)
+                                        ),
+                                    modifier = Modifier
+                                        .graphicsLayer(alpha = 0.99f)
+                                        .drawWithCache {
+                                            val brush = Brush.horizontalGradient(
+                                                listOf(
+                                                    Color(0XFFFFF47A),
+                                                    Color(0XFFFFA8CF),
+                                                    Color(0XFFA774FF)
+                                                )
+                                            )
+                                            onDrawWithContent {
+                                                drawContent()
+                                                drawRect(brush, blendMode = BlendMode.SrcAtop)
+                                            }
                                         }
-                                    }
+                                )
+                                Spacer(modifier = Modifier.height(16.dp))
+                                DayOfWeekHeader()
+                                Spacer(modifier = Modifier.height(8.dp))
+                                CalendarGrid(
+                                    days = days,
+                                    currentMonth = currentMonth,
+
+                                    )
+                            }
+                        }
+                    }
+                }
+
+                item{
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.Center
+                    ){
+                        Column(
+                            modifier = Modifier
+                                .clip(CircleShape)
+                                .background(Color.White)
+                                .size(30.dp)
+                                .clickable {
+                                    onAddHabit()
+                                },
+                            horizontalAlignment = Alignment.CenterHorizontally,
+                            verticalArrangement = Arrangement.Center
+
+
+                        ) {
+                            Text("+",
+                                style = TextStyle(
+                                    fontSize = 20.sp,
+                                    fontFamily = FontFamily(Font(R.font.verdana_bold)),
+                                    fontWeight = FontWeight(600),
+                                    color = Color.Black,
+                                    letterSpacing = 1.sp,
+                                )
                             )
-                            Spacer(modifier = Modifier.height(16.dp))
-                            DayOfWeekHeader()
-                            Spacer(modifier = Modifier.height(8.dp))
-                            CalendarGrid(
-                                days = days,
-                                currentMonth = currentMonth,
-
-                                )
                         }
+
                     }
                 }
-                item{
-                    Surface(
-                        modifier = Modifier.fillMaxWidth().padding(16.dp),
-                        shape = MaterialTheme.shapes.medium,
-                        shadowElevation = 4.dp,
-                        color = Color.White
-                    ) {
-                        Column(
-                            modifier = Modifier.padding(16.dp),
-                            horizontalAlignment = Alignment.CenterHorizontally
-                        ) {
-                            Text("VITAMINS",
-                            style = androidx.compose.ui.text.TextStyle(
 
-                                    fontSize = 19.sp,
-                                    fontFamily = FontFamily(Font(R.font.poppins_bold)),
-                                    fontWeight = FontWeight(800),
-                                    color = Color(0xFFFFF47A),
 
-                                    textAlign = TextAlign.Center,
-                                    letterSpacing = 13.3.sp,
-
-                            ),
-                                modifier = Modifier.graphicsLayer(alpha = 0.99f)
-                                    .drawWithCache {
-                                        val brush = Brush.horizontalGradient(listOf(Color(0XFFFFF47A),Color(0XFFFFA8CF), Color(0XFFA774FF)))
-                                        onDrawWithContent {
-                                            drawContent()
-                                            drawRect(brush, blendMode = BlendMode.SrcAtop)
-                                        }
-                                    }
-                                )
-                            Spacer(modifier = Modifier.height(16.dp))
-                            DayOfWeekHeader()
-                            Spacer(modifier = Modifier.height(8.dp))
-                            CalendarGrid(
-                                days = days,
-                                currentMonth = currentMonth,
-
-                                )
-                        }
-                    }
-                }
 
             }
+//            DrawCanvas(drawingViewModel =  drawingViewModel, page)
 
     }
 
@@ -162,9 +173,9 @@ private fun DayOfWeekHeader() {
         }
         daysOfWeek.forEach { day ->
             Text(
-                text = day.getDisplayName(TextStyle.NARROW, Locale.getDefault()),
+                text = day.getDisplayName(java.time.format.TextStyle.NARROW, Locale.getDefault()),
                 style = androidx.compose.ui.text.TextStyle(
-                    fontFamily = FontFamily(Font(R.font.poppins_bold)),
+                    fontFamily = FontFamily(Font(R.font.verdana_bold)),
                     fontWeight = FontWeight(700),
                     color = Color(0XFF2B395B),
                     letterSpacing = 1.sp,
@@ -257,5 +268,5 @@ private fun generateCalendarDays(yearMonth: YearMonth): List<LocalDate> {
 @Preview(showSystemUi = true, showBackground = true)
 @Composable
 fun HabitCalendarPreview() {
-    HabitCalendar(currentMonth = YearMonth.now())
+    HabitCalendar(currentMonth = YearMonth.now(), drawingViewModel = viewModel(factory = DrawingViewModel.Factory), page = JournalPage.HabitsPage(id=0))
 }

@@ -46,6 +46,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
 import com.example.scribesoul.R
+import com.example.scribesoul.utils.softShadow
 
 @Composable
 fun AddScribbleScreen(navController: NavController) {
@@ -91,6 +92,11 @@ fun GradientCard(modifier: Modifier = Modifier, navController: NavController) {
             }
             .width(200.dp)
             .height(300.dp)
+            .softShadow(
+                radius = 20f,
+                offsetY = 12f,
+                alpha = 0.18f
+            )
             .clip(RoundedCornerShape(16.dp))
             .background(
                 brush = Brush.linearGradient(

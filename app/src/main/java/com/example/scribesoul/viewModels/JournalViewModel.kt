@@ -1,5 +1,6 @@
 package com.example.scribesoul.viewModels
 
+import Journal
 import JournalPage
 import JournalPage.*
 import JournalSection
@@ -17,6 +18,7 @@ import androidx.lifecycle.ViewModelProvider
 //import androidx.lifecycle.ViewModelProvider.AndroidViewModelFactory.Companion.APPLICATION_KEY
 import androidx.lifecycle.viewmodel.initializer
 import androidx.lifecycle.viewmodel.viewModelFactory
+import androidx.navigation.NavController
 import com.example.scribesoul.commands.Command
 import com.example.scribesoul.models.DrawablePath
 import com.example.scribesoul.models.EditableText
@@ -25,15 +27,24 @@ import com.example.scribesoul.models.ItemGroup
 import com.example.scribesoul.models.Movable
 import com.example.scribesoul.models.ShapeItem
 import com.example.scribesoul.models.ToolMode
+import com.example.scribesoul.ui.components.journalPages.MoodPage
 import com.example.scribesoul.ui.screens.ColorPickerTarget
 import com.example.scribesoul.ui.screens.GuideLine
+import java.time.LocalDate
+import java.time.YearMonth
 
 //import com.example.scribesoul.ScribeSoulApplication
 
 class JournalViewModel : ViewModel() {
     // --- Sections and Pages ---
-    private val _sections = mutableStateListOf<JournalSection>()
+    private var _sections = mutableStateListOf<JournalSection>()
     val sections: List<JournalSection> = _sections
+
+    private var nextGlobalPageId = 0
+
+
+    var journalId by mutableStateOf(0)
+        private set
 
     var selectedSectionIndex by mutableStateOf(0)
         private set
@@ -44,30 +55,14 @@ class JournalViewModel : ViewModel() {
         selectedPageIndex = page
     }
 
-    // --- Drawing State ---
-    val selectedPaths = mutableStateListOf<DrawablePath>()
-    val paths = mutableStateListOf<DrawablePath>()
-    var toolMode by mutableStateOf(ToolMode.DRAW)
-    var currentPath by mutableStateOf<List<Offset>>(emptyList())
-
-    var drawColor by mutableStateOf(Color.Black)
-    var drawThickness by mutableFloatStateOf(8f)
-    var eraseThickness by mutableFloatStateOf(40f)
-    val guideLines = mutableStateListOf<GuideLine>()
-
-    // --- Layers ---
-    val shapes = mutableStateListOf<ShapeItem>()
-    val texts = mutableStateListOf<EditableText>()
-    val groups = mutableStateListOf<ItemGroup>()
-    val imageLayers = mutableStateListOf<ImageLayer>()
-    val selectedItems = mutableStateListOf<Movable>()
-    val canvasCenter = mutableStateOf(Offset(500f, 500f))
+    fun changeJournalId(jid: Int){
+        journalId = jid
+    }
 
     // --- UI Flags ---
     var showLayerMenu = mutableStateOf(false)
     var showShapeMenu = mutableStateOf(false)
     var colorPickerTarget by mutableStateOf<ColorPickerTarget?>(null)
-    var pendingShapeType by mutableStateOf<String?>(null)
     var isAddingText by mutableStateOf(false)
     var showGradientPicker by mutableStateOf(false)
 
@@ -83,35 +78,53 @@ class JournalViewModel : ViewModel() {
     private var nextColorIndex = 0
 
     // --- Init ---
-    init {
-        _sections.add(
-            JournalSection(
-                id = 0,
-                type = SectionType.Creation,
-                pages = mutableStateListOf(),
-                Color(0xFF74A8FF)
+
+
+    fun init(){
+        if(_sections.size == 0) {
+            _sections.add(
+                JournalSection(
+                    id = 0,
+                    jid = journalId,
+                    type = SectionType.Creation,
+                    pages = mutableStateListOf(),
+                    Color(0xFF74A8FF)
+                )
             )
-        )
+        }
+    }
+
+    fun loadJournal(journal: Journal, navController: NavController){
+        _sections.clear()
+        _sections.addAll(journal.sections)
+
+        changeJournalId(journal.id)
+        init()
+        changeSelectedSection(0)
+        navController.navigate("journal")
     }
 
     // --- Commands ---
-    fun executeCommand(command: Command, page: JournalPage?) {
-        command.execute()
-        if(page is PlainPage){
-            page.undoStack.add(command)
-            page.redoStack.clear()
-            selectedItems.clear()
-            selectedPaths.clear()
-        }
 
-    }
 
     // --- Actions ---
-    fun changeSelectedSection(section: Int) { selectedSectionIndex = section }
+    fun changeSelectedSection(section: Int) {
+        selectedSectionIndex = section
+    }
+
+    fun syncBackTo(journalListViewModel: JournalListViewModel) {
+        val journal = journalListViewModel.journals.find { it.id == journalId } ?: return
+
+        journal.sections.clear()
+        journal.sections.addAll(_sections)
+    }
 
     fun addSection(type: SectionType) {
+        val color = sectionColors[_sections.size % sectionColors.size]
+        val firstPageId = nextGlobalPageId++
         val newSection = JournalSection(
             id = _sections.size,
+            jid = 1,
             type = type,
             pages = mutableStateListOf(
                 when (type) {
@@ -119,42 +132,62 @@ class JournalViewModel : ViewModel() {
                         0,
                         name = ""
                     )
-                    SectionType.Habits -> HabitsPage(0)
-                    SectionType.Calendar -> CalendarPage(0)
+                    SectionType.Habits -> HabitsPage(firstPageId)
+                    SectionType.Calendar -> CalendarPage(firstPageId)
+                    SectionType.Mood -> MoodsPage(firstPageId, currentMonth =  YearMonth.now())
+                    SectionType.Todo -> TodoPage(id = firstPageId)
                     SectionType.Creation -> TODO()
+                    SectionType.WideLined -> WideLinedPage(firstPageId)
+                    SectionType.WideLinedSmallMargin -> WideLinedSmallMarginPage(firstPageId)
+                    SectionType.SmallGrid -> SmallGridPage(firstPageId)
+                    SectionType.LargeGrid -> LargeGridPage(firstPageId)
+                    SectionType.NarrowLined -> NarrowLinedPage(firstPageId)
+                    SectionType.WideLinedLargeMargin -> WideLinedLargeMarginPage(firstPageId)
+                    SectionType.NarrowLinedSmallMargin -> NarrowLinedSmallMarginPage(firstPageId)
+                    SectionType.NarrowLinedLargeMargin -> NarrowLinedLargeMarginPage(firstPageId)
                 }
             ),
-            color = sectionColors[nextColorIndex]
+            color = color
         )
         _sections.add(newSection)
         selectedSectionIndex = _sections.lastIndex
         selectedPageIndex = 0
 
-        nextColorIndex = (nextColorIndex + 1) % sectionColors.size
     }
 
     fun addPageToSection(sectionIndex: Int) {
         val section = _sections[sectionIndex]
-        val newPageId = section.pages.size
+        val newPageId = nextGlobalPageId++
         val newPage = when (section.type) {
             SectionType.Plain -> PlainPage(newPageId)
             SectionType.Habits -> HabitsPage(newPageId)
             SectionType.Calendar -> CalendarPage(newPageId)
+            SectionType.Todo -> TodoPage(newPageId)
+            SectionType.Mood -> MoodsPage(newPageId, currentMonth =  YearMonth.now())
             SectionType.Creation -> TODO()
+            SectionType.WideLined -> WideLinedPage(newPageId)
+            SectionType.LargeGrid -> LargeGridPage(newPageId)
+            SectionType.SmallGrid -> SmallGridPage(newPageId)
+            SectionType.NarrowLined -> NarrowLinedPage(newPageId)
+            SectionType.NarrowLinedLargeMargin -> NarrowLinedLargeMarginPage(newPageId)
+            SectionType.NarrowLinedSmallMargin -> NarrowLinedSmallMarginPage(newPageId)
+            SectionType.WideLinedLargeMargin -> WideLinedLargeMarginPage(newPageId)
+            SectionType.WideLinedSmallMargin -> WideLinedSmallMarginPage(newPageId)
         }
         section.pages.add(newPage)
         selectedPageIndex = section.pages.lastIndex
     }
 
 
-    fun pickImage(uri: Uri) {
-//        executeCommand(AddImageCommand(ImageLayer(uri = uri, offset = canvasCenter.value), imageLayers))
+    fun saveJournal(){
+
     }
 
-    // --- Tools ---
-    fun changeToolMode(mode: ToolMode) { toolMode = mode }
-    fun updateDrawThickness(value: Float) { drawThickness = value }
-    fun updateEraseThickness(value: Float) { eraseThickness = value }
+    fun convertToJournalUpload(){
+
+    }
+
+
 
     companion object {
         val Factory: ViewModelProvider.Factory = viewModelFactory {

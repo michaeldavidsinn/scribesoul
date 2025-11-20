@@ -56,7 +56,7 @@ fun MentalTip(navController: NavController){
                 Text("Anxiety",
                     style = TextStyle(
                         fontSize = 30.sp,
-                        fontFamily = FontFamily(Font(R.font.poppins_bold)),
+                        fontFamily = FontFamily(Font(R.font.verdana_bold)),
                         fontWeight = FontWeight(600),
                         color = Color(0xFF2B395B),
 
@@ -68,7 +68,7 @@ fun MentalTip(navController: NavController){
             Text("Anxiety is your body's natural response to stress. It’s a feeling of fear or apprehension about what’s to come.",
                     style = TextStyle(
                         fontSize = 20.sp,
-                        fontFamily = FontFamily(Font(R.font.poppins_regular)),
+                        fontFamily = FontFamily(Font(R.font.verdana)),
                         fontWeight = FontWeight(400),
                         color = Color(0xFF2B395B),
 
@@ -105,7 +105,7 @@ fun MentalTip(navController: NavController){
                     Text("BACK",
                         style = TextStyle(
                             fontSize = 16.sp,
-                            fontFamily = FontFamily(Font(R.font.poppins_bold)),
+                            fontFamily = FontFamily(Font(R.font.verdana_bold)),
                             fontWeight = FontWeight(400),
                             color = Color.White,
 
@@ -130,7 +130,7 @@ fun MentalTip(navController: NavController){
                     Text("NEXT",
                         style = TextStyle(
                             fontSize = 16.sp,
-                            fontFamily = FontFamily(Font(R.font.poppins_bold)),
+                            fontFamily = FontFamily(Font(R.font.verdana_bold)),
                             fontWeight = FontWeight(400),
                             color = Color.White,
 

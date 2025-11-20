@@ -40,8 +40,9 @@ fun BottomNavItem(
                 modifier = Modifier.size(iconSize)
             )
         }
-        Spacer(modifier = Modifier.height(2.dp))
+
         Text(
+            modifier = Modifier.offset(y = -6.dp),
             text = label,
             fontSize = 10.sp,
             color = Color(0xFF2B395B),

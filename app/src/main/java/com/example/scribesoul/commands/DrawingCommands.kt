@@ -1,5 +1,6 @@
 package com.example.scribesoul.commands // Sesuaikan dengan nama package Anda
 
+import androidx.compose.runtime.snapshots.SnapshotStateList
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.Color
@@ -11,7 +12,7 @@ interface Command {
     fun undo()
 }
 
-class AddDrawableCommand(private val drawable: DrawablePath, private val paths: MutableList<DrawablePath>) : Command {
+class AddDrawableCommand(private val drawable: DrawablePath, private val paths: SnapshotStateList<DrawablePath>) : Command {
     override fun execute() { paths.add(drawable) }
     override fun undo() { paths.remove(drawable) }
 }
@@ -19,7 +20,7 @@ class AddDrawableCommand(private val drawable: DrawablePath, private val paths: 
 class EraseCommand(
     private val originalPaths: List<DrawablePath>,
     private val pathsAfterErase: List<DrawablePath>,
-    private val paths: MutableList<DrawablePath>
+    private val paths: SnapshotStateList<DrawablePath>
 ) : Command {
     override fun execute() {
         paths.clear()

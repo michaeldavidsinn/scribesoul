@@ -8,6 +8,9 @@ import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import com.example.scribesoul.ui.screens.*
+import com.example.scribesoul.viewModels.DrawingViewModel
+import com.example.scribesoul.viewModels.HomeViewModel
+import com.example.scribesoul.viewModels.JournalListViewModel
 import com.example.scribesoul.viewModels.JournalViewModel
 
 
@@ -15,12 +18,16 @@ import com.example.scribesoul.viewModels.JournalViewModel
 @Composable
 fun AppNavigation(
     navController: NavHostController,
-    journalViewModel: JournalViewModel = viewModel(factory = JournalViewModel.Factory)
+    journalViewModel: JournalViewModel = viewModel(factory = JournalViewModel.Factory),
+    journalListViewModel: JournalListViewModel = viewModel(factory = JournalListViewModel.Factory),
+    homeViewModel: HomeViewModel = viewModel(factory = HomeViewModel.Factory),
+    drawingViewModel: DrawingViewModel = viewModel(factory = DrawingViewModel.Factory ),
+
 ) {
 
     NavHost(navController = navController, startDestination = "home") {
         composable("home") {
-            HomeScreen(navController)
+            HomeScreen(navController, viewModel =  homeViewModel)
         }
         composable("therapist") {
             TherapistRecommendationScreen(navController)
@@ -38,10 +45,10 @@ fun AppNavigation(
             DrawScribbleScreen(navController)
         }
         composable("journalList") {
-            JournalListScreen(navController)
+            JournalListScreen(navController, journalViewModel = journalViewModel, journalListViewModel = journalListViewModel)
         }
         composable("journal") {
-            JournalScreen(navController, journalViewModel = journalViewModel)
+            JournalScreen(navController, journalViewModel = journalViewModel,journalListViewModel = journalListViewModel, drawingViewModel = drawingViewModel)
         }
         composable("mental") {
             MentalTip(navController)

@@ -37,6 +37,7 @@ import androidx.navigation.NavController
 import androidx.navigation.compose.rememberNavController
 import com.example.scribesoul.R
 import com.example.scribesoul.ui.navigation.BottomNavItem
+import com.example.scribesoul.utils.softShadow
 
 @Composable
 fun ScribbleScreen(navController: NavController) {
@@ -97,6 +98,11 @@ fun ScribbleScreen(navController: NavController) {
                     Box(
                         modifier = Modifier
                             .width(275.dp)
+                            .softShadow(
+                                radius = 20f,
+                                offsetY = 12f,
+                                alpha = 0.18f
+                            )
                             .aspectRatio(1f)
                             .clip(RoundedCornerShape(16.dp))
                             .background(
@@ -109,7 +115,7 @@ fun ScribbleScreen(navController: NavController) {
                             .clickable{
                                 navController.navigate("addScribble")
                             }
-                            .shadow(elevation = 4.dp, shape = RoundedCornerShape(16.dp)),
+                            ,
                         contentAlignment = Alignment.Center
                     ) {
                         Text(
@@ -127,6 +133,11 @@ fun ScribbleScreen(navController: NavController) {
                     Box(
                         modifier = Modifier
                             .width(275.dp)
+                            .softShadow(
+                                radius = 20f,
+                                offsetY = 12f,
+                                alpha = 0.18f
+                            )
                             .aspectRatio(1f)
                             .clip(RoundedCornerShape(16.dp))
                             .background(
@@ -136,7 +147,7 @@ fun ScribbleScreen(navController: NavController) {
                                     radius = 500f // Sesuaikan agar menyebar dengan baik di ukuran box
                                 )
                             )
-                            .shadow(elevation = 4.dp, shape = RoundedCornerShape(16.dp)),
+                            ,
                         contentAlignment = Alignment.Center
                     ) {
                         Column(

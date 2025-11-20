@@ -37,6 +37,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.clipToBounds
+import androidx.compose.ui.draw.drawBehind
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.BlendMode
 import androidx.compose.ui.graphics.Brush
@@ -45,6 +46,7 @@ import androidx.compose.ui.graphics.Path
 import androidx.compose.ui.graphics.PathEffect
 import androidx.compose.ui.graphics.StrokeCap
 import androidx.compose.ui.graphics.StrokeJoin
+import androidx.compose.ui.graphics.drawscope.DrawScope
 import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.platform.LocalDensity
@@ -77,23 +79,24 @@ import com.example.scribesoul.models.SolidColor as SolidColorFill
 //(0XFFFFFEE4)
 
 @Composable
-fun PlainPage(
+fun WideLinedPage(
     journalViewModel: JournalViewModel,
     drawingViewModel: DrawingViewModel,
-    page: JournalPage.PlainPage,
+    page: JournalPage.WideLinedPage,
     color: Color
 ) {
     val density = LocalDensity.current
     var showTextInput by remember { mutableStateOf(false) }
-
+    val lineColor = Color.Gray.copy(alpha = 0.3f)
+    val lineSpacing = 40.dp
+    val topMargin = 80.dp
 
     if (showTextInput) {
         NameInputDialog(
             onNameCreate = { name ->
                 showTextInput = false
                 journalViewModel.addPageToSection(journalViewModel.selectedSectionIndex)
-                val newPage =
-                    journalViewModel.sections[journalViewModel.selectedSectionIndex].pages.last() as JournalPage.PlainPage
+                val newPage = journalViewModel.sections[journalViewModel.selectedSectionIndex].pages.last() as JournalPage.PlainPage
                 newPage.name = name
                 journalViewModel.changeSelectedPageIndex(
                     journalViewModel.sections[journalViewModel.selectedSectionIndex].pages.lastIndex
@@ -105,21 +108,38 @@ fun PlainPage(
 
 
     key(page.id) {
-        Box(
-            modifier = Modifier
-                .background(color, RoundedCornerShape(23.dp))
-                .height(640.dp)
-                .fillMaxWidth(0.8f)
-                .clip(RoundedCornerShape(23.dp))
-                .clipToBounds()
-        ) {
-            DrawCanvas(drawingViewModel = drawingViewModel, page = page)
+                Box(
+                    modifier = Modifier
+                        .background(color, RoundedCornerShape(23.dp))
+                        .height(640.dp)
+                        .fillMaxWidth(0.8f)
+                        .clip(RoundedCornerShape(23.dp))
+                        .clipToBounds()
+                        .drawBehind{
+                            val spacingPx = lineSpacing.toPx()
+                            val topMarginPx = topMargin.toPx()
+                            val strokeWidth = 1.dp.toPx()
+
+                            // 2. Loop from top margin down to the bottom of the page
+                            var currentY = topMarginPx
+                            while (currentY < size.height) {
+                                drawLine(
+                                    color = lineColor,
+                                    start = Offset(x = 0f, y = currentY),
+                                    end = Offset(x = size.width, y = currentY),
+                                    strokeWidth = strokeWidth
+                                )
+                                currentY += spacingPx
+                            }
+                        }
+                        .clipToBounds()
+                ) {
+
+                    DrawCanvas(drawingViewModel = drawingViewModel, page = page)
 
             // Page navigation and add new page
             Row(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(horizontal = 20.dp),
+                modifier = Modifier.fillMaxWidth().padding(horizontal = 20.dp),
                 horizontalArrangement = Arrangement.SpaceBetween,
                 verticalAlignment = Alignment.CenterVertically
             ) {
@@ -155,9 +175,7 @@ fun PlainPage(
             }
 
             Row(
-                modifier = Modifier
-                    .fillMaxSize()
-                    .padding(horizontal = 20.dp),
+                modifier = Modifier.fillMaxSize().padding(horizontal = 20.dp),
                 horizontalArrangement = Arrangement.SpaceBetween,
                 verticalAlignment = Alignment.CenterVertically
             ) {
@@ -168,12 +186,7 @@ fun PlainPage(
                     fontWeight = FontWeight.Bold,
                     color = Color(0xFF2B395B),
                     modifier = Modifier.clickable {
-                        journalViewModel.changeSelectedPageIndex(
-                            maxOf(
-                                0,
-                                journalViewModel.selectedPageIndex - 1
-                            )
-                        )
+                        journalViewModel.changeSelectedPageIndex(maxOf(0, journalViewModel.selectedPageIndex - 1))
                     }
                 )
                 Text(
@@ -183,14 +196,8 @@ fun PlainPage(
                     fontWeight = FontWeight.Bold,
                     color = Color(0xFF2B395B),
                     modifier = Modifier.clickable {
-                        val lastIndex =
-                            journalViewModel.sections[journalViewModel.selectedSectionIndex].pages.lastIndex
-                        journalViewModel.changeSelectedPageIndex(
-                            minOf(
-                                lastIndex,
-                                journalViewModel.selectedPageIndex + 1
-                            )
-                        )
+                        val lastIndex = journalViewModel.sections[journalViewModel.selectedSectionIndex].pages.lastIndex
+                        journalViewModel.changeSelectedPageIndex(minOf(lastIndex, journalViewModel.selectedPageIndex + 1))
                     }
                 )
             }
@@ -199,47 +206,13 @@ fun PlainPage(
 }
 
 
-// Fungsi menggambar path dari list Offset, tergantung mode aktif
-private fun androidx.compose.ui.graphics.drawscope.DrawScope.drawPathFromOffsets(
-    offsets: List<Offset>,
-    mode: ToolMode
-) {
-    if (offsets.size < 2) return
 
-    val smoothedPath = Path().apply {
-        moveTo(offsets.first().x, offsets.first().y)
-        val smoothness = 5
-        for (i in 1 until offsets.size) {
-            val from = offsets[i - 1]
-            val to = offsets[i]
-            val dx = abs(from.x - to.x)
-            val dy = abs(from.y - to.y)
-            if (dx >= smoothness || dy >= smoothness) {
-                quadraticTo(
-                    x1 = (from.x + to.x) / 2f,
-                    y1 = (from.y + to.y) / 2f,
-                    x2 = to.x,
-                    y2 = to.y
-                )
-            }
-        }
-    }
 
-    drawPath(
-        path = smoothedPath,
-        color = if (mode == ToolMode.DRAW) Color.Black else Color.Transparent,
-        style = Stroke(
-            width = if (mode == ToolMode.DRAW) 8f else 36f,
-            cap = StrokeCap.Round,
-            join = StrokeJoin.Round
-        ),
-        blendMode = if (mode == ToolMode.ERASE) BlendMode.Clear else BlendMode.SrcOver
-    )
+
+
+
+@Preview(showBackground = true, showSystemUi = true)
+@Composable
+fun WideLinedPageView(){
+    WideLinedPage(journalViewModel = viewModel(factory = JournalViewModel.Factory),page = JournalPage.WideLinedPage(id = 0,  name = "hi"), color = Color.Cyan, drawingViewModel = viewModel(factory = DrawingViewModel.Factory))
 }
-
-
-//@Preview(showBackground = true, showSystemUi = true)
-//@Composable
-//fun PlainPageView(){
-//    PlainPage(journalViewModel = viewModel(factory = JournalViewModel.Factory),page = JournalPage.PlainPage(id = 0, paths = mutableListOf(), undoStack = mutableListOf(), redoStack = mutableListOf(), name = "hi"), color = Color.Cyan)
-//}

@@ -10,11 +10,11 @@ import com.example.scribesoul.R
 
 // Inisialisasi FontFamily Poppins
 val Poppins = FontFamily(
-    Font(R.font.poppins_regular, FontWeight.Normal),
-    Font(R.font.poppins_bold, FontWeight.Bold),
-    Font(R.font.poppins_medium, FontWeight.Medium),
-    Font(R.font.poppins_light, FontWeight.Light),
-    Font(R.font.poppins_semibold, FontWeight.SemiBold)
+    Font(R.font.verdana, FontWeight.Normal),
+    Font(R.font.verdana_bold, FontWeight.Bold),
+    Font(R.font.verdana_bold, FontWeight.Bold),
+    Font(R.font.verdana, FontWeight.Light),
+    Font(R.font.verdana, FontWeight.SemiBold)
 )
 
 // Typography kustom pakai Poppins

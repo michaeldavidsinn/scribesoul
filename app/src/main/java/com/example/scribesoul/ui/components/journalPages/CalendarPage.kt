@@ -4,10 +4,13 @@ import android.widget.Toast
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.gestures.detectDragGestures
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
@@ -16,7 +19,9 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
+import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
@@ -24,6 +29,7 @@ import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
+import androidx.compose.runtime.snapshots.SnapshotStateList
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -50,104 +56,133 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.scribesoul.R
 import com.example.scribesoul.models.ToolMode
+import com.example.scribesoul.ui.components.CalendarGrid
+import com.example.scribesoul.utils.DrawCanvas
+import com.example.scribesoul.viewModels.DrawingViewModel
+import com.example.scribesoul.viewModels.JournalViewModel
+import java.time.LocalDate
+import java.time.YearMonth
 
 //(0XFFFFFEE4)
 
 @Composable
-fun CalendarPage(currentToolMode: ToolMode){
-    val paths = remember { mutableStateListOf<Pair<List<Offset>, ToolMode>>() }
-    var currentPath by remember { mutableStateOf<List<Offset>>(emptyList()) }
-    var color: Color by remember { mutableStateOf(Color(0XFFFFCCE3)) }
+fun CalendarPage(
+    page: JournalPage.CalendarPage,
+    color: Color
+) {
+    var showDialog by remember { mutableStateOf(false) }
+    var selectedDate by remember { mutableStateOf<LocalDate?>(null) }
+    var textInput by remember { mutableStateOf("") }
 
     Box(
         modifier = Modifier
-            .background(color, shape = RoundedCornerShape(size = 23.dp))
+            .background(color, RoundedCornerShape(23.dp))
             .height(640.dp)
-            .fillMaxWidth(fraction=0.8f)
-
+            .fillMaxWidth(0.8f)
             .clip(RoundedCornerShape(23.dp))
             .clipToBounds()
-
-    ){
+    ) {
         Column(
             modifier = Modifier.fillMaxSize().padding(20.dp)
         ) {
-            Column(
-                verticalArrangement = Arrangement.spacedBy(-50.dp)
+
+            // --- MONTH NAVIGATION ---
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically
             ) {
-                Text("November", modifier = Modifier.fillMaxWidth(), textAlign = TextAlign.Center,
-                    style = TextStyle(
-                        fontSize = 38.sp,
-                        fontFamily = FontFamily(Font(R.font.poppins_bold)),
-                        fontWeight = FontWeight(600),
-                        color = Color(0XFF2B395B),
-                        letterSpacing = 1.sp,
-                    )
-                )
-                Text("2024", modifier = Modifier.fillMaxWidth(), textAlign = TextAlign.Center,
-                    style = TextStyle(
-                        fontSize = 96.sp,
-                        fontFamily = FontFamily(Font(R.font.palace_script)),
-                        fontWeight = FontWeight(500),
-                        color = Color.Black,
-                        letterSpacing = 1.sp,
-                    )
-                )
-            }
-
-            Image(
-                painter = painterResource(R.drawable.calendar),
-                contentDescription = null,
-                contentScale = ContentScale.FillWidth,
-                modifier = Modifier.fillMaxWidth()
-
-            )
-
-            Text("Goals:",
-                style = TextStyle(
-                    fontSize = 50.sp,
-                    fontFamily = FontFamily(Font(R.font.palace_script)),
-                    fontWeight = FontWeight(500),
-                    color = Color.Black,
-                    letterSpacing = 1.sp,
-                ))
-
-        }
-
-        Canvas(modifier = Modifier
-            .height(600.dp)
-            .fillMaxWidth()
-            .pointerInput(currentToolMode) {
-                detectDragGestures(
-                    onDragStart = { startOffset ->
-                        currentPath = listOf(startOffset)
-                    },
-                    onDrag = { change, _ ->
-                        currentPath = currentPath + change.position
-                    },
-                    onDragEnd = {
-                        if (currentPath.isNotEmpty()) {
-                            paths.add(currentPath to currentToolMode)
-                            currentPath = emptyList()
+                Text(
+                    "◀",
+                    fontSize = 32.sp,
+                    color = Color(0xFF2B395B),
+                    modifier = Modifier
+                        .padding(8.dp)
+                        .clickable {
+                            page.currentMonth = page.currentMonth.minusMonths(1)
                         }
-                    }
                 )
-            }) {
-            drawIntoCanvas { canvas ->
-                canvas.saveLayer(size.toRect(), Paint())
-                paths.forEach { (points, toolMode) ->
-                    drawPathFromOffsets(offsets = points, mode = toolMode)
-                }
-                drawPathFromOffsets(offsets = currentPath, mode = currentToolMode)
-                canvas.restore()
-            }
-        }
 
+                Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                    Text(
+                        page.currentMonth.month.toString(),
+                        fontSize = 28.sp,
+                        fontWeight = FontWeight.Bold,
+                        color = Color(0xFF2B395B)
+                    )
+                    Text(
+                        page.currentMonth.year.toString(),
+                        fontSize = 22.sp,
+                        color = Color.DarkGray
+                    )
+                }
+
+                Text(
+                    "▶",
+                    fontSize = 32.sp,
+                    color = Color(0xFF2B395B),
+                    modifier = Modifier
+                        .padding(8.dp)
+                        .clickable {
+                            page.currentMonth = page.currentMonth.plusMonths(1)
+                        }
+                )
+            }
+
+            Spacer(Modifier.height(8.dp))
+
+            // --- IMPROVED GRID WITH SPACING ---
+            CalendarGrid(
+                month = page.currentMonth,
+                reminders = page.reminders,
+//                onDateClick = { date ->
+//                    selectedDate = date
+//                    textInput = ""
+//                    showDialog = true
+//                }
+            )
+        }
     }
 
+    // --- ADD EVENT POP-UP ---
+    if (showDialog && selectedDate != null) {
+        AlertDialog(
+            onDismissRequest = { showDialog = false },
+            title = { Text("Add Event for $selectedDate") },
+            text = {
+                OutlinedTextField(
+                    value = textInput,
+                    onValueChange = { textInput = it },
+                    placeholder = { Text("Type reminder here") }
+                )
+            },
+            confirmButton = {
+                Button(
+                    onClick = {
+                        if (textInput.isNotBlank()) {
+                            val list = page.reminders.getOrPut(selectedDate!!) { SnapshotStateList() }
+                            list.add(textInput)
+
+
+                        }
+                        showDialog = false
+                    }
+                ) {
+                    Text("Add")
+                }
+            },
+            dismissButton = {
+                Button(onClick = { showDialog = false }) {
+                    Text("Cancel")
+                }
+            }
+        )
+    }
 }
+
 
 // Fungsi menggambar path dari list Offset, tergantung mode aktif
 private fun androidx.compose.ui.graphics.drawscope.DrawScope.drawPathFromOffsets(
@@ -175,5 +210,5 @@ private fun androidx.compose.ui.graphics.drawscope.DrawScope.drawPathFromOffsets
 @Preview(showBackground = true, showSystemUi = true)
 @Composable
 fun CalendarPageView(){
-    CalendarPage(currentToolMode = ToolMode.DRAW)
+    CalendarPage(page = JournalPage.CalendarPage(id = 1), color = Color(0XFFFFCCE3))
 }
