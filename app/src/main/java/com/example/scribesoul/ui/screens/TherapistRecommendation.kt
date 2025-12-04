@@ -313,7 +313,7 @@ fun BottomBarTherapist(navController: NavController, modifier: Modifier = Modifi
                 }
             }
             BottomNavItem(R.drawable.scribble_icon, "Scribble", 28.dp) {
-                navController.navigate("scribble") {
+                navController.navigate("addScribble") {
                     launchSingleTop = true
                 }
             }

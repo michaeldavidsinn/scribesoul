@@ -81,9 +81,6 @@ fun AppNavigation(
             CommunityGroupScreen(navController)
         }
 
-        composable("scribble") {
-            ScribbleScreen(navController)
-        }
         composable("addScribble") {
             AddScribbleScreen(navController)
         }

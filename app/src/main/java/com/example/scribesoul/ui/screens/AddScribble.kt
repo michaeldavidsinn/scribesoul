@@ -47,6 +47,7 @@ import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
 import androidx.navigation.compose.rememberNavController
 import com.example.scribesoul.R
+import com.example.scribesoul.ui.navigation.BottomNavItem
 import com.example.scribesoul.utils.softShadow
 
 @Composable
@@ -80,6 +81,58 @@ fun AddScribbleScreen(navController: NavController) {
             verticalArrangement = Arrangement.spacedBy(1.dp)
         ) {
             BottomBarScribble(navController = navController)
+        }
+    }
+}
+
+@Composable
+fun BottomBarScribble(navController: NavController, modifier: Modifier = Modifier) {
+    Box(
+        modifier = modifier
+            .padding(start = 24.dp, end = 24.dp, top = 6.dp, bottom = 20.dp)
+            .shadow(
+                elevation = 6.dp,
+                shape = RoundedCornerShape(30.dp),
+                clip = false
+            )
+            .clip(RoundedCornerShape(30.dp))
+            .background(Color.White)
+            .height(70.dp)
+            .fillMaxWidth(),
+        contentAlignment = Alignment.Center
+    ) {
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(horizontal = 12.dp),
+            horizontalArrangement = Arrangement.SpaceBetween,
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            BottomNavItem(R.drawable.home_icon, "Home", iconSize = 28.dp) {
+                navController.navigate("home") {
+                    launchSingleTop = true
+                }
+            }
+            BottomNavItem(R.drawable.therapist_icon, "Therapist", iconSize = 25.dp) {
+                navController.navigate("therapist") {
+                    launchSingleTop = true
+                }
+            }
+            BottomNavItem(R.drawable.explore_icon, "Explore", iconSize = 25.dp) {
+                navController.navigate("explore") {
+                    launchSingleTop = true
+                }
+            }
+            BottomNavItem(R.drawable.scribble_icon, "Scribble", iconSize = 43.dp) {
+                navController.navigate("addScribble") {
+                    launchSingleTop = true
+                }
+            }
+            BottomNavItem(R.drawable.journal_icon, "Journal", iconSize = 25.dp) {
+                navController.navigate("journalList") {
+                    launchSingleTop = true
+                }
+            }
         }
     }
 }
