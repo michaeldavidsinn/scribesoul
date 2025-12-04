@@ -88,9 +88,6 @@ fun AddScribbleScreen(navController: NavController) {
 fun GradientCard(modifier: Modifier = Modifier, navController: NavController) {
     Box(
         modifier = modifier
-            .clickable{
-                navController.navigate("scribbleDraw")
-            }
             .width(200.dp)
             .height(300.dp)
             .softShadow(
@@ -113,7 +110,7 @@ fun GradientCard(modifier: Modifier = Modifier, navController: NavController) {
         contentAlignment = Alignment.Center
     ) {
         Icon(
-            imageVector = Icons.Rounded.Add, // ujungnya bulat
+            imageVector = Icons.Rounded.Add,
             contentDescription = "Add",
             tint = Color.White,
             modifier = Modifier.size(115.dp)
