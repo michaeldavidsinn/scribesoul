@@ -587,47 +587,47 @@ fun DrawScribbleScreen(navController: NavController) {
         // RenderMovableItem usage (unchanged)
 
 
-        individualItems.forEach { item ->
-            key(item) {
-                RenderMovableItem(
-                    item = item,
-                    isSelected = selectedItems.contains(item),
-                    onSelect = {
-                        selectedItems.clear()
-                        selectedPaths.clear()
-                        selectedItems.add(item)
-                        texts.forEach { it.isEditing = false }
-                    },
-                    onDoubleClick = { if (it is EditableText) it.isEditing = true },
-                    executeCommand = { executeCommand(it) },
-                    allItems = allMovables,
-                    guideLines = guideLines,
-                    onUpdate = {
-                            newItem ->
-                        when (newItem) {
-                            is EditableText -> {
-                                (item as EditableText).apply {
-                                    text = newItem.text
-                                    offset = newItem.offset
-                                    rotation = newItem.rotation
-                                    fill = newItem.fill
-                                    fontSize = newItem.fontSize
-                                    size = newItem.size
-                                }
-                            }
-                            is ShapeItem -> {
-                                val idx = shapes.indexOf(item)
-                                if (idx != -1) shapes[idx] = newItem
-                            }
-                            is ImageLayer -> {
-                                val idx = imageLayers.indexOf(item)
-                                if (idx != -1) imageLayers[idx] = newItem
-                            }
-                        }
-                    }
-                )
-            }
-        }
+//        individualItems.forEach { item ->
+//            key(item) {
+//                RenderMovableItem(
+//                    item = item,
+//                    isSelected = selectedItems.contains(item),
+//                    onSelect = {
+//                        selectedItems.clear()
+//                        selectedPaths.clear()
+//                        selectedItems.add(item)
+//                        texts.forEach { it.isEditing = false }
+//                    },
+//                    onDoubleClick = { if (it is EditableText) it.isEditing = true },
+//                    executeCommand = { executeCommand(it) },
+//                    allItems = allMovables,
+//                    guideLines = guideLines,
+//                    onUpdate = {
+//                            newItem ->
+//                        when (newItem) {
+//                            is EditableText -> {
+//                                (item as EditableText).apply {
+//                                    text = newItem.text
+//                                    offset = newItem.offset
+//                                    rotation = newItem.rotation
+//                                    fill = newItem.fill
+//                                    fontSize = newItem.fontSize
+//                                    size = newItem.size
+//                                }
+//                            }
+//                            is ShapeItem -> {
+//                                val idx = shapes.indexOf(item)
+//                                if (idx != -1) shapes[idx] = newItem
+//                            }
+//                            is ImageLayer -> {
+//                                val idx = imageLayers.indexOf(item)
+//                                if (idx != -1) imageLayers[idx] = newItem
+//                            }
+//                        }
+//                    }
+//                )
+//            }
+//        }
 
 
 

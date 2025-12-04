@@ -119,6 +119,7 @@ fun PlainPage(
             Row(
                 modifier = Modifier
                     .fillMaxWidth()
+                    .padding(top = 10.dp)
                     .padding(horizontal = 20.dp),
                 horizontalArrangement = Arrangement.SpaceBetween,
                 verticalAlignment = Alignment.CenterVertically
@@ -126,7 +127,7 @@ fun PlainPage(
                 if (page.name.isEmpty()) {
                     Text(
                         "${journalViewModel.selectedPageIndex + 1} Page",
-                        fontSize = 30.sp,
+                        fontSize = 16.sp,
                         fontFamily = FontFamily(Font(R.font.verdana_bold)),
                         fontWeight = FontWeight.Bold,
                         color = Color(0xFF2B395B),
@@ -135,7 +136,7 @@ fun PlainPage(
                 } else {
                     Text(
                         page.name,
-                        fontSize = 30.sp,
+                        fontSize = 16.sp,
                         fontFamily = FontFamily(Font(R.font.verdana_bold)),
                         fontWeight = FontWeight.Bold,
                         color = Color(0xFF2B395B)
@@ -144,7 +145,7 @@ fun PlainPage(
 
                 Text(
                     "+",
-                    fontSize = 50.sp,
+                    fontSize = 30.sp,
                     fontFamily = FontFamily(Font(R.font.verdana_bold)),
                     fontWeight = FontWeight.Bold,
                     color = Color(0xFF2B395B),

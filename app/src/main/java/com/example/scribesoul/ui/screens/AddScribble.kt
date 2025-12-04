@@ -99,7 +99,6 @@ fun GradientCard(modifier: Modifier = Modifier, navController: NavController) {
                 alpha = 0.18f
             )
             .clip(RoundedCornerShape(16.dp))
-            .clickable { onClick() }
             .background(
                 brush = Brush.linearGradient(
                     colorStops = arrayOf(

@@ -107,7 +107,7 @@ fun CalendarGrid(
                                     textInput = ""
                                     showDialog = true
                                 }
-                                .padding(4.dp)
+                                .padding(2.dp),
                         ) {
                             // Date Number
                             Text(
