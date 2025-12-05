@@ -64,23 +64,61 @@ fun AddScribbleScreen(navController: NavController) {
                 )
             )
     ) {
-        // GradientCard sedikit di atas tengah layar
-        Box(
-            modifier = Modifier
-                .fillMaxSize(),
-            contentAlignment = Alignment.Center
-        ) {
-            GradientCard(modifier = Modifier.offset(y = (-32).dp), navController) // naik 32dp
-        }
 
-        // Bottom bar tetap di bawah
+        // Gunakan LazyColumn langsung sebagai konten scrollable
+        LazyColumn(
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(16.dp),
+            contentPadding = PaddingValues(0.dp),
+            verticalArrangement = Arrangement.spacedBy(0.dp)
+        ) {
+            item {
+                Column(
+                    modifier = Modifier
+                        .fillMaxWidth(),
+                    horizontalAlignment = Alignment.CenterHorizontally
+                ) {
+                    Spacer(modifier = Modifier.height(20.dp))
+
+                    Text(
+                        text = "Scribble",
+                        style = MaterialTheme.typography.titleLarge.copy(
+                            fontWeight = FontWeight(650),
+                            fontSize = 32.sp // Sesuaikan ukuran yang lebih besar dari default
+                        ),
+                        color = Color(0xFF2B395B),
+                        textAlign = TextAlign.Center
+                    )
+
+                    Text(
+                        text = "Express yourself here",
+                        style = MaterialTheme.typography.bodyMedium.copy(
+                            fontSize = 10.sp
+                        ),
+                        color = Color(0xFF2B395B),
+                        textAlign = TextAlign.Center,
+                        modifier = Modifier
+                            .offset(y = (-7).dp) // naikkan sedikit
+                            .padding(bottom = 16.dp) // opsional, untuk jarak bawah
+                    )
+
+                    Spacer(modifier = Modifier.height(130.dp))
+
+                    GradientCard(navController = navController)
+                }
+            }
+        }
         Column(
             modifier = Modifier
                 .align(Alignment.BottomCenter)
                 .padding(bottom = 20.dp),
             verticalArrangement = Arrangement.spacedBy(1.dp)
         ) {
-            BottomBarScribble(navController = navController)
+
+            BottomBarScribble(
+                navController = navController,
+            )
         }
     }
 }

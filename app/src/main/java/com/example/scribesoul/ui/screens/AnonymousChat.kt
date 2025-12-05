@@ -26,6 +26,7 @@ import androidx.compose.material.icons.filled.MoreVert
 
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.border
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.runtime.getValue
@@ -45,6 +46,8 @@ import androidx.compose.ui.geometry.Size
 import androidx.navigation.compose.rememberNavController
 import com.example.scribesoul.ui.navigation.BottomNavItem
 import androidx.compose.material.icons.filled.Close
+import androidx.compose.runtime.mutableStateListOf
+import com.example.scribesoul.model.PostData
 
 
 @Composable
@@ -52,6 +55,20 @@ fun AnonymousChatScreen(navController: NavController) {
 
     var isSearchActive by remember { mutableStateOf(false) }
     var searchQuery by remember { mutableStateOf("") }
+
+    var showCommentDialog by remember { mutableStateOf(false) }
+    var commentText by remember { mutableStateOf("") }
+    var selectedPostIndex by remember { mutableStateOf(-1) }
+
+    val postList = remember {
+        mutableStateListOf(
+            PostData(1, "Anonymous", "Sometimes I feel like...", 24, 12),
+            PostData(2, "Anonymous", "Coding is fun but tiring...", 10, 5),
+            PostData(3, "Anonymous", "Anyone knows good coffee in Sby?", 5, 2),
+            PostData(4, "Anonymous", "Just want to share my story...", 100, 45),
+            PostData(5, "Anonymous", "Is it okay to cry?", 50, 20),
+        )
+    }
 
     Box(
         modifier = Modifier
@@ -193,20 +210,38 @@ fun AnonymousChatScreen(navController: NavController) {
                 }
             }
 
-            itemsIndexed(List(10) { it }) { index, item ->
+            items(postList.size) { index ->
+                val post = postList[index]
+
                 Column {
                     ChatCard(
-                        title = "Anonymous",
-                        description = "This is message number $item."
+                        title = post.title,
+                        description = post.description,
+
+                        // LOGIKA LIKE "REAL":
+                        // Jika isLiked true, tampilkan (jumlah + 1). Jika false, tampilkan jumlah asli.
+                        likeCount = if (post.isLiked) post.initialLikeCount + 1 else post.initialLikeCount,
+                        commentCount = post.commentCount,
+                        isLiked = post.isLiked, // Kirim status like ke kartu
+
+                        // AKSI SAAT TOMBOL DIKLIK:
+                        onLikeClick = {
+                            // Update data di dalam list utama
+                            // Kita copy data lama, tapi status isLiked dibalik (true jadi false, false jadi true)
+                            postList[index] = post.copy(isLiked = !post.isLiked)
+                        },
+                        onCommentClick = {
+                            selectedPostIndex = index // Simpan index postingan yg diklik
+                            commentText = "" // Reset teks input
+                            showCommentDialog = true // Tampilkan dialog
+                        }
                     )
 
-                    if (index < 9) { // hanya tampilkan garis jika bukan item terakhir
+                    if (index < postList.size - 1) {
                         Image(
                             painter = painterResource(id = R.drawable.gariswarna),
                             contentDescription = "Divider",
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .height(12.dp)
+                            modifier = Modifier.fillMaxWidth().height(12.dp)
                         )
                     }
                 }
@@ -214,7 +249,7 @@ fun AnonymousChatScreen(navController: NavController) {
 
             // Spacer untuk memberi ruang agar item terakhir tidak tertutup BottomBar
             item {
-                Spacer(modifier = Modifier.height(120.dp))
+                Spacer(modifier = Modifier.height(170.dp))
             }
         }
 
@@ -222,11 +257,62 @@ fun AnonymousChatScreen(navController: NavController) {
         Column(
             modifier = Modifier
                 .align(Alignment.BottomCenter)
-                .padding(bottom = 20.dp),
+                .padding(bottom = 30.dp),
             verticalArrangement = Arrangement.spacedBy(1.dp)
         ) {
             InputBar()
             BottomBarAnonymous(navController = navController)
+        }
+        if (showCommentDialog) {
+            AlertDialog(
+                onDismissRequest = { showCommentDialog = false },
+                containerColor = Color.White,
+                title = {
+                    Text(
+                        text = "Add Comment",
+                        style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold),
+                        color = Color(0xFF2B395B)
+                    )
+                },
+                text = {
+                    OutlinedTextField(
+                        value = commentText,
+                        onValueChange = { commentText = it },
+                        placeholder = { Text("Type your comment...") },
+                        colors = TextFieldDefaults.colors(
+                            focusedContainerColor = Color.Transparent,
+                            unfocusedContainerColor = Color.Transparent,
+                            focusedIndicatorColor = Color(0xFF2B395B),
+                            unfocusedIndicatorColor = Color.Gray,
+                            cursorColor = Color(0xFF2B395B),
+                            focusedTextColor = Color.Black,
+                            unfocusedTextColor = Color.Black
+                        ),
+                        modifier = Modifier.fillMaxWidth()
+                    )
+                },
+                confirmButton = {
+                    Button(
+                        onClick = {
+                            // --- LOGIKA UPDATE JUMLAH KOMEN ---
+                            if (selectedPostIndex != -1 && commentText.isNotEmpty()) {
+                                val currentPost = postList[selectedPostIndex]
+                                // Update post di list: copy post lama, tapi commentCount + 1
+                                postList[selectedPostIndex] = currentPost.copy(commentCount = currentPost.commentCount + 1)
+                            }
+                            showCommentDialog = false // Tutup dialog
+                        },
+                        colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF2B395B))
+                    ) {
+                        Text("Send", color = Color.White)
+                    }
+                },
+                dismissButton = {
+                    TextButton(onClick = { showCommentDialog = false }) {
+                        Text("Cancel", color = Color(0xFF2B395B))
+                    }
+                }
+            )
         }
     }
 }
@@ -236,7 +322,10 @@ fun ChatCard(
     title: String = "Anonymous",
     description: String = "This is an anonymous message.",
     likeCount: Int = 24,
-    commentCount: Int = 12
+    commentCount: Int = 12,
+    isLiked: Boolean,
+    onLikeClick: () -> Unit,
+    onCommentClick: () -> Unit
 ) {
     Card(
         modifier = Modifier
@@ -251,7 +340,8 @@ fun ChatCard(
         Row(
             modifier = Modifier
                 .padding(16.dp)
-                .fillMaxWidth()
+                .fillMaxWidth(),
+            verticalAlignment = Alignment.Top
 
         ) {
             // Avatar lingkaran
@@ -329,31 +419,62 @@ fun ChatCard(
 
                 Spacer(modifier = Modifier.height(8.dp))
 
-                Row(
-                    horizontalArrangement = Arrangement.spacedBy(24.dp),
-                    modifier = Modifier.padding(top = 4.dp)
-                ) {
-                    Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                Row(horizontalArrangement = Arrangement.spacedBy(24.dp), modifier = Modifier.padding(top = 4.dp)) {
+                    // Tombol Like
+                    Row(
+                        verticalAlignment = Alignment.CenterVertically,
+                        modifier = Modifier
+                            .clickable { onLikeClick() }
+                    ) {
+                        // --- PERUBAHAN DI SINI ---
+
+                        // Tentukan resource icon berdasarkan status isLiked
+                        val likeIconResId = if (isLiked) {
+                            R.drawable.ic_heart_filled // Gunakan icon terisi jika dilike (Pastikan nama file sesuai Langkah 1)
+                        } else {
+                            R.drawable.like // Gunakan icon outline jika tidak dilike (Ganti dengan nama file outline kamu)
+                        }
+
+                        // Tentukan warna berdasarkan status isLiked
+                        val likeIconColor = if (isLiked) {
+                            Color(0xFFE91E63) // Merah/Pink jika dilike
+                        } else {
+                            Color(0xFF2B395B) // Biru tua default jika tidak dilike
+                        }
+
                         Icon(
-                            painter = painterResource(id = R.drawable.like),
+                            painter = painterResource(id = likeIconResId), // Gunakan resource dinamis tadi
                             contentDescription = "Like",
-                            modifier = Modifier.size(20.dp)
+                            modifier = Modifier.size(20.dp),
+                            tint = likeIconColor // Gunakan warna dinamis tadi
                         )
+
+                        // --- AKHIR PERUBAHAN ---
+
+                        Spacer(modifier = Modifier.width(4.dp))
                         Text(
-                            text = "24", // Ganti sesuai kebutuhan
+                            text = "$likeCount",
                             style = MaterialTheme.typography.bodySmall,
-                            color = Color(0xFF2B395B)
+                            // Warna teks juga mengikuti status like agar serasi
+                            color = likeIconColor
                         )
                     }
 
-                    Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                    // Tombol Comment
+                    Row(
+                        verticalAlignment = Alignment.CenterVertically,
+                        modifier = Modifier
+                            .clickable { onCommentClick() }
+                    ) {
                         Icon(
                             painter = painterResource(id = R.drawable.comment),
                             contentDescription = "Comment",
-                            modifier = Modifier.size(20.dp)
+                            modifier = Modifier.size(20.dp),
+                            tint = Color(0xFF2B395B)
                         )
+                        Spacer(modifier = Modifier.width(4.dp))
                         Text(
-                            text = "12", // Ganti sesuai kebutuhan
+                            text = "$commentCount",
                             style = MaterialTheme.typography.bodySmall,
                             color = Color(0xFF2B395B)
                         )

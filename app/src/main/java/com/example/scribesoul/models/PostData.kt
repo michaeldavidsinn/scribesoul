@@ -1,0 +1,10 @@
+package com.example.scribesoul.model
+
+data class PostData(
+    val id: Int,
+    val title: String,
+    val description: String,
+    val initialLikeCount: Int,
+    val commentCount: Int,
+    var isLiked: Boolean = false
+)
