@@ -26,3 +26,19 @@ fun NameInputDialog(onDismissRequest: () -> Unit, onNameCreate: (String) -> Unit
         dismissButton = { TextButton(onClick = onDismissRequest) { Text("Cancel") } }
     )
 }
+
+@Composable
+fun ChangeInputDialog(onDismissRequest: () -> Unit, onNameChange: (String) -> Unit, initial: String){
+    var name by remember { mutableStateOf(initial) }
+    AlertDialog(
+        onDismissRequest = onDismissRequest,
+        title = { Text("Change Page Name") },
+        text = {
+            TextField(value = name, onValueChange = {
+                name = it
+            })
+        },
+        confirmButton = { Button(onClick = { onNameChange(name) }) { Text("OK") } },
+        dismissButton = { TextButton(onClick = onDismissRequest) { Text("Cancel") } }
+    )
+}

@@ -34,6 +34,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.scribesoul.R
+import com.example.scribesoul.utils.ChangeInputDialog
 import com.example.scribesoul.utils.DrawCanvas
 import com.example.scribesoul.utils.NameInputDialog
 import com.example.scribesoul.viewModels.DrawingViewModel
@@ -51,6 +52,17 @@ fun SmallGridPage(
     val lineColor = Color.Gray.copy(alpha = 0.3f)
     val lineSpacing = 20.dp
     val topMargin = 80.dp
+    var showChangeInput by remember { mutableStateOf(false) }
+
+    if(showChangeInput){
+        ChangeInputDialog(onNameChange = { name ->
+            showChangeInput = false
+            page.name = name
+
+        }, onDismissRequest = { showChangeInput = false },
+            initial = page.name
+        )
+    }
 
     if (showTextInput) {
         NameInputDialog(
@@ -122,7 +134,7 @@ fun SmallGridPage(
                         fontFamily = FontFamily(Font(R.font.verdana_bold)),
                         fontWeight = FontWeight.Bold,
                         color = Color(0xFF2B395B),
-                        modifier = Modifier.clickable { showTextInput = true }
+                        modifier = Modifier.clickable { showChangeInput = true }
                     )
                 } else {
                     Text(
@@ -130,7 +142,8 @@ fun SmallGridPage(
                         fontSize = 30.sp,
                         fontFamily = FontFamily(Font(R.font.verdana_bold)),
                         fontWeight = FontWeight.Bold,
-                        color = Color(0xFF2B395B)
+                        color = Color(0xFF2B395B),
+                        modifier = Modifier.clickable { showChangeInput = true }
                     )
                 }
 

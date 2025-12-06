@@ -95,6 +95,9 @@ fun GradientCard(modifier: Modifier = Modifier, navController: NavController) {
                 offsetY = 12f,
                 alpha = 0.18f
             )
+            .clickable{
+                navController.navigate("scribbleDraw")
+            }
             .clip(RoundedCornerShape(16.dp))
             .background(
                 brush = Brush.linearGradient(

@@ -135,7 +135,7 @@ fun AnonymousChatScreen(navController: NavController) {
                         Box(
                             modifier = Modifier
                                 .fillMaxWidth()
-                                .padding(top = 16.dp, start = 4.dp, end = 4.dp),
+                                .padding(top = 32.dp, start = 4.dp, end = 4.dp),
                             contentAlignment = Alignment.Center
                         ) {
                             // Ikon Kiri (Search)

@@ -159,7 +159,7 @@ fun TherapistCard(
                 Column {
                     Text(
                         text = name,
-                        style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold, fontSize = 12.sp),
+                        style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold, fontSize = 14.sp),
                         color = Color(0xFF2B395B)
                     )
                     Text(
@@ -222,8 +222,8 @@ fun TherapistCard(
                                 .padding(horizontal = 12.dp, vertical = 4.dp)
                         ) {
                             Text(
-                                text = "$compatibility% Compatibility",
-                                style = MaterialTheme.typography.labelSmall.copy(fontSize = 8.sp),
+                                text = "$compatibility% Match",
+                                style = MaterialTheme.typography.labelSmall.copy(fontSize = 6.sp),
                                 color = Color(0xFF2B395B),
                                 maxLines = 1
                             )

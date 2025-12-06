@@ -216,7 +216,9 @@ fun HomeScreen(navController: NavController, viewModel: HomeViewModel) {
                             )
                         )
                         if (date == viewModel.currentDay) {
-                            Box {
+                            Box(
+                                modifier = Modifier.align(alignment = Alignment.CenterHorizontally)
+                            ) {
                                 Column(
                                     modifier = Modifier
                                         .softShadow(
@@ -224,6 +226,8 @@ fun HomeScreen(navController: NavController, viewModel: HomeViewModel) {
                                             offsetY = 12f,
                                             alpha = 0.18f
                                         )
+                                        .align(Alignment.Center)
+                                        .width(30.dp)
                                         .clip(CircleShape)
                                         .background(Color(0xff74A8FF))
                                         .padding(5.dp)
@@ -235,8 +239,10 @@ fun HomeScreen(navController: NavController, viewModel: HomeViewModel) {
                                             fontSize = 14.sp,
                                             fontFamily = FontFamily(Font(R.font.verdana)),
                                             fontWeight = FontWeight(600),
-                                            color = Color.White
-                                        )
+                                            color = Color.White,
+                                            textAlign = TextAlign.Center
+                                        ),
+                                        modifier = Modifier.fillMaxWidth()
                                     )
                                 }
                                 Column(

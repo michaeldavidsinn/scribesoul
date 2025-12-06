@@ -122,7 +122,9 @@ fun InputBar(modifier: Modifier = Modifier) {
                 },
                 textStyle = LocalTextStyle.current.copy(fontSize = 13.sp),
                 modifier = Modifier
+                    .align(Alignment.CenterVertically)
                     .weight(1f)
+
                     .padding(end = 4.dp),
                 colors = TextFieldDefaults.colors(
                     focusedContainerColor = Color.Transparent,
