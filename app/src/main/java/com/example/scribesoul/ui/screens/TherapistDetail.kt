@@ -663,7 +663,7 @@ fun TherapistDetailScreen(navController: NavController) {
                     }
 
                     // Spacer at the end of the list to prevent overlap with the button
-                    Spacer(modifier = Modifier.height(120.dp))
+                    Spacer(modifier = Modifier.height(165.dp))
                 }
             }
         }

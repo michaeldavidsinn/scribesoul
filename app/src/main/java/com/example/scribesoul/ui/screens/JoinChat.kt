@@ -106,12 +106,11 @@ fun JoinChatScreen(navController: NavController) {
         Column(
             modifier = Modifier
                 .fillMaxSize()
-                .padding(horizontal = 16.dp)
-                .align(Alignment.Center), // INI YANG MEMBUAT TENGAH VERTIKAL
+                .padding(horizontal = 16.dp),
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
 
-            Spacer(modifier = Modifier.height(230.dp))
+            Spacer(modifier = Modifier.height(290.dp))
 
             Text(
                 text = "Wanna join our",

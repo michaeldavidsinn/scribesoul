@@ -1260,7 +1260,7 @@ fun BottomBarHome(navController: NavController, modifier: Modifier = Modifier) {
                 }
             })
             BottomNavItem(R.drawable.scribble_icon, "Scribble", iconSize = 25.dp, onClick = {
-                navController.navigate("scribble") {
+                navController.navigate("addScribble") {
                     launchSingleTop = true
                 }
             })

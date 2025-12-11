@@ -9,19 +9,12 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.foundation.text.KeyboardActions
-import androidx.compose.foundation.text.KeyboardOptions
+import androidx.compose.foundation.text.BasicTextField
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.filled.Send
+import androidx.compose.material.icons.filled.Send
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
-import androidx.compose.material3.LocalTextStyle
-import androidx.compose.material3.OutlinedTextField
-import androidx.compose.material3.Switch
-import androidx.compose.material3.SwitchDefaults
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextField
-import androidx.compose.material3.TextFieldDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -35,24 +28,13 @@ import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.res.painterResource
-import androidx.compose.ui.text.input.ImeAction
-import androidx.compose.ui.tooling.preview.Preview
+import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import com.example.scribesoul.R
 
-/**
- * Sebuah Composable yang menampilkan bar input teks dengan tombol kirim.
- *
- * @param onSendMessage Fungsi yang akan dipanggil saat tombol kirim ditekan.
- * Fungsi ini menerima String berisi pesan yang akan dikirim.
- * @param modifier Modifier untuk kustomisasi layout.
- */
 @Composable
 fun InputBar(modifier: Modifier = Modifier) {
     var inputText by remember { mutableStateOf("") }
-    var isToggled by remember { mutableStateOf(false) }
 
     Box(
         modifier = modifier
@@ -69,30 +51,22 @@ fun InputBar(modifier: Modifier = Modifier) {
 
                 // Inner shadow effect
                 drawRect(
-                    brush = Brush.verticalGradient(
-                        colors = listOf(shadowColor, Color.Transparent),
-                    ),
+                    brush = Brush.verticalGradient(colors = listOf(shadowColor, Color.Transparent)),
                     topLeft = Offset(0f, 0f),
                     size = Size(size.width, shadowSize)
                 )
                 drawRect(
-                    brush = Brush.verticalGradient(
-                        colors = listOf(Color.Transparent, shadowColor),
-                    ),
+                    brush = Brush.verticalGradient(colors = listOf(Color.Transparent, shadowColor)),
                     topLeft = Offset(0f, size.height - shadowSize),
                     size = Size(size.width, shadowSize)
                 )
                 drawRect(
-                    brush = Brush.horizontalGradient(
-                        colors = listOf(shadowColor, Color.Transparent),
-                    ),
+                    brush = Brush.horizontalGradient(colors = listOf(shadowColor, Color.Transparent)),
                     topLeft = Offset(0f, 0f),
                     size = Size(shadowSize, size.height)
                 )
                 drawRect(
-                    brush = Brush.horizontalGradient(
-                        colors = listOf(Color.Transparent, shadowColor),
-                    ),
+                    brush = Brush.horizontalGradient(colors = listOf(Color.Transparent, shadowColor)),
                     topLeft = Offset(size.width - shadowSize, 0f),
                     size = Size(shadowSize, size.height)
                 )
@@ -107,54 +81,48 @@ fun InputBar(modifier: Modifier = Modifier) {
         Row(
             modifier = Modifier
                 .fillMaxSize()
-                .padding(start = 12.dp, end = 8.dp),
+                .padding(start = 16.dp, end = 8.dp),
             verticalAlignment = Alignment.CenterVertically
         ) {
-            TextField(
+            // REVISI: Menggunakan BasicTextField agar tidak ada error contentPadding
+            // dan teks bisa benar-benar di tengah vertikal.
+            BasicTextField(
                 value = inputText,
                 onValueChange = { inputText = it },
-                placeholder = {
-                    Text(
-                        text = "write yours",
-                        fontSize = 13.sp,
-                        color = Color(0xFF2B395B).copy(alpha = 0.6f)
-                    )
-                },
-                textStyle = LocalTextStyle.current.copy(fontSize = 13.sp),
                 modifier = Modifier
                     .align(Alignment.CenterVertically)
                     .weight(1f)
-
-                    .padding(end = 4.dp),
-                colors = TextFieldDefaults.colors(
-                    focusedContainerColor = Color.Transparent,
-                    unfocusedContainerColor = Color.Transparent,
-                    disabledContainerColor = Color.Transparent,
-                    focusedIndicatorColor = Color.Transparent,
-                    unfocusedIndicatorColor = Color.Transparent,
-                    disabledIndicatorColor = Color.Transparent
+                    .padding(end = 8.dp),
+                textStyle = TextStyle(
+                    fontSize = 13.sp,
+                    color = Color.Black // Warna teks input Hitam
                 ),
                 singleLine = true,
-                maxLines = 1
+                decorationBox = { innerTextField ->
+                    Box(
+                        contentAlignment = Alignment.CenterStart
+                    ) {
+                        // Placeholder manual
+                        if (inputText.isEmpty()) {
+                            Text(
+                                text = "Write yours...",
+                                fontSize = 13.sp,
+                                color = Color.Gray
+                            )
+                        }
+                        // Input field asli
+                        innerTextField()
+                    }
+                }
             )
 
-            Switch(
-                checked = isToggled,
-                onCheckedChange = { isToggled = it },
-                colors = SwitchDefaults.colors(
-                    checkedThumbColor = Color(0xFF2B395B),
-                    uncheckedThumbColor = Color.LightGray,
-                    checkedTrackColor = Color(0xFF2B395B).copy(alpha = 0.5f),
-                    uncheckedTrackColor = Color.LightGray.copy(alpha = 0.5f)
-                )
-            )
-
+            // Tombol Kirim (Pesawat)
             IconButton(
-                onClick = { /* TODO: aksi ketika tombol + ditekan */ }
+                onClick = { /* TODO: Send Action */ }
             ) {
                 Icon(
-                    painter = painterResource(id = R.drawable.plus), // ganti dengan ikon plus kamu
-                    contentDescription = "Add",
+                    imageVector = Icons.Default.Send, // Menggunakan Icons.Default.Send yang lebih umum
+                    contentDescription = "Send",
                     tint = Color(0xFF2B395B)
                 )
             }

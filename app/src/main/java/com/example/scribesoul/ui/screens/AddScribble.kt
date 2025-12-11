@@ -47,6 +47,7 @@ import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
 import androidx.navigation.compose.rememberNavController
 import com.example.scribesoul.R
+import com.example.scribesoul.ui.navigation.BottomNavItem
 import com.example.scribesoul.utils.softShadow
 
 @Composable
@@ -63,23 +64,113 @@ fun AddScribbleScreen(navController: NavController) {
                 )
             )
     ) {
-        // GradientCard sedikit di atas tengah layar
-        Box(
-            modifier = Modifier
-                .fillMaxSize(),
-            contentAlignment = Alignment.Center
-        ) {
-            GradientCard(modifier = Modifier.offset(y = (-32).dp), navController) // naik 32dp
-        }
 
-        // Bottom bar tetap di bawah
+        // Gunakan LazyColumn langsung sebagai konten scrollable
+        LazyColumn(
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(16.dp),
+            contentPadding = PaddingValues(0.dp),
+            verticalArrangement = Arrangement.spacedBy(0.dp)
+        ) {
+            item {
+                Column(
+                    modifier = Modifier
+                        .fillMaxWidth(),
+                    horizontalAlignment = Alignment.CenterHorizontally
+                ) {
+                    Spacer(modifier = Modifier.height(20.dp))
+
+                    Text(
+                        text = "Scribble",
+                        style = MaterialTheme.typography.titleLarge.copy(
+                            fontWeight = FontWeight(650),
+                            fontSize = 32.sp // Sesuaikan ukuran yang lebih besar dari default
+                        ),
+                        color = Color(0xFF2B395B),
+                        textAlign = TextAlign.Center
+                    )
+
+                    Text(
+                        text = "Express yourself here",
+                        style = MaterialTheme.typography.bodyMedium.copy(
+                            fontSize = 10.sp
+                        ),
+                        color = Color(0xFF2B395B),
+                        textAlign = TextAlign.Center,
+                        modifier = Modifier
+                            .offset(y = (-7).dp) // naikkan sedikit
+                            .padding(bottom = 16.dp) // opsional, untuk jarak bawah
+                    )
+
+                    Spacer(modifier = Modifier.height(130.dp))
+
+                    GradientCard(navController = navController)
+                }
+            }
+        }
         Column(
             modifier = Modifier
                 .align(Alignment.BottomCenter)
                 .padding(bottom = 20.dp),
             verticalArrangement = Arrangement.spacedBy(1.dp)
         ) {
-            BottomBarScribble(navController = navController)
+
+            BottomBarScribble(
+                navController = navController,
+            )
+        }
+    }
+}
+
+@Composable
+fun BottomBarScribble(navController: NavController, modifier: Modifier = Modifier) {
+    Box(
+        modifier = modifier
+            .padding(start = 24.dp, end = 24.dp, top = 6.dp, bottom = 20.dp)
+            .shadow(
+                elevation = 6.dp,
+                shape = RoundedCornerShape(30.dp),
+                clip = false
+            )
+            .clip(RoundedCornerShape(30.dp))
+            .background(Color.White)
+            .height(70.dp)
+            .fillMaxWidth(),
+        contentAlignment = Alignment.Center
+    ) {
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(horizontal = 12.dp),
+            horizontalArrangement = Arrangement.SpaceBetween,
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            BottomNavItem(R.drawable.home_icon, "Home", iconSize = 28.dp) {
+                navController.navigate("home") {
+                    launchSingleTop = true
+                }
+            }
+            BottomNavItem(R.drawable.therapist_icon, "Therapist", iconSize = 25.dp) {
+                navController.navigate("therapist") {
+                    launchSingleTop = true
+                }
+            }
+            BottomNavItem(R.drawable.explore_icon, "Explore", iconSize = 25.dp) {
+                navController.navigate("explore") {
+                    launchSingleTop = true
+                }
+            }
+            BottomNavItem(R.drawable.scribble_icon, "Scribble", iconSize = 43.dp) {
+                navController.navigate("addScribble") {
+                    launchSingleTop = true
+                }
+            }
+            BottomNavItem(R.drawable.journal_icon, "Journal", iconSize = 25.dp) {
+                navController.navigate("journalList") {
+                    launchSingleTop = true
+                }
+            }
         }
     }
 }

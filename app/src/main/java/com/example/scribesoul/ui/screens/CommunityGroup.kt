@@ -30,11 +30,16 @@ import androidx.compose.material.icons.filled.Notes
 import androidx.compose.material.icons.filled.Search
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.DropdownMenu
+import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -53,10 +58,25 @@ import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
 import com.example.scribesoul.R
 import com.example.scribesoul.ui.components.ChatBubble
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.setValue
 
 
 @Composable
 fun CommunityGroupScreen(navController: NavController) {
+    // --- STATE MANAGEMENT ---
+    // State untuk Search
+    var isSearchActive by remember { mutableStateOf(false) }
+    var searchQuery by remember { mutableStateOf("") }
+
+    // State untuk Notes (Dialog)
+    var showNotesDialog by remember { mutableStateOf(false) }
+
+    // State untuk Menu "More" (Dropdown)
+    var showMoreMenu by remember { mutableStateOf(false) }
+
+    val context = LocalContext.current
+
     Box(
         modifier = Modifier
             .fillMaxSize()
@@ -88,7 +108,7 @@ fun CommunityGroupScreen(navController: NavController) {
         Row(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(top = 16.dp),
+                .padding(top = 50.dp),
             horizontalArrangement = Arrangement.Start,
             verticalAlignment = Alignment.CenterVertically
         ) {
@@ -96,7 +116,7 @@ fun CommunityGroupScreen(navController: NavController) {
             Box(
                 modifier = Modifier
                     .clip(RoundedCornerShape(50))
-                    .clickable { /* TODO: Back action */ }
+                    .clickable { navController.popBackStack() }
                     .padding(horizontal = 16.dp, vertical = 8.dp)
             ) {
                 Icon(
@@ -123,22 +143,20 @@ fun CommunityGroupScreen(navController: NavController) {
             Spacer(modifier = Modifier.weight(1f))
 
             // Right action icons
-            Row(
-                verticalAlignment = Alignment.CenterVertically
-            ) {
+            Row(verticalAlignment = Alignment.CenterVertically) {
                 IconButton(
-                    onClick = { /* TODO: Search action */ },
-                    modifier = Modifier.size(36.dp) // lebih kecil dari default
+                    onClick = { isSearchActive = true }, // Mengaktifkan mode search
+                    modifier = Modifier.size(36.dp)
                 ) {
                     Icon(
                         imageVector = Icons.Default.Search,
                         contentDescription = "Search",
                         tint = Color.Black,
-                        modifier = Modifier.size(20.dp) // biar proporsional
+                        modifier = Modifier.size(20.dp)
                     )
                 }
                 IconButton(
-                    onClick = { /* TODO: Notes action */ },
+                    onClick = { showNotesDialog = true }, // Membuka Dialog Notes
                     modifier = Modifier.size(36.dp)
                 ) {
                     Icon(
@@ -148,16 +166,38 @@ fun CommunityGroupScreen(navController: NavController) {
                         modifier = Modifier.size(20.dp)
                     )
                 }
-                IconButton(
-                    onClick = { /* TODO: More options action */ },
-                    modifier = Modifier.size(36.dp)
-                ) {
-                    Icon(
-                        imageVector = Icons.Default.MoreVert,
-                        contentDescription = "More",
-                        tint = Color.Black,
-                        modifier = Modifier.size(20.dp)
-                    )
+                Box {
+                    IconButton(
+                        onClick = { showMoreMenu = true }, // Membuka Dropdown
+                        modifier = Modifier.size(36.dp)
+                    ) {
+                        Icon(
+                            imageVector = Icons.Default.MoreVert,
+                            contentDescription = "More",
+                            tint = Color.Black,
+                            modifier = Modifier.size(20.dp)
+                        )
+                    }
+
+                    // Isi Menu Dropdown
+                    DropdownMenu(
+                        expanded = showMoreMenu,
+                        onDismissRequest = { showMoreMenu = false },
+                        containerColor = Color.White
+                    ) {
+                        DropdownMenuItem(
+                            text = { Text("Group Info", color = Color(0xFF2B395B)) },
+                            onClick = { showMoreMenu = false /* TODO: Navigasi ke info */ }
+                        )
+                        DropdownMenuItem(
+                            text = { Text("Mute Notifications", color = Color(0xFF2B395B)) },
+                            onClick = { showMoreMenu = false }
+                        )
+                        DropdownMenuItem(
+                            text = { Text("Leave Group", color = Color.Red) },
+                            onClick = { showMoreMenu = false }
+                        )
+                    }
                 }
             }
         }

@@ -25,9 +25,14 @@ import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
 import com.example.scribesoul.R
 import com.example.scribesoul.ui.navigation.BottomNavItem
+import android.content.Intent
+import android.net.Uri
 
 @Composable
 fun TherapistRecommendationScreen(navController: NavController) {
+
+    val context = LocalContext.current
+
     val therapistList = listOf(
         Triple("Dr. Andini Pramudita", "Psikolog Klinis", "Depresi & Kecemasan"),
         Triple("Dr. Raka Mahendra", "Psikolog Anak", "Gangguan Perilaku & ADHD"),
@@ -86,7 +91,18 @@ fun TherapistRecommendationScreen(navController: NavController) {
                     experienceYears = (5..15).random(),
                     compatibility = (90..100).random(),
                     price = "Rp 250.000,00",
-                    onChatClick = { navController.navigate("therapist_detail") } // <--- SEPERTI INI
+
+                    onInfoClick = {
+                        navController.navigate("therapist_detail")
+                    },
+                    onChatClick = {
+
+                        val intent = Intent(
+                            Intent.ACTION_VIEW,
+                            Uri.parse("https://play.google.com/store/account/subscriptions")
+                        )
+                        context.startActivity(intent)
+                    }
                 )
             }
 
@@ -114,12 +130,14 @@ fun TherapistCard(
     experienceYears: Int,
     compatibility: Int,
     price: String,
+    onInfoClick: () -> Unit,
     onChatClick: () -> Unit
 ) {
     Card(
         modifier = Modifier
             .fillMaxWidth()
-            .wrapContentHeight(),
+            .wrapContentHeight()
+            .clickable { onInfoClick() },
         shape = RoundedCornerShape(16.dp),
         colors = CardDefaults.cardColors(containerColor = Color.White),
         elevation = CardDefaults.cardElevation(defaultElevation = 4.dp)
@@ -176,10 +194,11 @@ fun TherapistCard(
 
                 Spacer(modifier = Modifier.height(8.dp))
 
-// Baris Experience + Compatibility
+
+                // Baris Experience + Compatibility
                 Row(
                     modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.spacedBy(12.dp)
+                    horizontalArrangement = Arrangement.spacedBy(4.dp) // [OPTIMASI 1] Jarak antar chip dirapatkan (12 -> 4)
                 ) {
                     val gradientBrush = Brush.horizontalGradient(
                         colors = listOf(
@@ -192,19 +211,24 @@ fun TherapistCard(
                     // Experience
                     Box(
                         modifier = Modifier
+                            .weight(1f) // [OPTIMASI 2] Wajib pakai weight agar membagi ruang 50:50
                             .background(brush = gradientBrush, shape = RoundedCornerShape(50))
-                            .padding(1.dp) // Border thickness
+                            .padding(1.dp)
                     ) {
                         Box(
                             modifier = Modifier
+                                .fillMaxWidth()
                                 .clip(RoundedCornerShape(50))
                                 .background(Color.White)
-                                .padding(horizontal = 12.dp, vertical = 4.dp)
+                                .padding(horizontal = 6.dp, vertical = 4.dp), // [OPTIMASI 3] Padding dalam dikurangi (12 -> 6)
+                            contentAlignment = Alignment.Center
                         ) {
                             Text(
-                                text = "$experienceYears Years Experience",
-                                style = MaterialTheme.typography.labelSmall.copy(fontSize = 9.sp),
-                                color = Color(0xFF2B395B)
+                                text = "$experienceYears Years Experience", // Teks tetap utuh
+                                style = MaterialTheme.typography.labelSmall.copy(fontSize = 8.sp), // Samakan jadi 8.sp agar muat
+                                color = Color(0xFF2B395B),
+                                maxLines = 1,
+                                textAlign = TextAlign.Center
                             )
                         }
                     }
@@ -212,20 +236,24 @@ fun TherapistCard(
                     // Compatibility
                     Box(
                         modifier = Modifier
+                            .weight(1f) // Wajib pakai weight
                             .background(brush = gradientBrush, shape = RoundedCornerShape(50))
                             .padding(1.dp)
                     ) {
                         Box(
                             modifier = Modifier
+                                .fillMaxWidth()
                                 .clip(RoundedCornerShape(50))
                                 .background(Color.White)
-                                .padding(horizontal = 12.dp, vertical = 4.dp)
+                                .padding(horizontal = 6.dp, vertical = 4.dp), // Padding dalam dikurangi (12 -> 6)
+                            contentAlignment = Alignment.Center
                         ) {
                             Text(
                                 text = "$compatibility% Match",
                                 style = MaterialTheme.typography.labelSmall.copy(fontSize = 6.sp),
                                 color = Color(0xFF2B395B),
-                                maxLines = 1
+                                maxLines = 1,
+                                textAlign = TextAlign.Center
                             )
                         }
                     }
@@ -313,7 +341,7 @@ fun BottomBarTherapist(navController: NavController, modifier: Modifier = Modifi
                 }
             }
             BottomNavItem(R.drawable.scribble_icon, "Scribble", 28.dp) {
-                navController.navigate("scribble") {
+                navController.navigate("addScribble") {
                     launchSingleTop = true
                 }
             }
