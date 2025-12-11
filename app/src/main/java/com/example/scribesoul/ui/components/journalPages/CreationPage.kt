@@ -45,7 +45,8 @@ fun CreationPage(
     onAddHabitsPage: () -> Unit,
     onAddCalendarPage: () -> Unit,
     onAddTodoPage: () -> Unit,
-    onAddMoodPage: () -> Unit
+    onAddMoodPage: () -> Unit,
+    onAddDottedPage: () -> Unit
 ){
     Column(
         modifier = Modifier
@@ -284,7 +285,10 @@ fun CreationPage(
             horizontalArrangement = Arrangement.SpaceBetween
         ){
             Column(
-                horizontalAlignment = Alignment.CenterHorizontally
+                horizontalAlignment = Alignment.CenterHorizontally,
+                modifier = Modifier.clickable{
+                    onAddDottedPage()
+                }
             )  {
                 Image(
                     painter = painterResource(R.drawable.dotted),

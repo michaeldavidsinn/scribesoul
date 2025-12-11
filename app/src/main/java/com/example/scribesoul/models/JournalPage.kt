@@ -20,6 +20,7 @@ sealed class SectionType {
     object Calendar : SectionType()
     object Creation : SectionType()
     object Todo : SectionType()
+    object Dotted: SectionType()
     object Mood: SectionType()
     object WideLined: SectionType()
     object WideLinedSmallMargin: SectionType()

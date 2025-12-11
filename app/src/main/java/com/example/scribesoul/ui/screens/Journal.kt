@@ -67,6 +67,7 @@ import com.example.scribesoul.models.*
 import com.example.scribesoul.models.SolidColor as SolidColorFill
 import com.example.scribesoul.models.ToolMode
 import com.example.scribesoul.ui.components.journalPages.CalendarPage
+import com.example.scribesoul.ui.components.journalPages.DottedPage
 import com.example.scribesoul.ui.components.journalPages.HabitsPage
 import com.example.scribesoul.ui.components.journalPages.LargeGridPage
 import com.example.scribesoul.ui.components.journalPages.MoodPage
@@ -273,6 +274,7 @@ fun JournalScreen(navController: NavController, journalViewModel: JournalViewMod
                     onAddCalendarPage = { journalViewModel.addSection(SectionType.Calendar) },
                     onAddTodoPage = { journalViewModel.addSection(SectionType.Todo)},
                     onAddMoodPage = { journalViewModel.addSection(SectionType.Mood) },
+                    onAddDottedPage ={ journalViewModel.addSection(SectionType.Dotted)},
                     onAddWideLinedPage = {journalViewModel.addSection(SectionType.WideLined)},
                     onAddLargeGridPage = {journalViewModel.addSection(SectionType.LargeGrid)},
                     onAddSmallGridPage = {journalViewModel.addSection(SectionType.SmallGrid)},
@@ -356,6 +358,13 @@ fun JournalScreen(navController: NavController, journalViewModel: JournalViewMod
                         )
 
                         is JournalPage.LargeGridPage -> LargeGridPage(
+                            page,
+                            section.color,
+                            drawingViewModel,
+                            journalViewModel
+                        )
+
+                        is JournalPage.DottedPage -> DottedPage(
                             page,
                             section.color,
                             drawingViewModel,

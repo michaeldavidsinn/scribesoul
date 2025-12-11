@@ -65,6 +65,10 @@ fun AppNavigation(
             TherapistProAndConsScreen(navController)
         }
 
+        composable("profile"){
+            TherapistProfileScreen(navController)
+        }
+
         composable("therapist_privacy_policy") {
             TherapistPrivacyPolicyScreen(navController)
         }

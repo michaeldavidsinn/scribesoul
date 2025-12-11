@@ -167,7 +167,9 @@ fun HomeScreen(navController: NavController, viewModel: HomeViewModel) {
                             fontWeight = FontWeight(600),
                             color = Color(0xFF2B395B),
 
-                            ))
+                            ),
+                        modifier = Modifier.padding(top = 8.dp)
+                        )
                 }
                 Spacer(modifier = Modifier.weight(1f))
                 Box(
@@ -175,6 +177,9 @@ fun HomeScreen(navController: NavController, viewModel: HomeViewModel) {
                         .clip(CircleShape)
                         .background( brush = bgGradient, shape = CircleShape)
                         .padding(3.dp)
+                        .clickable{
+                            navController.navigate("profile")
+                        }
                 ) {
                     Box(
                         modifier = Modifier.clip(CircleShape).background(Color.White).padding(10.dp).align(Alignment.Center)

@@ -32,6 +32,8 @@ import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.PathEffect
 import androidx.compose.ui.graphics.SolidColor
+import androidx.compose.ui.graphics.StrokeCap
+import androidx.compose.ui.graphics.StrokeJoin
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.unit.dp
 import com.example.scribesoul.commands.AddDrawableCommand
@@ -92,7 +94,9 @@ fun DrawScope.drawPathFromFill(
         width = when (mode) {
             ToolMode.Highlighter -> thickness * 2
             else -> thickness
-        }
+        },
+        cap = StrokeCap.Round,
+        join = StrokeJoin.Round
     )
     val brush = when (fill) {
         is SolidColorFill -> SolidColor(fill.color.copy(alpha = if (mode == ToolMode.Highlighter) 0.4f else fill.color.alpha))
@@ -608,7 +612,7 @@ fun DrawCanvas(
         if (drawingViewModel.toolMode == ToolMode.ERASE && currentPath.isNotEmpty()) {
             val lastPoint = currentPath.last()
             drawCircle(
-                color = Color.LightGray.copy(alpha = 0.3f),
+                color = Color.Black.copy(alpha = 0.5f),
                 center = lastPoint,
                 radius = drawingViewModel.eraseThickness,
                 style = Stroke(width = 2.dp.toPx())
