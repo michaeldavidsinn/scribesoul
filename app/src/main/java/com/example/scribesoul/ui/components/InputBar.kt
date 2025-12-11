@@ -11,6 +11,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.BasicTextField
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.Send
 import androidx.compose.material.icons.filled.Send
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -33,7 +34,10 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 
 @Composable
-fun InputBar(modifier: Modifier = Modifier) {
+fun InputBar(
+    modifier: Modifier = Modifier,
+    onSend: (String) -> Unit = {} // REVISI: Tambahkan callback ini
+) {
     var inputText by remember { mutableStateOf("") }
 
     Box(
@@ -106,7 +110,7 @@ fun InputBar(modifier: Modifier = Modifier) {
                             Text(
                                 text = "Write yours...",
                                 fontSize = 13.sp,
-                                color = Color.Gray
+                                color = Color.Black
                             )
                         }
                         // Input field asli
@@ -117,10 +121,15 @@ fun InputBar(modifier: Modifier = Modifier) {
 
             // Tombol Kirim (Pesawat)
             IconButton(
-                onClick = { /* TODO: Send Action */ }
+                onClick = {
+                    if (inputText.isNotBlank()) {
+                        onSend(inputText)
+                        inputText = "" // Kosongkan input setelah kirim
+                    }
+                }
             ) {
                 Icon(
-                    imageVector = Icons.Default.Send, // Menggunakan Icons.Default.Send yang lebih umum
+                    imageVector = Icons.AutoMirrored.Filled.Send,
                     contentDescription = "Send",
                     tint = Color(0xFF2B395B)
                 )

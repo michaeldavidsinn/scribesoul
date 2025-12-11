@@ -84,7 +84,7 @@ fun JoinChatScreen(navController: NavController) {
         Row(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(top = 16.dp),
+                .padding(top = 50.dp),
             horizontalArrangement = Arrangement.Start
         ) {
             Box(
