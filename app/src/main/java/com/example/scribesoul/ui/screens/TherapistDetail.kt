@@ -49,7 +49,7 @@ import com.google.accompanist.flowlayout.FlowRow
 import com.google.accompanist.flowlayout.MainAxisAlignment
 
 @Composable
-fun TherapistDetailScreen(navController: NavController) {
+fun TherapistDetailScreen(navController: NavController, therapistName: String) {
 
     // --- BRUSH DEFINITIONS ---
     val gradientBrushs = Brush.horizontalGradient(
@@ -156,7 +156,7 @@ fun TherapistDetailScreen(navController: NavController) {
                             }
                             Spacer(modifier = Modifier.height(8.dp))
                             Text(
-                                text = "Dr. Lisa Hermawan S.Psi, M.Psi, Psikolog",
+                                text = therapistName, // Gunakan variabel ini!
                                 fontSize = 20.sp,
                                 fontWeight = FontWeight.Bold,
                                 color = Color(0xFF2B395B)
@@ -755,6 +755,6 @@ fun TherapistDetailPreview() {
     val context = LocalContext.current
     val navController = remember { NavController(context) }
     Surface(modifier = Modifier.fillMaxSize()) {
-        TherapistDetailScreen(navController = navController)
+        TherapistDetailScreen(navController = navController, therapistName = "Dr. Lisa Hermawan")
     }
 }
