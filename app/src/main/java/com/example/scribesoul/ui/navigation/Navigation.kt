@@ -12,6 +12,8 @@ import com.example.scribesoul.viewModels.DrawingViewModel
 import com.example.scribesoul.viewModels.HomeViewModel
 import com.example.scribesoul.viewModels.JournalListViewModel
 import com.example.scribesoul.viewModels.JournalViewModel
+import androidx.navigation.NavType
+import androidx.navigation.navArgument
 
 
 @RequiresApi(Build.VERSION_CODES.VANILLA_ICE_CREAM)
@@ -33,8 +35,16 @@ fun AppNavigation(
             TherapistRecommendationScreen(navController)
         }
 
-        composable("therapist_detail") {
-            TherapistDetailScreen(navController)
+        composable(
+            route = "therapist_detail/{therapistName}",
+            arguments = listOf(navArgument("therapistName") { type = NavType.StringType })
+        ) { backStackEntry ->
+            val therapistName = backStackEntry.arguments?.getString("therapistName") ?: "Unknown"
+
+            TherapistDetailScreen(
+                navController = navController,
+                therapistName = therapistName
+            )
         }
 
         composable("therapist_account_info") {

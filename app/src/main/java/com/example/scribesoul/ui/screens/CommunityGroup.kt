@@ -116,7 +116,10 @@ fun CommunityGroupScreen(navController: NavController) {
             Box(
                 modifier = Modifier
                     .clip(RoundedCornerShape(50))
-                    .clickable { navController.popBackStack() }
+                    .clickable {
+                        navController.navigate("explore") {
+                        popUpTo("explore") { inclusive = true }
+                    } }
                     .padding(horizontal = 16.dp, vertical = 8.dp)
             ) {
                 Icon(
@@ -195,7 +198,11 @@ fun CommunityGroupScreen(navController: NavController) {
                         )
                         DropdownMenuItem(
                             text = { Text("Leave Group", color = Color.Red) },
-                            onClick = { showMoreMenu = false }
+                            // REVISI: Leave Group -> Ke Join Chat Page
+                            onClick = {
+                                showMoreMenu = false
+                                navController.navigate("join_chat")
+                            }
                         )
                     }
                 }
@@ -208,6 +215,25 @@ fun CommunityGroupScreen(navController: NavController) {
                 .padding(bottom = 20.dp),
             verticalArrangement = Arrangement.spacedBy(1.dp)
         ) {
+
+            Spacer(modifier = Modifier.weight(1f))
+
+            // REVISI: Indikator "You Joined"
+            Box(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(bottom = 20.dp),
+                contentAlignment = Alignment.Center
+            ) {
+                Text(
+                    text = "You Joined",
+                    style = MaterialTheme.typography.labelMedium.copy(fontWeight = FontWeight.Bold),
+                    color = Color.Gray.copy(alpha = 0.8f),
+                    modifier = Modifier
+                        .background(Color.LightGray.copy(alpha = 0.3f), shape = RoundedCornerShape(12.dp))
+                        .padding(horizontal = 12.dp, vertical = 6.dp)
+                )
+            }
 
             ChatBubble(
                 message = "Hi, I'm Clara. I've been working",

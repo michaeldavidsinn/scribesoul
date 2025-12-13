@@ -27,7 +27,6 @@ import androidx.compose.material.icons.filled.MoreVert
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
-import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -48,6 +47,7 @@ import com.example.scribesoul.ui.navigation.BottomNavItem
 import androidx.compose.material.icons.filled.Close
 import androidx.compose.runtime.mutableStateListOf
 import com.example.scribesoul.model.PostData
+import androidx.compose.foundation.lazy.items
 
 
 @Composable
@@ -68,6 +68,15 @@ fun AnonymousChatScreen(navController: NavController) {
             PostData(4, "Anonymous", "Just want to share my story...", 100, 45),
             PostData(5, "Anonymous", "Is it okay to cry?", 50, 20),
         )
+    }
+
+    val filteredPosts = if (searchQuery.isEmpty()) {
+        postList
+    } else {
+        postList.filter {
+            it.description.contains(searchQuery, ignoreCase = true) ||
+                    it.title.contains(searchQuery, ignoreCase = true)
+        }
     }
 
     Box(
@@ -123,14 +132,17 @@ fun AnonymousChatScreen(navController: NavController) {
                             TextField(
                                 value = searchQuery,
                                 onValueChange = { searchQuery = it },
-                                placeholder = { Text("Cari di SoulFess...") },
+                                placeholder = { Text("Search posts...", color = Color.Gray) },
                                 modifier = Modifier.weight(1f),
                                 colors = TextFieldDefaults.colors(
                                     focusedContainerColor = Color.Transparent,
                                     unfocusedContainerColor = Color.Transparent,
                                     disabledContainerColor = Color.Transparent,
                                     focusedIndicatorColor = Color(0xFF2B395B),
-                                    unfocusedIndicatorColor = Color.Gray
+                                    unfocusedIndicatorColor = Color.Gray,
+                                    focusedTextColor = Color.Black, // REVISI: Text jadi Hitam
+                                    unfocusedTextColor = Color.Black, // REVISI: Text jadi Hitam
+                                    cursorColor = Color.Black // REVISI: Cursor jadi Hitam
                                 ),
                                 maxLines = 1,
                                 singleLine = true
@@ -210,40 +222,32 @@ fun AnonymousChatScreen(navController: NavController) {
                 }
             }
 
-            items(postList.size) { index ->
-                val post = postList[index]
+            items(filteredPosts) { post ->
+                val originalIndex = postList.indexOf(post)
 
                 Column {
                     ChatCard(
                         title = post.title,
                         description = post.description,
-
-                        // LOGIKA LIKE "REAL":
-                        // Jika isLiked true, tampilkan (jumlah + 1). Jika false, tampilkan jumlah asli.
                         likeCount = if (post.isLiked) post.initialLikeCount + 1 else post.initialLikeCount,
                         commentCount = post.commentCount,
-                        isLiked = post.isLiked, // Kirim status like ke kartu
+                        isLiked = post.isLiked,
 
-                        // AKSI SAAT TOMBOL DIKLIK:
                         onLikeClick = {
-                            // Update data di dalam list utama
-                            // Kita copy data lama, tapi status isLiked dibalik (true jadi false, false jadi true)
-                            postList[index] = post.copy(isLiked = !post.isLiked)
+                            if (originalIndex != -1) {
+                                postList[originalIndex] = post.copy(isLiked = !post.isLiked)
+                            }
                         },
+
                         onCommentClick = {
-                            selectedPostIndex = index // Simpan index postingan yg diklik
-                            commentText = "" // Reset teks input
-                            showCommentDialog = true // Tampilkan dialog
+                            // Logika dialog komentar (seperti sebelumnya)
+                            selectedPostIndex = originalIndex
+                            commentText = ""
+                            showCommentDialog = true
                         }
                     )
 
-                    if (index < postList.size - 1) {
-                        Image(
-                            painter = painterResource(id = R.drawable.gariswarna),
-                            contentDescription = "Divider",
-                            modifier = Modifier.fillMaxWidth().height(12.dp)
-                        )
-                    }
+                    Image(painter = painterResource(id = R.drawable.gariswarna), contentDescription = "Divider", modifier = Modifier.fillMaxWidth().height(12.dp))
                 }
             }
 
@@ -260,7 +264,21 @@ fun AnonymousChatScreen(navController: NavController) {
                 .padding(bottom = 30.dp),
             verticalArrangement = Arrangement.spacedBy(1.dp)
         ) {
-            InputBar()
+            InputBar(
+                onSend = { message ->
+                    if (message.isNotBlank()) {
+                        // Tambahkan postingan baru ke index 0 (paling atas)
+                        postList.add(0, PostData(
+                            id = (postList.maxOfOrNull { it.id } ?: 0) + 1,
+                            title = "Anonymous", // Default user
+                            description = message,
+                            initialLikeCount = 0,
+                            commentCount = 0,
+                            isLiked = false
+                        ))
+                    }
+                }
+            )
             BottomBarAnonymous(navController = navController)
         }
         if (showCommentDialog) {
@@ -319,165 +337,88 @@ fun AnonymousChatScreen(navController: NavController) {
 
 @Composable
 fun ChatCard(
-    title: String = "Anonymous",
-    description: String = "This is an anonymous message.",
-    likeCount: Int = 24,
-    commentCount: Int = 12,
+    title: String,
+    description: String,
+    likeCount: Int,
+    commentCount: Int,
     isLiked: Boolean,
     onLikeClick: () -> Unit,
     onCommentClick: () -> Unit
 ) {
+    // State untuk dropdown menu Report
+    var showMenu by remember { mutableStateOf(false) }
+
     Card(
-        modifier = Modifier
-            .fillMaxWidth()
-            .wrapContentHeight(),
-        colors = CardDefaults.cardColors(
-            containerColor = Color(0xFFF5F8FF).copy(alpha = 0.4f) // 50% transparan
-        ),
+        modifier = Modifier.fillMaxWidth().wrapContentHeight(),
+        colors = CardDefaults.cardColors(containerColor = Color(0xFFF5F8FF).copy(alpha = 0.4f)),
         elevation = CardDefaults.cardElevation(defaultElevation = 0.dp),
         shape = RectangleShape
     ) {
         Row(
-            modifier = Modifier
-                .padding(16.dp)
-                .fillMaxWidth(),
+            modifier = Modifier.padding(16.dp).fillMaxWidth(),
             verticalAlignment = Alignment.Top
-
         ) {
-            // Avatar lingkaran
-            Box(
-                modifier = Modifier
-                    .size(52.dp) // Ukuran lebih besar sedikit dari avatar
-            ) {
-                // Gradient border (tanpa fill background)
+            // Avatar
+            Box(modifier = Modifier.size(52.dp)) {
                 Canvas(modifier = Modifier.matchParentSize()) {
                     drawCircle(
-                        brush = Brush.linearGradient(
-                            colors = listOf(Color(0xFF82D9D2), Color(0xFF74A8FF)),
-                            start = Offset(0f, 0f),
-                            end = Offset(size.width, size.height)
-                        ),
-                        style = Stroke(width = 4f) // Hanya border
+                        brush = Brush.linearGradient(colors = listOf(Color(0xFF82D9D2), Color(0xFF74A8FF)), start = Offset(0f, 0f), end = Offset(size.width, size.height)),
+                        style = Stroke(width = 4f)
                     )
                 }
-
-                // Avatar image di dalam border
-                Image(
-                    painter = painterResource(id = R.drawable.cat2),
-                    contentDescription = "Avatar",
-                    modifier = Modifier
-                        .size(36.dp) // Supaya ada ruang untuk border 4dp
-                        .align(Alignment.Center)
-                        .clip(CircleShape)
-                )
+                Image(painter = painterResource(id = R.drawable.cat2), contentDescription = null, modifier = Modifier.size(36.dp).align(Alignment.Center).clip(CircleShape))
             }
-
 
             Spacer(modifier = Modifier.width(12.dp))
 
-            // Kolom isi teks: title + deskripsi + ikon
-            Column(
-                modifier = Modifier.fillMaxWidth()
-            ) {
-                Row(
-                    modifier = Modifier
-                        .fillMaxWidth(),
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
-                    Text(
-                        text = title,
-                        style = MaterialTheme.typography.titleMedium,
-                        color = Color(0xFF2B395B)
-                    )
-
+            Column(modifier = Modifier.fillMaxWidth()) {
+                // Header Post
+                Row(modifier = Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
+                    Text(text = title, style = MaterialTheme.typography.titleMedium, color = Color(0xFF2B395B))
                     Spacer(modifier = Modifier.width(5.dp))
-
-                    Text(
-                        text = "16-06-2025",
-                        style = MaterialTheme.typography.bodySmall,
-                        color = Color(0xFF2B395B)
-                    )
-
+                    Text(text = "Just Now", style = MaterialTheme.typography.bodySmall, color = Color(0xFF2B395B))
                     Spacer(modifier = Modifier.weight(1f))
 
-                    IconButton(
-                        onClick = { /* TODO: aksi titik tiga */ }
-                    ) {
-                        Icon(
-                            imageVector = Icons.Default.MoreVert,
-                            contentDescription = "More Options",
-                            tint = Color.Gray
-                        )
+                    // --- DROPDOWN MENU REPORT ---
+                    Box {
+                        IconButton(onClick = { showMenu = true }) {
+                            Icon(Icons.Default.MoreVert, contentDescription = "More", tint = Color.Gray)
+                        }
+                        DropdownMenu(
+                            expanded = showMenu,
+                            onDismissRequest = { showMenu = false },
+                            containerColor = Color.White
+                        ) {
+                            DropdownMenuItem(
+                                text = { Text("Report Post", color = Color.Red) },
+                                onClick = { showMenu = false /* TODO: Logic Report */ }
+                            )
+                            DropdownMenuItem(
+                                text = { Text("Not Interested", color = Color(0xFF2B395B)) },
+                                onClick = { showMenu = false }
+                            )
+                        }
                     }
                 }
 
-                Text(
-                    text = description,
-                    style = MaterialTheme.typography.bodyMedium,
-                    color = Color(0xFF2B395B)
-                )
-
+                Text(text = description, style = MaterialTheme.typography.bodyMedium, color = Color(0xFF2B395B))
                 Spacer(modifier = Modifier.height(8.dp))
 
+                // Actions (Like & Comment)
                 Row(horizontalArrangement = Arrangement.spacedBy(24.dp), modifier = Modifier.padding(top = 4.dp)) {
-                    // Tombol Like
-                    Row(
-                        verticalAlignment = Alignment.CenterVertically,
-                        modifier = Modifier
-                            .clickable { onLikeClick() }
-                    ) {
-                        // --- PERUBAHAN DI SINI ---
-
-                        // Tentukan resource icon berdasarkan status isLiked
-                        val likeIconResId = if (isLiked) {
-                            R.drawable.ic_heart_filled // Gunakan icon terisi jika dilike (Pastikan nama file sesuai Langkah 1)
-                        } else {
-                            R.drawable.like // Gunakan icon outline jika tidak dilike (Ganti dengan nama file outline kamu)
-                        }
-
-                        // Tentukan warna berdasarkan status isLiked
-                        val likeIconColor = if (isLiked) {
-                            Color(0xFFE91E63) // Merah/Pink jika dilike
-                        } else {
-                            Color(0xFF2B395B) // Biru tua default jika tidak dilike
-                        }
-
-                        Icon(
-                            painter = painterResource(id = likeIconResId), // Gunakan resource dinamis tadi
-                            contentDescription = "Like",
-                            modifier = Modifier.size(20.dp),
-                            tint = likeIconColor // Gunakan warna dinamis tadi
-                        )
-
-                        // --- AKHIR PERUBAHAN ---
-
+                    // Like
+                    Row(verticalAlignment = Alignment.CenterVertically, modifier = Modifier.clickable { onLikeClick() }) {
+                        val likeIconResId = if (isLiked) R.drawable.ic_heart_filled else R.drawable.like
+                        val likeIconColor = if (isLiked) Color(0xFFE91E63) else Color(0xFF2B395B)
+                        Icon(painter = painterResource(id = likeIconResId), contentDescription = "Like", modifier = Modifier.size(20.dp), tint = likeIconColor)
                         Spacer(modifier = Modifier.width(4.dp))
-                        Text(
-                            text = "$likeCount",
-                            style = MaterialTheme.typography.bodySmall,
-                            // Warna teks juga mengikuti status like agar serasi
-                            color = likeIconColor
-                        )
+                        Text(text = "$likeCount", style = MaterialTheme.typography.bodySmall, color = likeIconColor)
                     }
-
-                    // Tombol Comment
-                    Row(
-                        verticalAlignment = Alignment.CenterVertically,
-                        modifier = Modifier
-                            .clickable { onCommentClick() }
-                    ) {
-                        Icon(
-                            painter = painterResource(id = R.drawable.comment),
-                            contentDescription = "Comment",
-                            modifier = Modifier.size(20.dp),
-                            tint = Color(0xFF2B395B)
-                        )
+                    // Comment
+                    Row(verticalAlignment = Alignment.CenterVertically, modifier = Modifier.clickable { onCommentClick() }) {
+                        Icon(painter = painterResource(id = R.drawable.comment), contentDescription = "Comment", modifier = Modifier.size(20.dp), tint = Color(0xFF2B395B))
                         Spacer(modifier = Modifier.width(4.dp))
-                        Text(
-                            text = "$commentCount",
-                            style = MaterialTheme.typography.bodySmall,
-                            color = Color(0xFF2B395B)
-                        )
+                        Text(text = "$commentCount", style = MaterialTheme.typography.bodySmall, color = Color(0xFF2B395B))
                     }
                 }
             }

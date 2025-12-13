@@ -93,7 +93,9 @@ fun TherapistRecommendationScreen(navController: NavController) {
                     price = "Rp 250.000,00",
 
                     onInfoClick = {
-                        navController.navigate("therapist_detail")
+                        // --- REVISI: KIRIM DATA NAMA KE DETAIL ---
+                        // Menggunakan route dengan parameter: therapist_detail/{nama}
+                        navController.navigate("therapist_detail/$name")
                     },
                     onChatClick = {
 
@@ -225,7 +227,7 @@ fun TherapistCard(
                         ) {
                             Text(
                                 text = "$experienceYears Years Experience", // Teks tetap utuh
-                                style = MaterialTheme.typography.labelSmall.copy(fontSize = 8.sp), // Samakan jadi 8.sp agar muat
+                                style = MaterialTheme.typography.labelSmall.copy(fontSize = 8.5.sp), // Samakan jadi 8.sp agar muat
                                 color = Color(0xFF2B395B),
                                 maxLines = 1,
                                 textAlign = TextAlign.Center
@@ -250,7 +252,7 @@ fun TherapistCard(
                         ) {
                             Text(
                                 text = "$compatibility% Match",
-                                style = MaterialTheme.typography.labelSmall.copy(fontSize = 6.sp),
+                                style = MaterialTheme.typography.labelSmall.copy(fontSize = 8.5.sp),
                                 color = Color(0xFF2B395B),
                                 maxLines = 1,
                                 textAlign = TextAlign.Center
