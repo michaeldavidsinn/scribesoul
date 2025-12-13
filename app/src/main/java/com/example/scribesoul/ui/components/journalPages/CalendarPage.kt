@@ -184,29 +184,6 @@ fun CalendarPage(
 }
 
 
-// Fungsi menggambar path dari list Offset, tergantung mode aktif
-private fun androidx.compose.ui.graphics.drawscope.DrawScope.drawPathFromOffsets(
-    offsets: List<Offset>,
-    mode: ToolMode
-) {
-    if (offsets.size < 2) return
-
-    val path = Path().apply {
-        moveTo(offsets.first().x, offsets.first().y)
-        for (i in 1 until offsets.size) {
-            lineTo(offsets[i].x, offsets[i].y)
-        }
-    }
-
-    drawPath(
-        path = path,
-        color = if (mode == ToolMode.DRAW) Color.Black else Color.Transparent,
-        style = Stroke(width = if (mode == ToolMode.DRAW) 4f else 36f, cap = StrokeCap.Round, join = StrokeJoin.Round)
-        ,
-        blendMode = if (mode == ToolMode.ERASE) BlendMode.Clear else BlendMode.SrcOver
-    )
-}
-
 @Preview(showBackground = true, showSystemUi = true)
 @Composable
 fun CalendarPageView(){

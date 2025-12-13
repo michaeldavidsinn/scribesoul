@@ -238,7 +238,7 @@ fun JournalScreen(navController: NavController, journalViewModel: JournalViewMod
         Box(
             modifier = Modifier
                 .align(Alignment.Center)
-                .offset(x = 5.dp, y= (-20).dp)
+                .offset()
         ) {
             Column(
                 modifier = Modifier.fillMaxWidth(fraction = 0.75f).offset(250.dp)
@@ -412,15 +412,15 @@ fun JournalScreen(navController: NavController, journalViewModel: JournalViewMod
             }
         }
 
-        Column(
-            modifier = Modifier
-                .align(Alignment.BottomCenter)
-                .padding(bottom = 0.dp),
-            verticalArrangement = Arrangement.spacedBy(1.dp)
-        ) {
-
-            BottomBarJournal(navController)
-        }
+//        Column(
+//            modifier = Modifier
+//                .align(Alignment.BottomCenter)
+//                .padding(bottom = 0.dp),
+//            verticalArrangement = Arrangement.spacedBy(1.dp)
+//        ) {
+//
+//            BottomBarJournal(navController)
+//        }
 
     }
 

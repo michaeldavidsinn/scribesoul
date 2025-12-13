@@ -136,8 +136,12 @@ sealed class JournalPage(
     }
 
     data class MoodsPage(
-        override val id: Int, val moods: SnapshotStateMap<YearMonth, SnapshotStateMap<Int, Float>> = SnapshotStateMap(), var currentMonth: YearMonth
-    ) : JournalPage(id)
+        override val id: Int,
+        val moods: SnapshotStateMap<YearMonth, SnapshotStateMap<Int, Float>> = SnapshotStateMap(),
+        val initialMonth: YearMonth = YearMonth.now()
+    ) : JournalPage(id){
+        var currentMonth by mutableStateOf(initialMonth)
+    }
 
     data class TodoPage(
         override val id: Int,
