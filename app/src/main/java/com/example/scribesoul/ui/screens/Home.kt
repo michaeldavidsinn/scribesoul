@@ -167,7 +167,9 @@ fun HomeScreen(navController: NavController, viewModel: HomeViewModel) {
                             fontWeight = FontWeight(600),
                             color = Color(0xFF2B395B),
 
-                            ))
+                            ),
+                        modifier = Modifier.padding(top = 8.dp)
+                        )
                 }
                 Spacer(modifier = Modifier.weight(1f))
                 Box(
@@ -175,6 +177,9 @@ fun HomeScreen(navController: NavController, viewModel: HomeViewModel) {
                         .clip(CircleShape)
                         .background( brush = bgGradient, shape = CircleShape)
                         .padding(3.dp)
+                        .clickable{
+                            navController.navigate("profile")
+                        }
                 ) {
                     Box(
                         modifier = Modifier.clip(CircleShape).background(Color.White).padding(10.dp).align(Alignment.Center)
@@ -194,7 +199,7 @@ fun HomeScreen(navController: NavController, viewModel: HomeViewModel) {
             LazyRow(
                 horizontalArrangement = Arrangement.spacedBy(5.dp),
                 modifier = Modifier
-                    .padding(top = 5.dp)
+                    .padding(top = 15.dp)
                     .align(Alignment.CenterHorizontally),
                 contentPadding = PaddingValues(start = 16.dp, end = 16.dp)
             ) {
@@ -216,14 +221,19 @@ fun HomeScreen(navController: NavController, viewModel: HomeViewModel) {
                             )
                         )
                         if (date == viewModel.currentDay) {
-                            Box {
+                            Box(
+                                modifier = Modifier.align(alignment = Alignment.CenterHorizontally)
+                            ) {
                                 Column(
                                     modifier = Modifier
+                                        .padding(top = 5.dp)
                                         .softShadow(
                                             radius = 20f,
                                             offsetY = 12f,
                                             alpha = 0.18f
                                         )
+                                        .align(Alignment.Center)
+                                        .width(30.dp)
                                         .clip(CircleShape)
                                         .background(Color(0xff74A8FF))
                                         .padding(5.dp)
@@ -235,8 +245,10 @@ fun HomeScreen(navController: NavController, viewModel: HomeViewModel) {
                                             fontSize = 14.sp,
                                             fontFamily = FontFamily(Font(R.font.verdana)),
                                             fontWeight = FontWeight(600),
-                                            color = Color.White
-                                        )
+                                            color = Color.White,
+                                            textAlign = TextAlign.Center
+                                        ),
+                                        modifier = Modifier.fillMaxWidth()
                                     )
                                 }
                                 Column(
@@ -252,7 +264,7 @@ fun HomeScreen(navController: NavController, viewModel: HomeViewModel) {
                         } else {
                             Text(
                                 text = date.dayOfMonth.toString(),
-                                modifier = Modifier.padding(5.dp),
+                                modifier = Modifier.padding(top = 5.dp).padding(5.dp),
                                 style = TextStyle(
                                     fontSize = 14.sp,
                                     fontFamily = FontFamily(Font(R.font.verdana)),
@@ -266,7 +278,7 @@ fun HomeScreen(navController: NavController, viewModel: HomeViewModel) {
             }
 
             LazyRow(
-                horizontalArrangement = Arrangement.spacedBy(10.dp), modifier = Modifier.padding( top = 5.dp).align(alignment = Alignment.Start), contentPadding = PaddingValues(start = 16.dp, end = 16.dp)
+                horizontalArrangement = Arrangement.spacedBy(10.dp), modifier = Modifier.padding( top = 16.dp).align(alignment = Alignment.Start), contentPadding = PaddingValues(start = 16.dp, end = 16.dp)
             ) {
                 item{
 
@@ -297,7 +309,7 @@ fun HomeScreen(navController: NavController, viewModel: HomeViewModel) {
             Row(
                 modifier = Modifier
                     .padding(horizontal = 16.dp)
-                    .padding(top = 10.dp)
+                    .padding(top = 20.dp)
                     .fillMaxWidth(),
                 horizontalArrangement = Arrangement.SpaceBetween,
                 verticalAlignment = Alignment.CenterVertically

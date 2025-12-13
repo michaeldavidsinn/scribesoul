@@ -1,5 +1,6 @@
 package com.example.scribesoul.ui.components.journalPages
 
+import JournalPage
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
@@ -40,16 +41,16 @@ import com.example.scribesoul.viewModels.DrawingViewModel
 import com.example.scribesoul.viewModels.JournalViewModel
 
 @Composable
-fun WideLinedSmallMarginsPage(
-    journalViewModel: JournalViewModel,
+fun DottedPage(
+    page: JournalPage.DottedPage,
+    color: Color,
     drawingViewModel: DrawingViewModel,
-    page: JournalPage.WideLinedSmallMarginPage,
-    color: Color
-) {
+    journalViewModel: JournalViewModel
+){
     val density = LocalDensity.current
     var showTextInput by remember { mutableStateOf(false) }
     val lineColor = Color.Gray.copy(alpha = 0.3f)
-    val lineSpacing = 40.dp
+    val lineSpacing = 20.dp
     val topMargin = 80.dp
     var showChangeInput by remember { mutableStateOf(false) }
 
@@ -87,25 +88,25 @@ fun WideLinedSmallMarginsPage(
                 .fillMaxWidth(0.8f)
                 .clip(RoundedCornerShape(23.dp))
                 .clipToBounds()
-                .drawBehind{
-                    val verticalLineX = 40.dp.toPx()
+                .drawBehind {
                     val spacingPx = lineSpacing.toPx()
+                    val dotRadius = 2.dp.toPx()
                     val topMarginPx = topMargin.toPx()
-                    val strokeWidth = 1.dp.toPx()
 
-                    // 2. Loop from top margin down to the bottom of the page
+                    // Draw dots in a grid
                     var currentY = topMarginPx
                     while (currentY < size.height) {
-                        drawLine(
-                            color = lineColor,
-                            start = Offset(x = 0f, y = currentY),
-                            end = Offset(x = size.width, y = currentY),
-                            strokeWidth = strokeWidth
-                        )
+                        var currentX = 0f
+                        while (currentX < size.width) {
+                            drawCircle(
+                                color = lineColor,
+                                radius = dotRadius,
+                                center = Offset(currentX, currentY)
+                            )
+                            currentX += spacingPx
+                        }
                         currentY += spacingPx
                     }
-
-                    drawLine(color = lineColor, start = Offset(x=verticalLineX, y=0f), end = Offset(x=verticalLineX, y=size.height))
                 }
                 .clipToBounds()
         ) {
@@ -183,6 +184,6 @@ fun WideLinedSmallMarginsPage(
 
 @Preview(showBackground = true, showSystemUi = true)
 @Composable
-fun WideLinedSmallMarginsPreview(){
-    WideLinedSmallMarginsPage(journalViewModel = viewModel(factory = JournalViewModel.Factory),page = JournalPage.WideLinedSmallMarginPage(id = 0,  name = "hi"), color = Color.Cyan, drawingViewModel = viewModel(factory = DrawingViewModel.Factory))
+fun DottedPagePreview(){
+    DottedPage(journalViewModel = viewModel(factory = JournalViewModel.Factory),page = JournalPage.DottedPage(id = 0,  name = "hi"), color = Color.Cyan, drawingViewModel = viewModel(factory = DrawingViewModel.Factory))
 }

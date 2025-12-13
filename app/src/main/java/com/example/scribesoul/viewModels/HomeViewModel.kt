@@ -1,6 +1,7 @@
 package com.example.scribesoul.viewModels
 
 import androidx.compose.runtime.*
+import androidx.compose.runtime.snapshots.SnapshotStateList
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.viewmodel.initializer
@@ -10,7 +11,7 @@ import java.time.LocalDate
 
 class HomeViewModel : ViewModel() {
     private val _habits = mutableStateListOf<Habit>()
-    val habits: List<Habit> get() = _habits
+    val habits: SnapshotStateList<Habit> get() = _habits
 
     var currentDay by mutableStateOf(LocalDate.now())
         private set
@@ -25,7 +26,7 @@ class HomeViewModel : ViewModel() {
     var read by mutableIntStateOf(0)
 
     init {
-        // Create a 7-day week range
+        // Create a 7-day week rangez
         val today = currentDay
         val daysToSubtract = today.dayOfWeek.value % 7L
         val startOfWeek = today.minusDays(daysToSubtract)

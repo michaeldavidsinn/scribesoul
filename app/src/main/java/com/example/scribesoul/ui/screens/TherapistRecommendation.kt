@@ -179,7 +179,7 @@ fun TherapistCard(
                 Column {
                     Text(
                         text = name,
-                        style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold, fontSize = 12.sp),
+                        style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold, fontSize = 14.sp),
                         color = Color(0xFF2B395B)
                     )
                     Text(

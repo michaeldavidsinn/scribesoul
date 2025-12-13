@@ -94,6 +94,7 @@ fun InputBar(
                 value = inputText,
                 onValueChange = { inputText = it },
                 modifier = Modifier
+                    .align(Alignment.CenterVertically)
                     .weight(1f)
                     .padding(end = 8.dp),
                 textStyle = TextStyle(

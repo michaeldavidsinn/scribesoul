@@ -1,12 +1,15 @@
 package com.example.scribesoul.ui.components.journalPages
 
 import JournalPage
+import android.app.DatePickerDialog
 import android.os.Build
 import androidx.annotation.RequiresApi
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxHeight
@@ -16,14 +19,21 @@ import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
+import androidx.compose.material3.DatePicker
+import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Slider
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
+import androidx.compose.material3.TextField
+import androidx.compose.material3.rememberDatePickerState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
+import androidx.compose.runtime.snapshots.SnapshotStateList
 import androidx.compose.runtime.snapshots.SnapshotStateMap
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -32,6 +42,8 @@ import androidx.compose.ui.draw.clipToBounds
 import androidx.compose.ui.focus.focusModifier
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.nativeCanvas
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.Font
@@ -42,15 +54,20 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.scribesoul.R
+import com.example.scribesoul.utils.AddMoodDialog
+import com.example.scribesoul.utils.NameInputDialog
 import java.nio.file.WatchEvent
 import java.time.LocalDate
 import java.time.YearMonth
+import java.util.Calendar
 
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun MoodPage(page: JournalPage.MoodsPage, color: Color) {
 
     var currentMonth by remember { mutableStateOf(page.currentMonth) }
+    var showAddMood by remember { mutableStateOf(false) }
 
     val today = LocalDate.now()
     val isCurrentMonth = today.year == currentMonth.year && today.month == currentMonth.month
@@ -63,6 +80,22 @@ fun MoodPage(page: JournalPage.MoodsPage, color: Color) {
         monthlyMoods[day]  // null means missing → draw gap
     }
 
+    if (showAddMood) {
+        AddMoodDialog(
+            onDismiss = { showAddMood = false },
+            onSave = { date, moodValue ->
+
+                val ym = YearMonth.from(date)
+                val monthMap = page.moods.getOrPut(ym) { SnapshotStateMap() }
+
+                monthMap[date.dayOfMonth] = moodValue
+
+                showAddMood = false
+            }
+        )
+    }
+
+
     Column(
         modifier = Modifier
             .background(color, RoundedCornerShape(23.dp))
@@ -74,7 +107,7 @@ fun MoodPage(page: JournalPage.MoodsPage, color: Color) {
     ) {
 
         // --- Title ---
-        Column(verticalArrangement = Arrangement.spacedBy(-60.dp)) {
+        Column(verticalArrangement = Arrangement.spacedBy(-60.dp), modifier = Modifier.height(75.dp)) {
             Text(
                 "MOOD",
                 modifier = Modifier.fillMaxWidth(),
@@ -111,7 +144,8 @@ fun MoodPage(page: JournalPage.MoodsPage, color: Color) {
             onNextMonth = {
                 currentMonth = currentMonth.plusMonths(1)
                 page.currentMonth = currentMonth
-            }
+            },
+
         )
 
         // --- Mood Icons (legend) ---
@@ -127,95 +161,90 @@ fun MoodPage(page: JournalPage.MoodsPage, color: Color) {
             Image(painterResource(R.drawable.great), null, Modifier.size(15.dp).weight(0.25f))
         }
 
-        Row(verticalAlignment = Alignment.Top) {
-
+        Row(modifier = Modifier.fillMaxWidth().clickable{
+            showAddMood = true
+        }.height(460.dp).padding(top=10.dp),verticalAlignment = Alignment.Top, horizontalArrangement = Arrangement.Center) {
+            val dayHeight = 460.dp / (daysInMonth + 1)
             // --- Day Numbers ---
-            Column(
-                modifier = Modifier.padding(horizontal = 32.dp, vertical = 10.dp),
-                verticalArrangement = Arrangement.SpaceBetween,
-                horizontalAlignment = Alignment.CenterHorizontally
-            ) {
-                for (day in 1..daysInMonth) {
-                    Text(text = day.toString(), fontSize = 12.sp)
-                }
-            }
 
             // --- Graph Area ---
             Canvas(
                 modifier = Modifier
-                    .padding(start = 14.dp, end = 36.dp)
-                    .padding(vertical = 18.dp)
+                    .padding(start = 64.dp, end = 36.dp)
                     .fillMaxWidth()
-                    .fillMaxHeight()
+
+                    .height(460.dp)
+
             ) {
-                val spacingY = size.height / (daysInMonth - 1)
+                val daySpacing = size.height / daysInMonth
                 val graphWidth = size.width
 
-                val points = moodList.mapIndexedNotNull { index, value ->
+
+
+                val points = (1..daysInMonth).map { day ->
+                    val value = monthlyMoods[day]  // keep nulls
                     value?.let {
-                        val percent = (it - 1f) / (4f - 1f)
+                        val percent = (it - 1f) / 3f        // (4f - 1f)
                         val x = graphWidth * percent
-                        val y = spacingY * index
+                        val y = daySpacing * (day - 0.5f)
                         Offset(x, y)
                     }
                 }
 
                 // Draw horizontal grid lines
-                for (i in 0 until daysInMonth) {
-                    val y = spacingY * i
+                for (i in 1 .. daysInMonth) {
+                    val y = daySpacing * (i + 0.5f)
                     drawLine(
-                        color = Color.LightGray,
+                        color = Color.Black,
                         start = Offset(0f, y),
                         end = Offset(graphWidth, y),
                         strokeWidth = 1f
                     )
+
+                    drawContext.canvas.nativeCanvas.drawText(
+                        i.toString(),
+                        -40f,           // X offset (to the left of the Canvas start)
+                        y + 5f,         // Y offset
+                        android.graphics.Paint().apply {
+                            this.color = android.graphics.Color.BLACK
+                            this.textSize = 28f
+                            this.isAntiAlias = true
+                        }
+                    )
                 }
 
                 // Draw lines between mood points (skip gaps)
-                for (i in 0 until points.size - 1) {
-                    drawLine(
-                        color = Color.Black,
-                        start = points[i],
-                        end = points[i + 1],
-                        strokeWidth = 4f
-                    )
-                }
-            }
-        }
-
-        // --- Mood Slider (only for today) ---
-        if (isCurrentMonth) {
-            val todayMood = monthlyMoods[today.dayOfMonth]
-            if (todayMood == null) {
-                Column(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(16.dp),
-                    horizontalAlignment = Alignment.CenterHorizontally
-                ) {
-                    Text("How do you feel today?", fontSize = 18.sp)
-
-                    var sliderValue by remember { mutableStateOf(2f) }
-
-                    Slider(
-                        value = sliderValue,
-                        onValueChange = { sliderValue = it },
-                        valueRange = 1f..4f,
-                        steps = 2
-                    )
-
-                    Button(
-                        onClick = {
-                            monthlyMoods[today.dayOfMonth] = sliderValue
-                        }
-                    ) {
-                        Text("Save Mood")
+                var lastPoint: Offset? = null
+                for (p in points) {
+                    if(p != null){
+                        drawCircle(
+                            color = Color.Black,
+                            radius = 6f,
+                            center = Offset(x = p.x, y = p.y)
+                        )
                     }
+
+                    if (p != null && lastPoint != null) {
+
+                        drawLine(
+                            color = Color.Black,
+                            start = lastPoint!!,
+                            end = p,
+                            strokeWidth = 4f
+                        )
+                    }
+                    lastPoint = p
                 }
+
             }
         }
+
+
     }
+
 }
+
+
 
 
 private fun getValuePercentageForRange(value: Float, max: Float, min: Float) =
@@ -226,5 +255,5 @@ private fun getValuePercentageForRange(value: Float, max: Float, min: Float) =
     (showBackground = true, showSystemUi = true)
 @Composable
 fun MoodPagePreview(){
-    MoodPage(JournalPage.MoodsPage(5, currentMonth =  YearMonth.of(2025,8)), color = Color(0xFFFFFDB4))
+    MoodPage(page = JournalPage.MoodsPage(id = 1), color = Color(0XFFFFCCE3))
 }

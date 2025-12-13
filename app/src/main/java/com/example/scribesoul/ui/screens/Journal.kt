@@ -67,6 +67,7 @@ import com.example.scribesoul.models.*
 import com.example.scribesoul.models.SolidColor as SolidColorFill
 import com.example.scribesoul.models.ToolMode
 import com.example.scribesoul.ui.components.journalPages.CalendarPage
+import com.example.scribesoul.ui.components.journalPages.DottedPage
 import com.example.scribesoul.ui.components.journalPages.HabitsPage
 import com.example.scribesoul.ui.components.journalPages.LargeGridPage
 import com.example.scribesoul.ui.components.journalPages.MoodPage
@@ -237,7 +238,7 @@ fun JournalScreen(navController: NavController, journalViewModel: JournalViewMod
         Box(
             modifier = Modifier
                 .align(Alignment.Center)
-                .offset(x = 5.dp, y= (-20).dp)
+                .offset()
         ) {
             Column(
                 modifier = Modifier.fillMaxWidth(fraction = 0.75f).offset(250.dp)
@@ -273,6 +274,7 @@ fun JournalScreen(navController: NavController, journalViewModel: JournalViewMod
                     onAddCalendarPage = { journalViewModel.addSection(SectionType.Calendar) },
                     onAddTodoPage = { journalViewModel.addSection(SectionType.Todo)},
                     onAddMoodPage = { journalViewModel.addSection(SectionType.Mood) },
+                    onAddDottedPage ={ journalViewModel.addSection(SectionType.Dotted)},
                     onAddWideLinedPage = {journalViewModel.addSection(SectionType.WideLined)},
                     onAddLargeGridPage = {journalViewModel.addSection(SectionType.LargeGrid)},
                     onAddSmallGridPage = {journalViewModel.addSection(SectionType.SmallGrid)},
@@ -362,6 +364,13 @@ fun JournalScreen(navController: NavController, journalViewModel: JournalViewMod
                             journalViewModel
                         )
 
+                        is JournalPage.DottedPage -> DottedPage(
+                            page,
+                            section.color,
+                            drawingViewModel,
+                            journalViewModel
+                        )
+
                         else -> TODO()
                     }
                 }
@@ -403,15 +412,15 @@ fun JournalScreen(navController: NavController, journalViewModel: JournalViewMod
             }
         }
 
-        Column(
-            modifier = Modifier
-                .align(Alignment.BottomCenter)
-                .padding(bottom = 0.dp),
-            verticalArrangement = Arrangement.spacedBy(1.dp)
-        ) {
-
-            BottomBarJournal(navController)
-        }
+//        Column(
+//            modifier = Modifier
+//                .align(Alignment.BottomCenter)
+//                .padding(bottom = 0.dp),
+//            verticalArrangement = Arrangement.spacedBy(1.dp)
+//        ) {
+//
+//            BottomBarJournal(navController)
+//        }
 
     }
 

@@ -47,7 +47,7 @@ class DrawingViewModel: ViewModel() {
 
     fun executeCommand(command: Command, page: JournalPage?) {
         command.execute()
-        if(page is PlainPage){
+        if(page is JournalPage){
             page.undoStack.add(command)
             page.redoStack.clear()
             selectedItems.clear()

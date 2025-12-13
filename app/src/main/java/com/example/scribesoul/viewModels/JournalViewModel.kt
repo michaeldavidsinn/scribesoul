@@ -27,6 +27,7 @@ import com.example.scribesoul.models.ItemGroup
 import com.example.scribesoul.models.Movable
 import com.example.scribesoul.models.ShapeItem
 import com.example.scribesoul.models.ToolMode
+import com.example.scribesoul.ui.components.journalPages.DottedPage
 import com.example.scribesoul.ui.components.journalPages.MoodPage
 import com.example.scribesoul.ui.screens.ColorPickerTarget
 import com.example.scribesoul.ui.screens.GuideLine
@@ -134,11 +135,12 @@ class JournalViewModel : ViewModel() {
                     )
                     SectionType.Habits -> HabitsPage(firstPageId)
                     SectionType.Calendar -> CalendarPage(firstPageId)
-                    SectionType.Mood -> MoodsPage(firstPageId, currentMonth =  YearMonth.now())
+                    SectionType.Mood -> MoodsPage(firstPageId)
                     SectionType.Todo -> TodoPage(id = firstPageId)
                     SectionType.Creation -> TODO()
                     SectionType.WideLined -> WideLinedPage(firstPageId)
                     SectionType.WideLinedSmallMargin -> WideLinedSmallMarginPage(firstPageId)
+                    SectionType.Dotted -> DottedPage(firstPageId)
                     SectionType.SmallGrid -> SmallGridPage(firstPageId)
                     SectionType.LargeGrid -> LargeGridPage(firstPageId)
                     SectionType.NarrowLined -> NarrowLinedPage(firstPageId)
@@ -163,7 +165,8 @@ class JournalViewModel : ViewModel() {
             SectionType.Habits -> HabitsPage(newPageId)
             SectionType.Calendar -> CalendarPage(newPageId)
             SectionType.Todo -> TodoPage(newPageId)
-            SectionType.Mood -> MoodsPage(newPageId, currentMonth =  YearMonth.now())
+            SectionType.Dotted -> DottedPage(newPageId)
+            SectionType.Mood -> MoodsPage(newPageId)
             SectionType.Creation -> TODO()
             SectionType.WideLined -> WideLinedPage(newPageId)
             SectionType.LargeGrid -> LargeGridPage(newPageId)

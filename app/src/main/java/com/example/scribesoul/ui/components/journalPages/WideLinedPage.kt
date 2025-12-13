@@ -68,6 +68,7 @@ import com.example.scribesoul.utils.isMovableInPolygon
 import com.example.scribesoul.utils.isPointInPolygon
 import kotlin.math.abs
 import com.example.scribesoul.models.*
+import com.example.scribesoul.utils.ChangeInputDialog
 import com.example.scribesoul.utils.DrawCanvas
 import com.example.scribesoul.utils.NameInputDialog
 import com.example.scribesoul.utils.drawPathFromFill
@@ -90,6 +91,17 @@ fun WideLinedPage(
     val lineColor = Color.Gray.copy(alpha = 0.3f)
     val lineSpacing = 40.dp
     val topMargin = 80.dp
+    var showChangeInput by remember { mutableStateOf(false) }
+
+    if(showChangeInput){
+        ChangeInputDialog(onNameChange = { name ->
+            showChangeInput = false
+            page.name = name
+
+        }, onDismissRequest = { showChangeInput = false },
+            initial = page.name
+        )
+    }
 
     if (showTextInput) {
         NameInputDialog(
@@ -150,7 +162,7 @@ fun WideLinedPage(
                         fontFamily = FontFamily(Font(R.font.verdana_bold)),
                         fontWeight = FontWeight.Bold,
                         color = Color(0xFF2B395B),
-                        modifier = Modifier.clickable { showTextInput = true }
+                        modifier = Modifier.clickable { showChangeInput = true }
                     )
                 } else {
                     Text(
@@ -158,7 +170,8 @@ fun WideLinedPage(
                         fontSize = 30.sp,
                         fontFamily = FontFamily(Font(R.font.verdana_bold)),
                         fontWeight = FontWeight.Bold,
-                        color = Color(0xFF2B395B)
+                        color = Color(0xFF2B395B),
+                        modifier = Modifier.clickable { showChangeInput = true }
                     )
                 }
 
