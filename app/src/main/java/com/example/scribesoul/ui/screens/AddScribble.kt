@@ -69,7 +69,7 @@ fun AddScribbleScreen(navController: NavController) {
         LazyColumn(
             modifier = Modifier
                 .fillMaxSize()
-                .padding(60.dp),
+                .padding(5.dp),
             contentPadding = PaddingValues(0.dp),
             verticalArrangement = Arrangement.spacedBy(0.dp)
         ) {
