@@ -222,7 +222,7 @@ fun TherapistCard(
                                 .fillMaxWidth()
                                 .clip(RoundedCornerShape(50))
                                 .background(Color.White)
-                                .padding(horizontal = 6.dp, vertical = 4.dp), // [OPTIMASI 3] Padding dalam dikurangi (12 -> 6)
+                                .padding(horizontal = 2.dp, vertical = 4.dp), // [OPTIMASI 3] Padding dalam dikurangi (12 -> 6)
                             contentAlignment = Alignment.Center
                         ) {
                             Text(
