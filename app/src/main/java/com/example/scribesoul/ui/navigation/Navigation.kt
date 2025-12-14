@@ -14,6 +14,7 @@ import com.example.scribesoul.viewModels.JournalListViewModel
 import com.example.scribesoul.viewModels.JournalViewModel
 import androidx.navigation.NavType
 import androidx.navigation.navArgument
+import com.example.scribesoul.viewModels.CommunityViewModel
 
 
 @RequiresApi(Build.VERSION_CODES.VANILLA_ICE_CREAM)
@@ -24,6 +25,7 @@ fun AppNavigation(
     journalListViewModel: JournalListViewModel = viewModel(factory = JournalListViewModel.Factory),
     homeViewModel: HomeViewModel = viewModel(factory = HomeViewModel.Factory),
     drawingViewModel: DrawingViewModel = viewModel(factory = DrawingViewModel.Factory ),
+    communityViewModel: CommunityViewModel = viewModel(factory = CommunityViewModel.Factory)
 
 ) {
 
@@ -84,15 +86,15 @@ fun AppNavigation(
         }
 
         composable("explore") {
-            AnonymousChatScreen(navController)
+            AnonymousChatScreen(navController, communityViewModel)
         }
 
         composable("join_chat") {
-            JoinChatScreen(navController)
+            JoinChatScreen(navController, communityViewModel)
         }
 
         composable("community_group") {
-            CommunityGroupScreen(navController)
+            CommunityGroupScreen(navController, communityViewModel)
         }
 
         composable("addScribble") {

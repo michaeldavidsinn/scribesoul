@@ -1,5 +1,6 @@
 package com.example.scribesoul.ui.screens
 
+import androidx.activity.compose.BackHandler
 import com.example.scribesoul.ui.components.InputBar
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.Image
@@ -19,6 +20,7 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.wrapContentHeight
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -60,10 +62,14 @@ import com.example.scribesoul.R
 import com.example.scribesoul.ui.components.ChatBubble
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.setValue
+import androidx.lifecycle.viewmodel.compose.viewModel
+import com.example.scribesoul.model.PostData
+import com.example.scribesoul.viewModels.CommunityViewModel
+import com.example.scribesoul.viewModels.HomeViewModel
 
 
 @Composable
-fun CommunityGroupScreen(navController: NavController) {
+fun CommunityGroupScreen(navController: NavController, communityViewModel: CommunityViewModel) {
     // --- STATE MANAGEMENT ---
     // State untuk Search
     var isSearchActive by remember { mutableStateOf(false) }
@@ -76,6 +82,12 @@ fun CommunityGroupScreen(navController: NavController) {
     var showMoreMenu by remember { mutableStateOf(false) }
 
     val context = LocalContext.current
+
+    BackHandler {
+        navController.navigate("explore") {
+            popUpTo("explore") { inclusive = true }
+        }
+    }
 
     Box(
         modifier = Modifier
@@ -217,8 +229,6 @@ fun CommunityGroupScreen(navController: NavController) {
         ) {
 
             Spacer(modifier = Modifier.weight(1f))
-
-            // REVISI: Indikator "You Joined"
             Box(
                 modifier = Modifier
                     .fillMaxWidth()
@@ -235,24 +245,29 @@ fun CommunityGroupScreen(navController: NavController) {
                 )
             }
 
-            ChatBubble(
-                message = "Hi, I'm Clara. I've been working",
-                sender = "anonymous 1",
-                isMine = false,
-                modifier = Modifier.padding(start = 12.dp, end = 48.dp) // margin kiri kecil, kanan lebih besar
-            )
 
-            ChatBubble(
-                message = "Hi Clara! Same here 👋",
-                sender = "Me",
-                isMine = true,
-                modifier = Modifier.padding(start = 48.dp, end = 12.dp) // margin kanan kecil, kiri lebih besar
-            )
+            LazyColumn {
+                items(communityViewModel.chats){ chat ->
+                    ChatBubble(
+                        message = chat.message,
+                        sender = chat.sender,
+                        isMine = true,
+                        modifier = Modifier.padding(start = 48.dp, end = 12.dp)
+                    )
+                }
+            }
 
 
             Spacer(modifier = Modifier.height(15.dp))
 
-            InputBar()
+            InputBar(
+                onSend = { message ->
+                    if (message.isNotBlank()) {
+                        // Tambahkan postingan baru ke index 0 (paling atas)
+                        communityViewModel.chat(message)
+                    }
+                }
+            )
             BottomBarAnonymous(navController = navController)
         }
     }
@@ -262,5 +277,5 @@ fun CommunityGroupScreen(navController: NavController) {
 @Composable
 fun CommunityGroupPreview() {
     // Gunakan dummy NavController untuk preview
-    CommunityGroupScreen(navController = NavController(LocalContext.current))
+    CommunityGroupScreen(navController = NavController(LocalContext.current), communityViewModel = viewModel(factory = CommunityViewModel.Factory))
 }

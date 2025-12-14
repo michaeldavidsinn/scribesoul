@@ -578,7 +578,7 @@ fun DrawScribbleScreen(navController: NavController) {
             if (toolMode == ToolMode.ERASE && currentPath.isNotEmpty()) {
                 val lastPoint = currentPath.last()
                 drawCircle(
-                    color = Color.LightGray.copy(alpha = 0.3f),
+                    color = Color.Black.copy(alpha = 0.5f),
                     center = lastPoint,
                     radius = eraseThickness,
                     style = Stroke(width = 2.dp.toPx())

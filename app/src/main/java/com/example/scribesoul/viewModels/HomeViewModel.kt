@@ -9,6 +9,7 @@ import androidx.lifecycle.viewmodel.viewModelFactory
 import com.example.scribesoul.models.Habit
 import com.example.scribesoul.models.User
 import java.time.LocalDate
+import java.time.LocalTime
 
 class HomeViewModel : ViewModel() {
     var user by mutableStateOf<User>(User(
@@ -18,6 +19,9 @@ class HomeViewModel : ViewModel() {
         birthday = LocalDate.of(2005, 11, 6)
     ))
         private set
+
+    val currentTime = LocalTime.now()
+
 
     private val _habits = mutableStateListOf<Habit>()
     val habits: SnapshotStateList<Habit> get() = _habits
@@ -44,6 +48,18 @@ class HomeViewModel : ViewModel() {
         }
 
 
+    }
+
+    fun getGreetinng(): String{
+        if(currentTime < LocalTime.of(12,0) && currentTime > LocalTime.of(0,0)){
+            return "Good Morning"
+        }else if(currentTime >= LocalTime.of(12,0) && currentTime < LocalTime.of(18,0)){
+            return "Good Afternoon"
+        }else if(currentTime >= LocalTime.of(18,0) && currentTime <= LocalTime.of(23,59)){
+            return "Good Night"
+        }else{
+            return "How's Your Day?"
+        }
     }
 
     fun addHabit(name: String, metric: String, icon: Int, goal: Int) {

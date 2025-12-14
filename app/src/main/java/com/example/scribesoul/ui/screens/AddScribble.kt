@@ -79,7 +79,7 @@ fun AddScribbleScreen(navController: NavController) {
                         .fillMaxWidth(),
                     horizontalAlignment = Alignment.CenterHorizontally
                 ) {
-                    Spacer(modifier = Modifier.height(60.dp))
+                    Spacer(modifier = Modifier.height(55.dp))
 
                     Text(
                         text = "Scribble",

@@ -80,15 +80,15 @@ fun TherapistAccountInfoScreen(navController: NavController, homeViewModel: Home
         Column(
             modifier = Modifier
                 .fillMaxSize()
-                .padding(horizontal = 20.dp, vertical = 24.dp),
+                .padding(top = 60.dp, bottom = 12.dp)
+                .padding(horizontal = 20.dp),
             verticalArrangement = Arrangement.Top,
             horizontalAlignment = Alignment.CenterHorizontally
 
         ) {
             Box(
                 modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(vertical = 8.dp), // Menambahkan sedikit padding vertikal untuk header
+                    .fillMaxWidth(), // Menambahkan sedikit padding vertikal untuk header
                 contentAlignment = Alignment.Center // Menyelaraskan item di tengah secara default
             ) {
                 // Tombol Kembali (diselaraskan ke kiri)

@@ -92,7 +92,7 @@ fun TherapistProfileScreen(navController: NavController, homeViewModel: HomeView
             Box(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(vertical = 32.dp),
+                    .padding(bottom = 16.dp, top = 60.dp),
                 contentAlignment = Alignment.Center
             ) {
                 Box(
@@ -177,7 +177,7 @@ fun TherapistProfileScreen(navController: NavController, homeViewModel: HomeView
                         horizontalAlignment = Alignment.CenterHorizontally
                     ) {
                         Text(
-                            text = "4",
+                            text = "0",
                             style = MaterialTheme.typography.titleLarge.copy(fontWeight = FontWeight.Bold),
                             color = Color(0xFF2B395B)
                         )
@@ -203,7 +203,7 @@ fun TherapistProfileScreen(navController: NavController, homeViewModel: HomeView
                         horizontalAlignment = Alignment.CenterHorizontally
                     ) {
                         Text(
-                            text = "20",
+                            text = "0",
                             style = MaterialTheme.typography.titleLarge.copy(fontWeight = FontWeight.Bold),
                             color = Color(0xFF2B395B)
                         )
@@ -290,7 +290,7 @@ fun TherapistProfileScreen(navController: NavController, homeViewModel: HomeView
         Box(
             modifier = Modifier
                 .align(Alignment.BottomCenter) // Menempel di bawah
-                .padding(bottom = 32.dp) // Memberi jarak dari tepi bawah
+                .padding(bottom = 45.dp) // Memberi jarak dari tepi bawah
                 .clip(RoundedCornerShape(50))
                 .background(
                     brush = Brush.horizontalGradient(

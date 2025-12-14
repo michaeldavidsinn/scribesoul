@@ -195,7 +195,7 @@ fun HomeScreen(navController: NavController, viewModel: HomeViewModel) {
                                 fontWeight = FontWeight(400),
                                 color = Color(0xFF2B395B)
                             ))
-                    Text("Good Morning",
+                    Text(viewModel.getGreetinng(),
                         style = TextStyle(
                             fontSize = 24.sp,
                             fontFamily = FontFamily(Font(R.font.verdana_bold)),

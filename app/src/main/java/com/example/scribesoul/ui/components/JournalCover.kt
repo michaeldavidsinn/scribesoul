@@ -61,8 +61,8 @@ fun JournalCover(navController: NavController, journalTitle: String, journalDate
         Box(
             modifier =
                 Modifier
-                    .width(190.dp)
-                    .height(250.dp)
+                    .width(200.dp)
+                    .height(300.dp)
                     .softShadow(
                         radius = 20f,
                         offsetY = 12f,

@@ -46,13 +46,15 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
 import com.example.scribesoul.R
 import com.example.scribesoul.ui.components.InputBar
+import com.example.scribesoul.viewModels.CommunityViewModel
 
 
 @Composable
-fun JoinChatScreen(navController: NavController) {
+fun JoinChatScreen(navController: NavController, communityViewModel: CommunityViewModel) {
     Box(
         modifier = Modifier
             .fillMaxSize()
@@ -145,7 +147,10 @@ fun JoinChatScreen(navController: NavController) {
                         .width(140.dp)
                         .height(50.dp)
                         .clip(RoundedCornerShape(8.dp))
-                        .clickable { navController.navigate("community_group") }
+                        .clickable {
+                            communityViewModel.joined = true
+                            navController.navigate("community_group")
+                        }
                         .background(
                             brush = Brush.horizontalGradient(
                                 colors = listOf(
@@ -172,7 +177,7 @@ fun JoinChatScreen(navController: NavController) {
                     modifier = Modifier
                         .width(140.dp)
                         .height(50.dp)
-                        .clickable { navController.navigate("explore") }
+                        .clickable { navController.popBackStack() }
                         .background(
                             brush = Brush.horizontalGradient(
                                 colors = listOf(
@@ -211,5 +216,5 @@ fun JoinChatScreen(navController: NavController) {
 @Composable
 fun JoinChatPreview() {
     // Gunakan dummy NavController untuk preview
-    JoinChatScreen(navController = NavController(LocalContext.current))
+    JoinChatScreen(navController = NavController(LocalContext.current), communityViewModel = viewModel(factory = CommunityViewModel.Factory))
 }

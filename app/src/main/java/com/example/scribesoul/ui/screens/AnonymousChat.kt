@@ -1,5 +1,6 @@
 package com.example.scribesoul.ui.screens
 
+import androidx.activity.compose.BackHandler
 import com.example.scribesoul.ui.components.InputBar
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.platform.LocalContext
@@ -48,10 +49,12 @@ import androidx.compose.material.icons.filled.Close
 import androidx.compose.runtime.mutableStateListOf
 import com.example.scribesoul.model.PostData
 import androidx.compose.foundation.lazy.items
+import androidx.lifecycle.viewmodel.compose.viewModel
+import com.example.scribesoul.viewModels.CommunityViewModel
 
 
 @Composable
-fun AnonymousChatScreen(navController: NavController) {
+fun AnonymousChatScreen(navController: NavController, communityViewModel: CommunityViewModel) {
 
     var isSearchActive by remember { mutableStateOf(false) }
     var searchQuery by remember { mutableStateOf("") }
@@ -69,6 +72,8 @@ fun AnonymousChatScreen(navController: NavController) {
             PostData(5, "Anonymous", "Is it okay to cry?", 50, 20),
         )
     }
+
+
 
     val filteredPosts = if (searchQuery.isEmpty()) {
         postList
@@ -194,7 +199,14 @@ fun AnonymousChatScreen(navController: NavController) {
 
                             // Ikon Kanan (Profile)
                             IconButton(
-                                onClick = { navController.navigate("join_chat") }, // <-- MODIFIKASI Aksi
+                                onClick = {
+                                    if(communityViewModel.joined){
+                                        navController.navigate("community_group")
+                                    }else{
+                                        navController.navigate("join_chat")
+                                    }
+
+                                     }, // <-- MODIFIKASI Aksi
                                 modifier = Modifier.align(Alignment.CenterEnd)
                             ) {
                                 Icon(
@@ -482,5 +494,5 @@ fun BottomBarAnonymous(navController: NavController, modifier: Modifier = Modifi
 @Composable
 fun AnonymousChatPreview() {
     val dummyController = rememberNavController()
-    AnonymousChatScreen(navController = dummyController)
+    AnonymousChatScreen(navController = dummyController, communityViewModel = viewModel(factory = CommunityViewModel.Factory))
 }

@@ -86,7 +86,8 @@ fun TherapistFAQScreen(navController: NavController) {
             Box(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(vertical = 8.dp), // Menambahkan sedikit padding vertikal untuk header
+                    .padding(top = 60.dp, bottom = 4.dp)
+                    , // Menambahkan sedikit padding vertikal untuk header
                 contentAlignment = Alignment.Center // Menyelaraskan item di tengah secara default
             ) {
                 // Tombol Kembali (diselaraskan ke kiri)
@@ -95,6 +96,7 @@ fun TherapistFAQScreen(navController: NavController) {
                         .align(Alignment.CenterStart) // << PENTING: Menyelaraskan item ini ke kiri tengah
                         .clip(RoundedCornerShape(50))
                         .clickable { navController.popBackStack() }
+
                         .padding(horizontal = 16.dp, vertical = 8.dp)
                 ) {
                     Icon(

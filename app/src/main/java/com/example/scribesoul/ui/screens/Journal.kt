@@ -519,29 +519,29 @@ fun JournalScreen(navController: NavController, journalViewModel: JournalViewMod
             }
 
 
-            if (drawingViewModel.selectedItems.isNotEmpty() || drawingViewModel.selectedPaths.isNotEmpty()) {
-                Box(modifier = Modifier
-                    .align(Alignment.BottomCenter)
-                    .padding(bottom = 32.dp)
-                    .imePadding()
-                    .wrapContentWidth()
-                ) {
-                    PropertiesToolbar(
-                        selectedItems = drawingViewModel.selectedItems,
-                        selectedPaths = drawingViewModel.selectedPaths,
-                        executeCommand = { drawingViewModel.executeCommand(it, page) },
-                        onClearSelection = {
-                            drawingViewModel.selectedItems.clear()
-                            drawingViewModel.selectedPaths.clear()
-                        },
-                        allLists = listOf(drawingViewModel.texts, drawingViewModel.shapes, drawingViewModel.imageLayers, drawingViewModel.groups),
-                        onShowColorPicker = { drawingViewModel.colorPickerTarget = ColorPickerTarget.EDIT_SELECTION },
-                        onShowGradientPicker = { drawingViewModel.showGradientPicker = true }
-                    )
-                }
+
+
+
+        }
+        if (drawingViewModel.selectedItems.isNotEmpty() || drawingViewModel.selectedPaths.isNotEmpty()) {
+            Box(modifier = Modifier
+                .align(Alignment.BottomCenter)
+                .padding(bottom = 25.dp)
+                .wrapContentWidth()
+            ) {
+                PropertiesToolbar(
+                    selectedItems = drawingViewModel.selectedItems,
+                    selectedPaths = drawingViewModel.selectedPaths,
+                    executeCommand = { drawingViewModel.executeCommand(it, page) },
+                    onClearSelection = {
+                        drawingViewModel.selectedItems.clear()
+                        drawingViewModel.selectedPaths.clear()
+                    },
+                    allLists = listOf(drawingViewModel.texts, drawingViewModel.shapes, drawingViewModel.imageLayers, drawingViewModel.groups),
+                    onShowColorPicker = { drawingViewModel.colorPickerTarget = ColorPickerTarget.EDIT_SELECTION },
+                    onShowGradientPicker = { drawingViewModel.showGradientPicker = true }
+                )
             }
-
-
         }
 
         AnimatedVisibility(
