@@ -42,6 +42,35 @@ fun NameInputDialog(onDismissRequest: () -> Unit, onNameCreate: (String) -> Unit
     )
 }
 
+@Composable
+fun JournalNameChangeDialog(onDismissRequest: () -> Unit, onNameChange: (String) -> Unit, initial: String){
+    var name by remember { mutableStateOf(initial) }
+
+    AlertDialog(
+        onDismissRequest = onDismissRequest,
+        title = { Text("Change Journal Name") },
+        text = {
+            TextField(value = name, onValueChange = {
+                name = it
+            })
+        },
+        confirmButton = { Button(onClick = { onNameChange(name) }) { Text("OK") } },
+        dismissButton = { TextButton(onClick = onDismissRequest) { Text("Cancel") } }
+    )
+}
+
+@Composable
+fun DeleteWarningDialog(onDismissRequest: () -> Unit, onDelete: () -> Unit){
+
+    AlertDialog(
+        onDismissRequest = onDismissRequest,
+        title = { Text("Are you sure you want to DELETE?") },
+
+        confirmButton = { Button(onClick = { onDelete() }) { Text("YES") } },
+        dismissButton = { TextButton(onClick = onDismissRequest) { Text("NO") } }
+    )
+}
+
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun AddMoodDialog(

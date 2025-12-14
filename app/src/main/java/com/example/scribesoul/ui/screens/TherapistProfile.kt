@@ -45,13 +45,15 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
 import com.example.scribesoul.R
+import com.example.scribesoul.viewModels.HomeViewModel
 import com.google.accompanist.flowlayout.FlowRow
 
 @OptIn(ExperimentalLayoutApi::class)
 @Composable
-fun TherapistProfileScreen(navController: NavController) {
+fun TherapistProfileScreen(navController: NavController, homeViewModel: HomeViewModel) {
 
     val gradientBrushs = Brush.horizontalGradient(
         colors = listOf(
@@ -143,7 +145,7 @@ fun TherapistProfileScreen(navController: NavController) {
 
             // Name
             Text(
-                text = "Eloise Hamilton",
+                text = homeViewModel.user.name,
                 fontSize = 20.sp,
                 fontWeight = FontWeight.Bold,
                 color = Color(0xFF2B395B),
@@ -318,6 +320,6 @@ fun TherapistProfilePreview() {
     val navController = remember { NavController(context) }
 
     Surface(modifier = Modifier.fillMaxSize()) {
-        TherapistProfileScreen(navController = navController)
+        TherapistProfileScreen(navController = navController, homeViewModel = viewModel(factory = HomeViewModel.Factory))
     }
 }

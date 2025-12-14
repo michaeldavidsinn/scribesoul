@@ -35,7 +35,7 @@ sealed class SectionType {
 data class Journal(
     val id: Int,
     val uid: Int,
-    val name: String,
+    var name: String,
     val sections: SnapshotStateList<JournalSection> = mutableStateListOf() //This will be removed when connected to backend
 )
 

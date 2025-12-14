@@ -22,10 +22,12 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.imePadding
 import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.wrapContentWidth
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -79,6 +81,9 @@ import com.example.scribesoul.ui.components.journalPages.TodoPage
 import com.example.scribesoul.ui.components.journalPages.WideLinedLargeMarginsPage
 import com.example.scribesoul.ui.components.journalPages.WideLinedPage
 import com.example.scribesoul.ui.components.journalPages.WideLinedSmallMarginsPage
+import com.example.scribesoul.utils.ChangeInputDialog
+import com.example.scribesoul.utils.DeleteWarningDialog
+import com.example.scribesoul.utils.JournalNameChangeDialog
 import com.example.scribesoul.viewModels.DrawingViewModel
 import com.example.scribesoul.viewModels.JournalListViewModel
 
@@ -93,6 +98,13 @@ fun JournalScreen(navController: NavController, journalViewModel: JournalViewMod
         navController.navigate("journalList")
     }
 
+    val changeTool: (ToolMode) -> Unit = { newMode ->
+        drawingViewModel.toolMode = newMode
+        drawingViewModel.selectedItems.clear() // Remove bounding box around shapes
+        drawingViewModel.selectedPaths.clear() // Remove bounding box around strokes
+        drawingViewModel.colorPickerTarget = null
+    }
+
 
     val imagePickerLauncher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.GetContent()
@@ -100,10 +112,11 @@ fun JournalScreen(navController: NavController, journalViewModel: JournalViewMod
         uri?.let {
             drawingViewModel.executeCommand(AddImageCommand(ImageLayer(uri = it, offset = drawingViewModel.canvasCenter.value), drawingViewModel.imageLayers), page)
         }
+        changeTool(ToolMode.Lasso)
     }
 
-    if (journalViewModel.colorPickerTarget != null) {
-        val initialColor = when (journalViewModel.colorPickerTarget) {
+    if (drawingViewModel.colorPickerTarget != null) {
+        val initialColor = when (drawingViewModel.colorPickerTarget) {
             ColorPickerTarget.DRAW_STROKE -> drawingViewModel.drawColor
             ColorPickerTarget.EDIT_SELECTION -> {
                 val firstSelected = (drawingViewModel.selectedItems.firstOrNull() as? Colorable)
@@ -116,37 +129,59 @@ fun JournalScreen(navController: NavController, journalViewModel: JournalViewMod
 
         ColorPickerDialog(
             initialColor = initialColor,
-            onDismissRequest = { journalViewModel.colorPickerTarget = null },
+            onDismissRequest = { drawingViewModel.colorPickerTarget = null },
             onColorSelected = { selectedColor ->
-                when (journalViewModel.colorPickerTarget) {
+                when (drawingViewModel.colorPickerTarget) {
                     ColorPickerTarget.DRAW_STROKE -> drawingViewModel.drawColor = selectedColor
                     ColorPickerTarget.EDIT_SELECTION -> {
                         val allTargets = drawingViewModel.selectedItems.toList() + drawingViewModel.selectedPaths.toList()
                         drawingViewModel.executeCommand(ChangeFillStyleCommand(allTargets, SolidColorFill(selectedColor)), page)
                     }
                     ColorPickerTarget.ADD_SHAPE -> {
-                       drawingViewModel.pendingShapeType?.let { shapeType ->
-                           drawingViewModel.pendingShapeFill = SolidColorFill(selectedColor)
-                            // set the tool mode so next drag will create shape at click
-                           drawingViewModel.toolMode = ToolMode.SHAPE
-                            // Do NOT add to shapes here — we only set pending fill and shape type.
+                        drawingViewModel.pendingShapeType?.let {
+                            drawingViewModel.pendingShapeFill = SolidColorFill(selectedColor)
+                            changeTool(ToolMode.SHAPE) // Use helper
                         }
                     }
                     null -> {}
                 }
-                journalViewModel.colorPickerTarget = null
-//                drawingViewModel.pendingShapeType = null
+                drawingViewModel.colorPickerTarget = null
             }
         )
     }
 
-    if (journalViewModel.showGradientPicker) {
+    if (drawingViewModel.showGradientPicker) {
         GradientPickerDialog(
-            onDismissRequest = { journalViewModel.showGradientPicker = false },
+            onDismissRequest = { drawingViewModel.showGradientPicker = false },
             onGradientSelected = { colors ->
                 val allTargets = drawingViewModel.selectedItems.toList() + drawingViewModel.selectedPaths.toList()
                 drawingViewModel.executeCommand(ChangeFillStyleCommand(allTargets, LinearGradientFill(colors)),page)
-                journalViewModel.showGradientPicker = false
+                drawingViewModel.showGradientPicker = false
+            }
+        )
+    }
+
+    if (journalViewModel.showChangeName.value) {
+        JournalNameChangeDialog(
+            onDismissRequest = {
+                journalViewModel.showChangeName.value = false
+            },
+            onNameChange = { name ->
+                journalListViewModel.changeJournalName(journalListViewModel.findJournalIndex(journalViewModel.journalId), name)
+                journalViewModel.showChangeName.value = false
+            },
+            initial = journalListViewModel.journals[journalListViewModel.findJournalIndex(journalViewModel.journalId)].name
+        )
+    }
+
+    if (journalViewModel.showDeleteWarning.value) {
+        DeleteWarningDialog(
+            onDismissRequest = {
+                journalViewModel.showDeleteWarning.value = false
+            },
+            onDelete = {
+                journalViewModel.showDeleteWarning.value = false
+                journalListViewModel.deleteJournal(journalListViewModel.findJournalIndex(journalViewModel.journalId), navController)
             }
         )
     }
@@ -166,70 +201,177 @@ fun JournalScreen(navController: NavController, journalViewModel: JournalViewMod
         ,
         contentAlignment = Alignment.TopCenter
     ){
-        Row(modifier = Modifier.fillMaxWidth().padding(horizontal = 15.dp).offset(y = 40.dp), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.CenterVertically){
+        Row(
+            modifier = Modifier.fillMaxWidth().padding(horizontal = 15.dp).offset(y = 40.dp),
+            horizontalArrangement = Arrangement.SpaceBetween,
+            verticalAlignment = Alignment.CenterVertically
+        ) {
             Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
-                // -- FIX: Logika Undo/Redo yang benar --
                 Image(
                     painter = painterResource(id = R.drawable.arrow_left),
                     contentDescription = "Undo",
-                    modifier = Modifier.size(20.dp).clickable(enabled = page?.undoStack?.isNotEmpty()==true) {
-                        val commandToUndo = page?.undoStack?.removeLastOrNull()
-                        commandToUndo?.let {
+                    modifier = Modifier.size(20.dp).clickable(enabled = page?.undoStack?.isNotEmpty() == true) {
+                        page?.undoStack?.removeLastOrNull()?.let {
                             it.undo()
                             page.redoStack.add(it)
                         }
                     }
                 )
-                Image(painter = painterResource(id = R.drawable.arrow_right), contentDescription = "Redo",
+                Image(
+                    painter = painterResource(id = R.drawable.arrow_right),
+                    contentDescription = "Redo",
                     modifier = Modifier.size(20.dp).clickable(enabled = page?.redoStack?.isNotEmpty() == true) {
-                        val commandToRedo = page?.redoStack?.removeLastOrNull()
-                        commandToRedo?.let {
+                        page?.redoStack?.removeLastOrNull()?.let {
                             it.execute()
                             page.undoStack.add(it)
                         }
-                    })
+                    }
+                )
             }
 
             Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
-                Image(painter = painterResource(id = R.drawable.text), contentDescription = "Text", modifier = Modifier.size(18.dp).clickable { journalViewModel.isAddingText = true })
-                Image(painter = painterResource(id = R.drawable.lassotool), contentDescription = "Lasso", modifier = Modifier.size(22.dp).clickable { drawingViewModel.toolMode = ToolMode.Lasso })
-                Image(painter = painterResource(id = R.drawable.image), contentDescription = "Image", modifier = Modifier.size(22.dp).clickable { imagePickerLauncher.launch("image/*") })
+                Image(
+                    painter = painterResource(id = R.drawable.text),
+                    contentDescription = "Text",
+                    modifier = Modifier.size(18.dp).clickable {
+                        changeTool(ToolMode.TEXT)
+                    }
+                )
+                Image(
+                    painter = painterResource(id = R.drawable.lassotool),
+                    contentDescription = "Lasso",
+                    modifier = Modifier.size(22.dp).clickable {
+                        // Note: We don't clear selection when clicking Lasso itself,
+                        // in case user wants to adjust existing selection
+                        drawingViewModel.toolMode = ToolMode.Lasso
+                    }
+                )
+                Image(
+                    painter = painterResource(id = R.drawable.image),
+                    contentDescription = "Image",
+                    modifier = Modifier.size(22.dp).clickable {
+                        imagePickerLauncher.launch("image/*")
+                    }
+                )
                 Box {
-                    Image(painter = painterResource(id = R.drawable.shapeasset), contentDescription = "Shape", modifier = Modifier.size(22.dp).clickable { journalViewModel.showShapeMenu.value = true })
-                    DropdownMenu(expanded = journalViewModel.showShapeMenu.value, onDismissRequest = { journalViewModel.showShapeMenu.value = false }) {
-                        DropdownMenuItem(onClick = { drawingViewModel.pendingShapeType = "Circle"; journalViewModel.colorPickerTarget = ColorPickerTarget.ADD_SHAPE; journalViewModel.showShapeMenu.value = false; drawingViewModel.toolMode = ToolMode.SHAPE }, text = { Text("Circle") })
-                        DropdownMenuItem(onClick = { drawingViewModel.pendingShapeType = "Rectangle"; journalViewModel.colorPickerTarget = ColorPickerTarget.ADD_SHAPE; journalViewModel.showShapeMenu.value = false; drawingViewModel.toolMode = ToolMode.SHAPE }, text = { Text("Rectangle") })
-                        DropdownMenuItem(onClick = { drawingViewModel.pendingShapeType = "Star"; journalViewModel.colorPickerTarget = ColorPickerTarget.ADD_SHAPE; journalViewModel.showShapeMenu.value = false; drawingViewModel.toolMode = ToolMode.SHAPE }, text = { Text("Star") })
-                        DropdownMenuItem(onClick = { drawingViewModel.pendingShapeType = "Triangle"; journalViewModel.colorPickerTarget = ColorPickerTarget.ADD_SHAPE; journalViewModel.showShapeMenu.value = false; drawingViewModel.toolMode = ToolMode.SHAPE }, text = { Text("Triangle") })
-                        DropdownMenuItem(onClick = { drawingViewModel.pendingShapeType = "Hexagon"; journalViewModel.colorPickerTarget = ColorPickerTarget.ADD_SHAPE; journalViewModel.showShapeMenu.value = false; drawingViewModel.toolMode = ToolMode.SHAPE }, text = { Text("Hexagon") })
+                    Image(
+                        painter = painterResource(id = R.drawable.shapeasset),
+                        contentDescription = "Shape",
+                        modifier = Modifier.size(22.dp).clickable { journalViewModel.showShapeMenu.value = true }
+                    )
+                    DropdownMenu(
+                        expanded = journalViewModel.showShapeMenu.value,
+                        onDismissRequest = { journalViewModel.showShapeMenu.value = false }
+                    ) {
+                        val shapes = listOf("Circle", "Rectangle", "Star", "Triangle", "Hexagon")
+                        shapes.forEach { shape ->
+                            DropdownMenuItem(
+                                text = { Text(shape) },
+                                onClick = {
+                                    changeTool(ToolMode.SHAPE)
+                                    drawingViewModel.pendingShapeType = shape
+                                    drawingViewModel.colorPickerTarget = ColorPickerTarget.ADD_SHAPE
+                                    journalViewModel.showShapeMenu.value = false
+                                }
+                            )
+                        }
                     }
                 }
-                Image(painter = painterResource(id = R.drawable.pencil), contentDescription = "Pencil", modifier = Modifier.size(22.dp).clickable {
-                    drawingViewModel.toolMode = ToolMode.DRAW; journalViewModel.colorPickerTarget = ColorPickerTarget.DRAW_STROKE
-                })
-                Image(painter = painterResource(id = R.drawable.eraser), contentDescription = "Eraser", modifier = Modifier.size(22.dp).clickable { drawingViewModel.toolMode = ToolMode.ERASE })
+                Image(
+                    painter = painterResource(id = R.drawable.pencil),
+                    contentDescription = "Pencil",
+                    modifier = Modifier.size(22.dp).clickable {
+                        changeTool(ToolMode.DRAW)
+                        drawingViewModel.colorPickerTarget = ColorPickerTarget.DRAW_STROKE
+                    }
+                )
+                Image(
+                    painter = painterResource(id = R.drawable.eraser),
+                    contentDescription = "Eraser",
+                    modifier = Modifier.size(22.dp).clickable {
+                        changeTool(ToolMode.ERASE)
+                    }
+                )
+
+                // Layer Menu Logic
                 Box {
                     val isLayerMenuEnabled = drawingViewModel.selectedItems.size == 1
                     Image(
-                        painter = painterResource(id = R.drawable.layer), contentDescription = "Layer",
-                        modifier = Modifier.size(22.dp).clickable(enabled = isLayerMenuEnabled) { journalViewModel.showLayerMenu.value = true },
+                        painter = painterResource(id = R.drawable.layer),
+                        contentDescription = "Layer",
+                        modifier = Modifier.size(22.dp).clickable(enabled = isLayerMenuEnabled) {
+                            journalViewModel.showLayerMenu.value = true
+                        },
                         alpha = if (isLayerMenuEnabled) 1f else 0.4f
                     )
-                    DropdownMenu(expanded = journalViewModel.showLayerMenu.value, onDismissRequest = { journalViewModel.showLayerMenu.value = false }) {
-                        DropdownMenuItem(text = { Text("Bring to Front") }, onClick = {
-                            if (isLayerMenuEnabled) {
-                                drawingViewModel.executeCommand(LayeringCommand(drawingViewModel.selectedItems.first(), listOf(drawingViewModel.texts, drawingViewModel.shapes, drawingViewModel.imageLayers, drawingViewModel.groups), LayerDirection.TO_FRONT), page)
-                            }; journalViewModel.showLayerMenu.value = false
-                        })
-                        DropdownMenuItem(text = { Text("Send to Back") }, onClick = {
-                            if (isLayerMenuEnabled) {
-                                drawingViewModel.executeCommand(LayeringCommand(drawingViewModel.selectedItems.first(), listOf(drawingViewModel.texts, drawingViewModel.shapes, drawingViewModel.imageLayers, drawingViewModel.groups), LayerDirection.TO_BACK), page)
-                            }; journalViewModel.showLayerMenu.value = false
-                        })
+                    DropdownMenu(
+                        expanded = journalViewModel.showLayerMenu.value,
+                        onDismissRequest = { journalViewModel.showLayerMenu.value = false }
+                    ) {
+                        DropdownMenuItem(
+                            text = { Text("Bring to Front") },
+                            onClick = {
+                                if (isLayerMenuEnabled) {
+                                    drawingViewModel.executeCommand(
+                                        LayeringCommand(
+                                            drawingViewModel.selectedItems.first(),
+                                            listOf(drawingViewModel.texts, drawingViewModel.shapes, drawingViewModel.imageLayers, drawingViewModel.groups),
+                                            LayerDirection.TO_FRONT
+                                        ), page
+                                    )
+                                }
+                                journalViewModel.showLayerMenu.value = false
+                            }
+                        )
+                        DropdownMenuItem(
+                            text = { Text("Send to Back") },
+                            onClick = {
+                                if (isLayerMenuEnabled) {
+                                    drawingViewModel.executeCommand(
+                                        LayeringCommand(
+                                            drawingViewModel.selectedItems.first(),
+                                            listOf(drawingViewModel.texts, drawingViewModel.shapes, drawingViewModel.imageLayers, drawingViewModel.groups),
+                                            LayerDirection.TO_BACK
+                                        ), page
+                                    )
+                                }
+                                journalViewModel.showLayerMenu.value = false
+                            }
+                        )
                     }
                 }
-                Image(painter = painterResource(id = R.drawable.dot3), contentDescription = "More", modifier = Modifier.size(22.dp))
-        }
+                Box{
+                    Image(painter = painterResource(id = R.drawable.dot3), contentDescription = "More", modifier = Modifier.clickable{
+                        journalViewModel.showJournalMenu.value = true
+                    }.size(22.dp))
+                    DropdownMenu(
+                        expanded = journalViewModel.showJournalMenu.value,
+                        onDismissRequest = { journalViewModel.showJournalMenu.value = false }
+                    ) {
+                        DropdownMenuItem(
+                            text = { Text("Edit Journal Name") },
+                            onClick = {
+                                journalViewModel.showChangeName.value = true
+                                journalViewModel.showJournalMenu.value = false
+                            }
+                        )
+                        DropdownMenuItem(
+                            text = { Text("Exit") },
+                            onClick = {
+                                navController.popBackStack()
+                            }
+                        )
+                        DropdownMenuItem(
+                            text = { Text("Delete") },
+                            onClick = {
+                                journalViewModel.showDeleteWarning.value = true
+                                journalViewModel.showJournalMenu.value = false
+                            }
+                        )
+                    }
+                }
+
+            }
 
         }
 
@@ -377,7 +519,27 @@ fun JournalScreen(navController: NavController, journalViewModel: JournalViewMod
             }
 
 
-
+            if (drawingViewModel.selectedItems.isNotEmpty() || drawingViewModel.selectedPaths.isNotEmpty()) {
+                Box(modifier = Modifier
+                    .align(Alignment.BottomCenter)
+                    .padding(bottom = 32.dp)
+                    .imePadding()
+                    .wrapContentWidth()
+                ) {
+                    PropertiesToolbar(
+                        selectedItems = drawingViewModel.selectedItems,
+                        selectedPaths = drawingViewModel.selectedPaths,
+                        executeCommand = { drawingViewModel.executeCommand(it, page) },
+                        onClearSelection = {
+                            drawingViewModel.selectedItems.clear()
+                            drawingViewModel.selectedPaths.clear()
+                        },
+                        allLists = listOf(drawingViewModel.texts, drawingViewModel.shapes, drawingViewModel.imageLayers, drawingViewModel.groups),
+                        onShowColorPicker = { drawingViewModel.colorPickerTarget = ColorPickerTarget.EDIT_SELECTION },
+                        onShowGradientPicker = { drawingViewModel.showGradientPicker = true }
+                    )
+                }
+            }
 
 
         }

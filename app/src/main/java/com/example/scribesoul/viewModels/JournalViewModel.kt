@@ -63,6 +63,9 @@ class JournalViewModel : ViewModel() {
     // --- UI Flags ---
     var showLayerMenu = mutableStateOf(false)
     var showShapeMenu = mutableStateOf(false)
+    var showJournalMenu = mutableStateOf(false)
+    var showChangeName = mutableStateOf(false)
+    var showDeleteWarning = mutableStateOf(false)
     var colorPickerTarget by mutableStateOf<ColorPickerTarget?>(null)
     var isAddingText by mutableStateOf(false)
     var showGradientPicker by mutableStateOf(false)

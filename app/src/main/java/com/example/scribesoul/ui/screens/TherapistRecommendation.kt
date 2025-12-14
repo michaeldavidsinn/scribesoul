@@ -117,7 +117,7 @@ fun TherapistRecommendationScreen(navController: NavController) {
         Column(
             modifier = Modifier
                 .align(Alignment.BottomCenter)
-                .padding(bottom = 20.dp)
+                .padding(bottom = 30.dp)
         ) {
             BottomBarTherapist(navController = navController)
         }

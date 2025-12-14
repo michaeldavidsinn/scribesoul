@@ -31,7 +31,7 @@ fun ProblemBubble(
 ){
     Column (
         modifier = Modifier.clickable(onClick = {
-            onClick
+            onClick()
         })
         ,
         horizontalAlignment = Alignment.CenterHorizontally

@@ -7,9 +7,18 @@ import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.viewmodel.initializer
 import androidx.lifecycle.viewmodel.viewModelFactory
 import com.example.scribesoul.models.Habit
+import com.example.scribesoul.models.User
 import java.time.LocalDate
 
 class HomeViewModel : ViewModel() {
+    var user by mutableStateOf<User>(User(
+        id = 1,
+        name = "Jake",
+        email = "Jake@gmail.com",
+        birthday = LocalDate.of(2005, 11, 6)
+    ))
+        private set
+
     private val _habits = mutableStateListOf<Habit>()
     val habits: SnapshotStateList<Habit> get() = _habits
 

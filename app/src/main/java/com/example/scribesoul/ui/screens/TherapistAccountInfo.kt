@@ -47,13 +47,15 @@ import androidx.compose.ui.draw.drawWithCache
 import androidx.compose.ui.graphics.BlendMode
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.platform.LocalContext
+import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
 import com.example.scribesoul.R
+import com.example.scribesoul.viewModels.HomeViewModel
 import com.google.accompanist.flowlayout.FlowRow
 
 @OptIn(ExperimentalLayoutApi::class)
 @Composable
-fun TherapistAccountInfoScreen(navController: NavController) {
+fun TherapistAccountInfoScreen(navController: NavController, homeViewModel: HomeViewModel) {
 
     val gradientBrushs = Brush.horizontalGradient(
         colors = listOf(
@@ -149,8 +151,8 @@ fun TherapistAccountInfoScreen(navController: NavController) {
                         )
 
                         val chipItems = listOf(
-                            "E-mail" to "scribesoul@gmail.com",
-                            "Birthday" to "December 25, 2004",
+                            "E-mail" to homeViewModel.user.email,
+                            "Birthday" to homeViewModel.user.birthday.toString(),
                             "Password" to "Change password"
                         )
 
@@ -233,6 +235,6 @@ fun TherapistAccountInfoPreview() {
     val navController = remember { NavController(context) }
 
     Surface(modifier = Modifier.fillMaxSize()) {
-        TherapistAccountInfoScreen(navController = navController)
+        TherapistAccountInfoScreen(navController = navController, homeViewModel = viewModel(factory = HomeViewModel.Factory))
     }
 }

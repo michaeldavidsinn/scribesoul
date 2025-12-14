@@ -7,6 +7,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.viewmodel.initializer
 import androidx.lifecycle.viewmodel.viewModelFactory
+import androidx.navigation.NavController
 
 class JournalListViewModel: ViewModel() {
     private val _journals = mutableStateListOf<Journal>()
@@ -22,6 +23,19 @@ class JournalListViewModel: ViewModel() {
         )
 
 
+    }
+
+    fun changeJournalName(id: Int, name: String){
+        _journals[id].name = name
+    }
+
+    fun deleteJournal(id: Int, navController: NavController){
+        _journals.removeAt(id)
+        navController.popBackStack()
+    }
+
+    fun findJournalIndex(id: Int): Int {
+        return _journals.indexOfFirst { journal -> journal.id == id }
     }
 
 

@@ -48,7 +48,7 @@ fun AppNavigation(
         }
 
         composable("therapist_account_info") {
-            TherapistAccountInfoScreen(navController)
+            TherapistAccountInfoScreen(navController, homeViewModel)
         }
 
         composable("therapist_history") {
@@ -76,7 +76,7 @@ fun AppNavigation(
         }
 
         composable("profile"){
-            TherapistProfileScreen(navController)
+            TherapistProfileScreen(navController, homeViewModel)
         }
 
         composable("therapist_privacy_policy") {
@@ -107,7 +107,7 @@ fun AppNavigation(
         composable("journal") {
             JournalScreen(navController, journalViewModel = journalViewModel,journalListViewModel = journalListViewModel, drawingViewModel = drawingViewModel)
         }
-        composable("mental") {
+        composable("anxiety") {
             MentalTip(navController)
         }
     }

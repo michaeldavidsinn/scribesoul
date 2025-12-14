@@ -94,7 +94,7 @@ fun TherapistHistoryScreen(navController: NavController) {
                     modifier = Modifier
                         .align(Alignment.CenterStart) // << PENTING: Menyelaraskan item ini ke kiri tengah
                         .clip(RoundedCornerShape(50))
-                        .clickable { /* TODO: action back */ }
+                        .clickable { navController.popBackStack() }
                         .padding(horizontal = 16.dp, vertical = 8.dp)
                 ) {
                     Icon(

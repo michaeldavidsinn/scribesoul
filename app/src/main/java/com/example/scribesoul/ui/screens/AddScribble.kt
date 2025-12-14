@@ -112,7 +112,7 @@ fun AddScribbleScreen(navController: NavController) {
         Column(
             modifier = Modifier
                 .align(Alignment.BottomCenter)
-                .padding(bottom = 20.dp),
+                .padding(bottom = 30.dp),
             verticalArrangement = Arrangement.spacedBy(1.dp)
         ) {
 

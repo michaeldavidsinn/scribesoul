@@ -24,6 +24,7 @@ import com.example.scribesoul.models.ItemGroup
 import com.example.scribesoul.models.Movable
 import com.example.scribesoul.models.ShapeItem
 import com.example.scribesoul.models.ToolMode
+import com.example.scribesoul.ui.screens.ColorPickerTarget
 import com.example.scribesoul.ui.screens.GuideLine
 
 class DrawingViewModel: ViewModel() {
@@ -34,13 +35,19 @@ class DrawingViewModel: ViewModel() {
     val groups = mutableStateListOf<ItemGroup>()
     val selectedItems = mutableStateListOf<Movable>()
     val guideLines = mutableStateListOf<GuideLine>()
-    var pendingShapeType by mutableStateOf<String?>(null)
-    var pendingShapeFill by  mutableStateOf<FillStyle?>(null)
+
 
     var toolMode by mutableStateOf(ToolMode.DRAW)
     var drawColor by mutableStateOf(Color.Black)
     var drawThickness by mutableFloatStateOf(8f)
     var eraseThickness by mutableFloatStateOf(40f)
+
+    var pendingShapeType by mutableStateOf<String?>(null)
+    var pendingShapeFill by  mutableStateOf<FillStyle?>(null)
+
+    var colorPickerTarget by mutableStateOf<ColorPickerTarget?>(null)
+    var showGradientPicker by mutableStateOf(false)
+
     val canvasCenter = mutableStateOf(Offset(500f, 500f))
 
 

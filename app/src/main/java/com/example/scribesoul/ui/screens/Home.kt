@@ -21,6 +21,7 @@ import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.wrapContentSize
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.grid.GridCells
@@ -37,11 +38,16 @@ import androidx.compose.material.icons.filled.ArrowDropDown
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material3.Card
+import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
+import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.OutlinedTextField
+import androidx.compose.material3.Slider
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.TextField
@@ -75,6 +81,7 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.compose.ui.window.Dialog
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
@@ -88,7 +95,11 @@ import com.example.scribesoul.viewModels.HomeViewModel
 import com.example.scribesoul.viewModels.JournalViewModel
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
+import java.time.LocalDate
+import java.time.format.DateTimeFormatter
+import kotlin.text.ifEmpty
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun HomeScreen(navController: NavController, viewModel: HomeViewModel) {
     val bgGradient = Brush.linearGradient(
@@ -100,6 +111,7 @@ fun HomeScreen(navController: NavController, viewModel: HomeViewModel) {
     var showTextInput by remember { mutableStateOf(false) }
     var showAddHabit by remember { mutableStateOf(false) }
     var selectedHabit by remember { mutableStateOf<Habit?>(null) }
+    var showUnavailable by remember { mutableStateOf(false) }
 
 
     var name by remember {mutableStateOf("")}
@@ -113,7 +125,28 @@ fun HomeScreen(navController: NavController, viewModel: HomeViewModel) {
             }
         )
     }
+    if (showUnavailable) {
+        Dialog(onDismissRequest = { showUnavailable = false }) {
+            Card(
+                shape = RoundedCornerShape(16.dp),
+                colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
+                elevation = CardDefaults.cardElevation(defaultElevation = 6.dp),
+                modifier = Modifier.wrapContentSize()
+            ) {
+                Column(
+                    modifier = Modifier.padding(24.dp),
+                    horizontalAlignment = Alignment.CenterHorizontally
+                ) {
+                    Text(
+                        text = "Tip is Unavailable",
+                        style = MaterialTheme.typography.titleLarge,
+                        modifier = Modifier.padding(bottom = 24.dp)
+                    )
 
+                }
+            }
+        }
+    }
 
     if (showTextInput && selectedHabit != null) {
         InputDialog(
@@ -150,9 +183,11 @@ fun HomeScreen(navController: NavController, viewModel: HomeViewModel) {
         Column(
 
         ) {
-            Row (modifier = Modifier.padding(start = 16.dp, end = 16.dp, top = 56.dp, bottom = 10.dp).fillMaxWidth()){
+            Row (modifier = Modifier
+                .padding(start = 16.dp, end = 16.dp, top = 56.dp, bottom = 10.dp)
+                .fillMaxWidth()){
                 Column {
-                    Text("Hi, Jake",
+                    Text("Hi, ${viewModel.user.name}",
                         style =
                             TextStyle(
                                 fontSize = 16.sp,
@@ -175,14 +210,18 @@ fun HomeScreen(navController: NavController, viewModel: HomeViewModel) {
                 Box(
                     modifier = Modifier
                         .clip(CircleShape)
-                        .background( brush = bgGradient, shape = CircleShape)
+                        .background(brush = bgGradient, shape = CircleShape)
                         .padding(3.dp)
-                        .clickable{
+                        .clickable {
                             navController.navigate("profile")
                         }
                 ) {
                     Box(
-                        modifier = Modifier.clip(CircleShape).background(Color.White).padding(10.dp).align(Alignment.Center)
+                        modifier = Modifier
+                            .clip(CircleShape)
+                            .background(Color.White)
+                            .padding(10.dp)
+                            .align(Alignment.Center)
                     ){
                         Image(
                             painter = painterResource(R.drawable.cat2),
@@ -264,7 +303,9 @@ fun HomeScreen(navController: NavController, viewModel: HomeViewModel) {
                         } else {
                             Text(
                                 text = date.dayOfMonth.toString(),
-                                modifier = Modifier.padding(top = 5.dp).padding(5.dp),
+                                modifier = Modifier
+                                    .padding(top = 5.dp)
+                                    .padding(5.dp),
                                 style = TextStyle(
                                     fontSize = 14.sp,
                                     fontFamily = FontFamily(Font(R.font.verdana)),
@@ -278,30 +319,32 @@ fun HomeScreen(navController: NavController, viewModel: HomeViewModel) {
             }
 
             LazyRow(
-                horizontalArrangement = Arrangement.spacedBy(10.dp), modifier = Modifier.padding( top = 16.dp).align(alignment = Alignment.Start), contentPadding = PaddingValues(start = 16.dp, end = 16.dp)
+                horizontalArrangement = Arrangement.spacedBy(10.dp), modifier = Modifier
+                    .padding(top = 16.dp)
+                    .align(alignment = Alignment.Start), contentPadding = PaddingValues(start = 16.dp, end = 16.dp)
             ) {
                 item{
 
-                    ProblemBubble("Stress", onClick = {})
+                    ProblemBubble("Stress", onClick = {showUnavailable = true})
                 }
                 item{
-                    ProblemBubble("Anxiety", onClick = {})
+                    ProblemBubble("Anxiety", onClick = {navController.navigate("anxiety")})
                 }
                 item{
-                    ProblemBubble("Insomnia", onClick = {})
+                    ProblemBubble("Insomnia", onClick = {showUnavailable = true})
                 }
                 item{
-                    ProblemBubble("Overthinking", onClick = {})
+                    ProblemBubble("Overthinking", onClick = {showUnavailable = true})
                 }
                 item{
-                    ProblemBubble("Fatigue", onClick = {})
+                    ProblemBubble("Fatigue", onClick = {showUnavailable = true})
                 }
                 item{
-                    ProblemBubble("Mood Swings", onClick = {})
+                    ProblemBubble("Mood Swings", onClick = {showUnavailable = true})
                 }
 
                 item{
-                    ProblemBubble("Panic Attack", onClick = {})
+                    ProblemBubble("Panic Attack", onClick = {showUnavailable = true})
                 }
 
 
@@ -372,11 +415,15 @@ fun HomeScreen(navController: NavController, viewModel: HomeViewModel) {
                     ) {
                         Column{
                             Box(
-                                modifier = Modifier.softShadow(
-                                    radius = 20f,
-                                    offsetY = 12f,
-                                    alpha = 0.18f
-                                ).clip(RoundedCornerShape(16.dp)).size(56.dp).background(Color(0XFFF9F9F9)), contentAlignment = Alignment.Center
+                                modifier = Modifier
+                                    .softShadow(
+                                        radius = 20f,
+                                        offsetY = 12f,
+                                        alpha = 0.18f
+                                    )
+                                    .clip(RoundedCornerShape(16.dp))
+                                    .size(56.dp)
+                                    .background(Color(0XFFF9F9F9)), contentAlignment = Alignment.Center
                             ){
                                 Image(
                                     painter = painterResource(R.drawable.habits_icon),
@@ -411,7 +458,11 @@ fun HomeScreen(navController: NavController, viewModel: HomeViewModel) {
                             )
                             LinearProgressIndicator(
                                 progress = { viewModel.overallProgress(viewModel.currentDay) },
-                                modifier = Modifier.fillMaxWidth().height(8.dp).clip(RoundedCornerShape(3.dp)).padding(top = 2.dp),
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .height(8.dp)
+                                    .clip(RoundedCornerShape(3.dp))
+                                    .padding(top = 2.dp),
                                 color = Color(0XFF40B490),
                                 trackColor = Color(0XFFF9F9F9)
                             )
@@ -446,11 +497,15 @@ fun HomeScreen(navController: NavController, viewModel: HomeViewModel) {
                         ) {
                             Column{
                                 Box(
-                                    modifier = Modifier.softShadow(
-                                        radius = 20f,
-                                        offsetY = 12f,
-                                        alpha = 0.18f
-                                    ).clip(RoundedCornerShape(16.dp)).size(56.dp).background(Color(0XFFF9F9F9)), contentAlignment = Alignment.Center
+                                    modifier = Modifier
+                                        .softShadow(
+                                            radius = 20f,
+                                            offsetY = 12f,
+                                            alpha = 0.18f
+                                        )
+                                        .clip(RoundedCornerShape(16.dp))
+                                        .size(56.dp)
+                                        .background(Color(0XFFF9F9F9)), contentAlignment = Alignment.Center
                                 ){
                                     Image(
                                         painter = painterResource(R.drawable.habits_icon),
@@ -485,7 +540,10 @@ fun HomeScreen(navController: NavController, viewModel: HomeViewModel) {
                                 )
                                 LinearProgressIndicator(
                                     progress = { viewModel.habitProgress(habit, viewModel.currentDay) },
-                                    modifier = Modifier.fillMaxWidth().height(8.dp).padding(top = 2.dp),
+                                    modifier = Modifier
+                                        .fillMaxWidth()
+                                        .height(8.dp)
+                                        .padding(top = 2.dp),
                                     color = Color(0XFF40B490),
                                     trackColor = Color(0XFFF9F9F9),
                                     strokeCap = StrokeCap.Round,
@@ -517,11 +575,15 @@ fun HomeScreen(navController: NavController, viewModel: HomeViewModel) {
                         ) {
                             Column{
                                 Box(
-                                    modifier = Modifier.softShadow(
-                                        radius = 20f,
-                                        offsetY = 12f,
-                                        alpha = 0.18f
-                                    ).clip(RoundedCornerShape(16.dp)).size(56.dp).background(Color(0XFFF9F9F9)), contentAlignment = Alignment.Center
+                                    modifier = Modifier
+                                        .softShadow(
+                                            radius = 20f,
+                                            offsetY = 12f,
+                                            alpha = 0.18f
+                                        )
+                                        .clip(RoundedCornerShape(16.dp))
+                                        .size(56.dp)
+                                        .background(Color(0XFFF9F9F9)), contentAlignment = Alignment.Center
                                 ){
                                     Image(
                                         painter = painterResource(R.drawable.meditation_icon),
@@ -556,7 +618,10 @@ fun HomeScreen(navController: NavController, viewModel: HomeViewModel) {
                                 )
                                 LinearProgressIndicator(
                                     progress = { viewModel.habitProgress(habit, viewModel.currentDay) },
-                                    modifier = Modifier.fillMaxWidth().height(8.dp).padding(top = 2.dp),
+                                    modifier = Modifier
+                                        .fillMaxWidth()
+                                        .height(8.dp)
+                                        .padding(top = 2.dp),
                                     color = Color(0XFFDC30AD),
                                     trackColor = Color(0XFFF9F9F9),
                                     strokeCap = StrokeCap.Round,
@@ -588,11 +653,15 @@ fun HomeScreen(navController: NavController, viewModel: HomeViewModel) {
                         ) {
                             Column{
                                 Box(
-                                    modifier = Modifier.softShadow(
-                                        radius = 20f,
-                                        offsetY = 12f,
-                                        alpha = 0.18f
-                                    ).clip(RoundedCornerShape(16.dp)).size(56.dp).background(Color(0XFFF9F9F9)), contentAlignment = Alignment.Center
+                                    modifier = Modifier
+                                        .softShadow(
+                                            radius = 20f,
+                                            offsetY = 12f,
+                                            alpha = 0.18f
+                                        )
+                                        .clip(RoundedCornerShape(16.dp))
+                                        .size(56.dp)
+                                        .background(Color(0XFFF9F9F9)), contentAlignment = Alignment.Center
                                 ){
                                     Image(
                                         painter = painterResource(R.drawable.exercise_icon),
@@ -627,7 +696,10 @@ fun HomeScreen(navController: NavController, viewModel: HomeViewModel) {
                                 )
                                 LinearProgressIndicator(
                                     progress = { viewModel.habitProgress(habit, viewModel.currentDay) },
-                                    modifier = Modifier.fillMaxWidth().height(8.dp).padding(top = 2.dp),
+                                    modifier = Modifier
+                                        .fillMaxWidth()
+                                        .height(8.dp)
+                                        .padding(top = 2.dp),
                                     color = Color(0XFF5373FF),
                                     trackColor = Color(0XFFF9F9F9),
                                     strokeCap = StrokeCap.Round,
@@ -659,11 +731,15 @@ fun HomeScreen(navController: NavController, viewModel: HomeViewModel) {
                         ) {
                             Column{
                                 Box(
-                                    modifier = Modifier.softShadow(
-                                        radius = 20f,
-                                        offsetY = 12f,
-                                        alpha = 0.18f
-                                    ).clip(RoundedCornerShape(16.dp)).size(56.dp).background(Color(0XFFF9F9F9)), contentAlignment = Alignment.Center
+                                    modifier = Modifier
+                                        .softShadow(
+                                            radius = 20f,
+                                            offsetY = 12f,
+                                            alpha = 0.18f
+                                        )
+                                        .clip(RoundedCornerShape(16.dp))
+                                        .size(56.dp)
+                                        .background(Color(0XFFF9F9F9)), contentAlignment = Alignment.Center
                                 ){
                                     Image(
                                         painter = painterResource(R.drawable.running_icon),
@@ -698,7 +774,10 @@ fun HomeScreen(navController: NavController, viewModel: HomeViewModel) {
                                 )
                                 LinearProgressIndicator(
                                     progress = { viewModel.habitProgress(habit, viewModel.currentDay) },
-                                    modifier = Modifier.fillMaxWidth().height(8.dp).padding(top = 2.dp),
+                                    modifier = Modifier
+                                        .fillMaxWidth()
+                                        .height(8.dp)
+                                        .padding(top = 2.dp),
                                     color = Color(0XFFDC30AD),
                                     trackColor = Color(0XFFF9F9F9),
                                     strokeCap = StrokeCap.Round,
@@ -730,11 +809,15 @@ fun HomeScreen(navController: NavController, viewModel: HomeViewModel) {
                         ) {
                             Column{
                                 Box(
-                                    modifier = Modifier.softShadow(
-                                        radius = 20f,
-                                        offsetY = 12f,
-                                        alpha = 0.18f
-                                    ).clip(RoundedCornerShape(16.dp)).size(56.dp).background(Color(0XFFF9F9F9)), contentAlignment = Alignment.Center
+                                    modifier = Modifier
+                                        .softShadow(
+                                            radius = 20f,
+                                            offsetY = 12f,
+                                            alpha = 0.18f
+                                        )
+                                        .clip(RoundedCornerShape(16.dp))
+                                        .size(56.dp)
+                                        .background(Color(0XFFF9F9F9)), contentAlignment = Alignment.Center
                                 ){
                                     Image(
                                         painter = painterResource(R.drawable.water_icon),
@@ -769,7 +852,10 @@ fun HomeScreen(navController: NavController, viewModel: HomeViewModel) {
                                 )
                                 LinearProgressIndicator(
                                     progress = { viewModel.habitProgress(habit, viewModel.currentDay) },
-                                    modifier = Modifier.fillMaxWidth().height(8.dp).padding(top = 2.dp),
+                                    modifier = Modifier
+                                        .fillMaxWidth()
+                                        .height(8.dp)
+                                        .padding(top = 2.dp),
                                     color = Color(0XFF9747FF),
                                     trackColor = Color(0XFFF9F9F9),
                                     strokeCap = StrokeCap.Round,
@@ -801,11 +887,15 @@ fun HomeScreen(navController: NavController, viewModel: HomeViewModel) {
                         ) {
                             Column{
                                 Box(
-                                    modifier = Modifier.softShadow(
-                                        radius = 20f,
-                                        offsetY = 12f,
-                                        alpha = 0.18f
-                                    ).clip(RoundedCornerShape(16.dp)).size(56.dp).background(Color(0XFFF9F9F9)), contentAlignment = Alignment.Center
+                                    modifier = Modifier
+                                        .softShadow(
+                                            radius = 20f,
+                                            offsetY = 12f,
+                                            alpha = 0.18f
+                                        )
+                                        .clip(RoundedCornerShape(16.dp))
+                                        .size(56.dp)
+                                        .background(Color(0XFFF9F9F9)), contentAlignment = Alignment.Center
                                 ){
                                     Image(
                                         painter = painterResource(R.drawable.read_icon),
@@ -840,7 +930,10 @@ fun HomeScreen(navController: NavController, viewModel: HomeViewModel) {
                                 )
                                 LinearProgressIndicator(
                                     progress = { viewModel.habitProgress(habit, viewModel.currentDay) },
-                                    modifier = Modifier.fillMaxWidth().height(8.dp).padding(top = 2.dp),
+                                    modifier = Modifier
+                                        .fillMaxWidth()
+                                        .height(8.dp)
+                                        .padding(top = 2.dp),
                                     color = Color(0XFFFD7A16),
                                     trackColor = Color(0XFFF9F9F9),
                                     strokeCap = StrokeCap.Round,
@@ -1224,7 +1317,7 @@ fun InputDialog(
 fun BottomBarHome(navController: NavController, modifier: Modifier = Modifier) {
     Box(
         modifier = modifier
-            .padding(start = 24.dp, end = 24.dp, top = 6.dp, bottom = 40.dp)
+            .padding(start = 24.dp, end = 24.dp, top = 6.dp, bottom = 50.dp)
             .shadow(
                 elevation = 6.dp,
                 shape = RoundedCornerShape(30.dp),
