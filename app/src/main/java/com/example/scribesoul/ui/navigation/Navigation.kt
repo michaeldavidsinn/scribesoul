@@ -33,6 +33,11 @@ fun AppNavigation(
         composable("home") {
             HomeScreen(navController, viewModel =  homeViewModel)
         }
+
+        composable("sos_screen") {
+            SOSScreen(navController)
+        }
+
         composable("therapist") {
             TherapistRecommendationScreen(navController)
         }

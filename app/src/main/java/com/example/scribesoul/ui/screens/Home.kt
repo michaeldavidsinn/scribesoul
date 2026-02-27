@@ -183,9 +183,12 @@ fun HomeScreen(navController: NavController, viewModel: HomeViewModel) {
         Column(
 
         ) {
-            Row (modifier = Modifier
-                .padding(start = 16.dp, end = 16.dp, top = 56.dp, bottom = 10.dp)
-                .fillMaxWidth()){
+            Row(
+                modifier = Modifier
+                    .padding(start = 16.dp, end = 16.dp, top = 56.dp, bottom = 10.dp)
+                    .fillMaxWidth(),
+                verticalAlignment = Alignment.CenterVertically
+            ) {
                 Column {
                     Text("Hi, ${viewModel.user.name}",
                         style =
@@ -201,38 +204,57 @@ fun HomeScreen(navController: NavController, viewModel: HomeViewModel) {
                             fontFamily = FontFamily(Font(R.font.verdana_bold)),
                             fontWeight = FontWeight(600),
                             color = Color(0xFF2B395B),
-
-                            ),
+                        ),
                         modifier = Modifier.padding(top = 8.dp)
-                        )
+                    )
                 }
                 Spacer(modifier = Modifier.weight(1f))
-                Box(
-                    modifier = Modifier
-                        .clip(CircleShape)
-                        .background(brush = bgGradient, shape = CircleShape)
-                        .padding(3.dp)
-                        .clickable {
-                            navController.navigate("profile")
-                        }
+
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.spacedBy(12.dp)
                 ) {
                     Box(
                         modifier = Modifier
+                            .size(50.dp)
                             .clip(CircleShape)
-                            .background(Color.White)
-                            .padding(10.dp)
-                            .align(Alignment.Center)
-                    ){
-                        Image(
-                            painter = painterResource(R.drawable.cat2),
-                            contentDescription = null,
-                            modifier = Modifier
-                                .clip(CircleShape)
-                                .size(30.dp),
-                            contentScale = ContentScale.Crop
+                            .background(Color(0xFF2B395B))
+                            .clickable { navController.navigate("sos_screen") },
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Text(
+                            text = "SOS",
+                            style = TextStyle(
+                                color = Color.White,
+                                fontSize = 16.sp,
+                                fontWeight = FontWeight.Bold,
+                                fontFamily = FontFamily(Font(R.font.verdana_bold))
+                            )
                         )
                     }
-
+                    Box(
+                        modifier = Modifier
+                            .clip(CircleShape)
+                            .background(brush = bgGradient, shape = CircleShape)
+                            .padding(3.dp)
+                            .clickable { navController.navigate("profile") }
+                    ) {
+                        Box(
+                            modifier = Modifier
+                                .clip(CircleShape)
+                                .background(Color.White)
+                                .padding(10.dp)
+                        ) {
+                            Image(
+                                painter = painterResource(R.drawable.cat2),
+                                contentDescription = null,
+                                modifier = Modifier
+                                    .clip(CircleShape)
+                                    .size(30.dp),
+                                contentScale = ContentScale.Crop
+                            )
+                        }
+                    }
                 }
             }
             LazyRow(
