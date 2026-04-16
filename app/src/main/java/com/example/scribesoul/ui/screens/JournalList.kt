@@ -13,12 +13,16 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.rounded.Add
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
+import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.TextField
@@ -46,6 +50,7 @@ import com.example.scribesoul.R
 import com.example.scribesoul.ui.components.JournalCover
 import com.example.scribesoul.ui.navigation.BottomNavItem
 import com.example.scribesoul.utils.NameInputDialog
+import com.example.scribesoul.utils.softShadow
 import com.example.scribesoul.viewModels.JournalListViewModel
 import com.example.scribesoul.viewModels.JournalViewModel
 
@@ -123,8 +128,13 @@ fun JournalListScreen(navController: NavController, journalListViewModel: Journa
                     Box(
                         modifier =
                             Modifier
-                                .width(190.dp)
-                                .height(250.dp)
+                                .width(200.dp)
+                                .height(300.dp)
+                                .softShadow(
+                                    radius = 20f,
+                                    offsetY = 12f,
+                                    alpha = 0.18f
+                                )
                                 .align(alignment = Alignment.CenterHorizontally)
                                 .clip(RoundedCornerShape(16.dp))
                                 .background(
@@ -146,15 +156,11 @@ fun JournalListScreen(navController: NavController, journalListViewModel: Journa
                             modifier = Modifier.align(Alignment.Center),
                             verticalArrangement = Arrangement.spacedBy(-30.dp)
                         ) {
-                            Text("+",
-
-                                style = TextStyle(
-                                    fontSize = 100.sp,
-                                    fontFamily = FontFamily(Font(R.font.verdana_bold)),
-                                    fontWeight = FontWeight(600),
-                                    color = Color.White,
-
-                                    )
+                            Icon(
+                                imageVector = Icons.Rounded.Add,
+                                contentDescription = "Add",
+                                tint = Color.White,
+                                modifier = Modifier.size(115.dp)
                             )
                         }
                     }

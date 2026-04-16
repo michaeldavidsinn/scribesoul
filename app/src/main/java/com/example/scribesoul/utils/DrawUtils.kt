@@ -266,8 +266,8 @@ fun DrawCanvas(
     var dragStart by remember { mutableStateOf<Offset?>(null) }
     var refreshTrigger by remember { mutableIntStateOf(0) }
 
-    val allMovables = remember(drawingViewModel.texts, page.shapes, drawingViewModel.imageLayers, drawingViewModel.groups) {
-        drawingViewModel.texts + page.shapes + drawingViewModel.imageLayers + drawingViewModel.groups
+    val allMovables = remember(page.texts, page.shapes, page.imageLayers, drawingViewModel.groups) {
+        page.texts + page.shapes + page.imageLayers + drawingViewModel.groups
     }
 
     Box(
@@ -316,7 +316,7 @@ fun DrawCanvas(
                                     val shapesToRemove = page.shapes.filter { shapeIntersectsPoint(it, point, drawingViewModel.eraseThickness) }
                                     if (shapesToRemove.isNotEmpty()) {
                                         page.shapes.removeAll(shapesToRemove)
-                                        page.undoStack.add(DeleteItemsCommand(shapesToRemove, listOf(drawingViewModel.texts, page.shapes, drawingViewModel.imageLayers, drawingViewModel.groups)))
+                                        page.undoStack.add(DeleteItemsCommand(shapesToRemove, listOf(page.texts, page.shapes, page.imageLayers, drawingViewModel.groups)))
                                         refreshTrigger++
                                     }
 
@@ -381,7 +381,7 @@ fun DrawCanvas(
                                     drawingViewModel.selectedPaths.clear()
 
                                     // FIX: Get FRESH list of items so we check against their CURRENT position
-                                    val freshMovables = drawingViewModel.texts + page.shapes + drawingViewModel.imageLayers + drawingViewModel.groups
+                                    val freshMovables = page.texts + page.shapes + page.imageLayers + drawingViewModel.groups
 
                                     freshMovables.forEach { item ->
                                         if (isMovableInPolygon(item, polygon, density)) drawingViewModel.selectedItems.add(item)
@@ -417,7 +417,7 @@ fun DrawCanvas(
                 if (drawingViewModel.toolMode == ToolMode.TEXT) {
                     detectTapGestures { offset ->
                         val newText = EditableText(text = "Type here", offset = offset, fontSize = 28, isEditing = true)
-                        drawingViewModel.texts.add(newText)
+                        page.texts.add(newText)
                         drawingViewModel.selectedItems.clear()
                         drawingViewModel.selectedItems.add(newText)
                     }
@@ -468,7 +468,7 @@ fun DrawCanvas(
                     onSelect = {
                         drawingViewModel.selectedItems.clear(); drawingViewModel.selectedPaths.clear()
                         drawingViewModel.selectedItems.add(item)
-                        drawingViewModel.texts.forEachIndexed { i, t -> if(t.isEditing) drawingViewModel.texts[i] = t.copy(isEditing=false) }
+                        page.texts.forEachIndexed { i, t -> if(t.isEditing) page.texts[i] = t.copy(isEditing=false) }
                     },
                     onUpdate = { updated ->
                         page.shapes[index] = updated as ShapeItem
@@ -485,7 +485,7 @@ fun DrawCanvas(
             }
         }
 
-        drawingViewModel.imageLayers.forEachIndexed { index, item ->
+        page.imageLayers.forEachIndexed { index, item ->
             key(index) {
                 RenderMovableItem(
                     item = item,
@@ -493,15 +493,15 @@ fun DrawCanvas(
                     onSelect = {
                         drawingViewModel.selectedItems.clear(); drawingViewModel.selectedPaths.clear()
                         drawingViewModel.selectedItems.add(item)
-                        drawingViewModel.texts.forEachIndexed { i, t -> if(t.isEditing) drawingViewModel.texts[i] = t.copy(isEditing=false) }
+                        page.texts.forEachIndexed { i, t -> if(t.isEditing) page.texts[i] = t.copy(isEditing=false) }
                     },
                     onUpdate = { updated ->
-                        drawingViewModel.imageLayers[index] = updated as ImageLayer
+                        page.imageLayers[index] = updated as ImageLayer
                         if(drawingViewModel.selectedItems.contains(item)) {
                             drawingViewModel.selectedItems.remove(item); drawingViewModel.selectedItems.add(updated)
                         }
                     },
-                    onDelete = { drawingViewModel.executeCommand(DeleteItemsCommand(listOf(item), listOf(drawingViewModel.imageLayers)), page) },
+                    onDelete = { drawingViewModel.executeCommand(DeleteItemsCommand(listOf(item), listOf(page.imageLayers)), page) },
                     onDoubleClick = {},
                     executeCommand = { cmd -> drawingViewModel.executeCommand(cmd, page) },
                     allItems = allMovables,
@@ -510,7 +510,7 @@ fun DrawCanvas(
             }
         }
 
-        drawingViewModel.texts.forEachIndexed { index, item ->
+        page.texts.forEachIndexed { index, item ->
             key(index) {
                 RenderMovableItem(
                     item = item,
@@ -518,20 +518,20 @@ fun DrawCanvas(
                     onSelect = {
                         drawingViewModel.selectedItems.clear(); drawingViewModel.selectedPaths.clear()
                         drawingViewModel.selectedItems.add(item)
-                        drawingViewModel.texts.forEachIndexed { i, t -> if(i != index && t.isEditing) drawingViewModel.texts[i] = t.copy(isEditing=false) }
+                        page.texts.forEachIndexed { i, t -> if(i != index && t.isEditing) page.texts[i] = t.copy(isEditing=false) }
                     },
                     onUpdate = { updated ->
-                        drawingViewModel.texts[index] = updated as EditableText
+                        page.texts[index] = updated as EditableText
                         if(drawingViewModel.selectedItems.contains(item)) {
                             drawingViewModel.selectedItems.remove(item); drawingViewModel.selectedItems.add(updated)
                         }
                     },
-                    onDelete = { drawingViewModel.executeCommand(DeleteItemsCommand(listOf(item), listOf(drawingViewModel.texts)), page) },
+                    onDelete = { drawingViewModel.executeCommand(DeleteItemsCommand(listOf(item), listOf(page.texts)), page) },
                     onDoubleClick = {
                         val editing = item.copy(isEditing = true)
-                        drawingViewModel.texts[index] = editing
+                        page.texts[index] = editing
                         drawingViewModel.selectedItems.clear(); drawingViewModel.selectedItems.add(editing)
-                        drawingViewModel.texts.forEachIndexed { i, t -> if(i != index) drawingViewModel.texts[i] = t.copy(isEditing=false) }
+                        page.texts.forEachIndexed { i, t -> if(i != index) page.texts[i] = t.copy(isEditing=false) }
                     },
                     executeCommand = { cmd -> drawingViewModel.executeCommand(cmd, page) },
                     allItems = allMovables,

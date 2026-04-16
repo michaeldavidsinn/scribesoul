@@ -105,12 +105,11 @@ fun JournalScreen(navController: NavController, journalViewModel: JournalViewMod
         drawingViewModel.colorPickerTarget = null
     }
 
-
     val imagePickerLauncher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.GetContent()
     ) { uri: Uri? ->
         uri?.let {
-            drawingViewModel.executeCommand(AddImageCommand(ImageLayer(uri = it, offset = drawingViewModel.canvasCenter.value), drawingViewModel.imageLayers), page)
+            drawingViewModel.executeCommand(AddImageCommand(ImageLayer(uri = it, offset = drawingViewModel.canvasCenter.value), page!!.imageLayers), page)
         }
         changeTool(ToolMode.Lasso)
     }
@@ -315,7 +314,7 @@ fun JournalScreen(navController: NavController, journalViewModel: JournalViewMod
                                     drawingViewModel.executeCommand(
                                         LayeringCommand(
                                             drawingViewModel.selectedItems.first(),
-                                            listOf(drawingViewModel.texts, drawingViewModel.shapes, drawingViewModel.imageLayers, drawingViewModel.groups),
+                                            listOf(page!!.texts, page.shapes, page.imageLayers, drawingViewModel.groups),
                                             LayerDirection.TO_FRONT
                                         ), page
                                     )
@@ -330,7 +329,7 @@ fun JournalScreen(navController: NavController, journalViewModel: JournalViewMod
                                     drawingViewModel.executeCommand(
                                         LayeringCommand(
                                             drawingViewModel.selectedItems.first(),
-                                            listOf(drawingViewModel.texts, drawingViewModel.shapes, drawingViewModel.imageLayers, drawingViewModel.groups),
+                                            listOf(page!!.texts, page.shapes, page.imageLayers, drawingViewModel.groups),
                                             LayerDirection.TO_BACK
                                         ), page
                                     )
@@ -526,7 +525,7 @@ fun JournalScreen(navController: NavController, journalViewModel: JournalViewMod
         if (drawingViewModel.selectedItems.isNotEmpty() || drawingViewModel.selectedPaths.isNotEmpty()) {
             Box(modifier = Modifier
                 .align(Alignment.BottomCenter)
-                .padding(bottom = 25.dp)
+                .padding(bottom = 50.dp)
                 .wrapContentWidth()
             ) {
                 PropertiesToolbar(
@@ -537,7 +536,7 @@ fun JournalScreen(navController: NavController, journalViewModel: JournalViewMod
                         drawingViewModel.selectedItems.clear()
                         drawingViewModel.selectedPaths.clear()
                     },
-                    allLists = listOf(drawingViewModel.texts, drawingViewModel.shapes, drawingViewModel.imageLayers, drawingViewModel.groups),
+                    allLists = listOf(page!!.texts, page.shapes, page.imageLayers, drawingViewModel.groups),
                     onShowColorPicker = { drawingViewModel.colorPickerTarget = ColorPickerTarget.EDIT_SELECTION },
                     onShowGradientPicker = { drawingViewModel.showGradientPicker = true }
                 )

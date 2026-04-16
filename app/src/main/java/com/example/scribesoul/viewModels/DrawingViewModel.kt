@@ -29,9 +29,9 @@ import com.example.scribesoul.ui.screens.GuideLine
 
 class DrawingViewModel: ViewModel() {
     val selectedPaths = mutableStateListOf<DrawablePath>()
-    val shapes = mutableStateListOf<ShapeItem>()
-    val texts = mutableStateListOf<EditableText>()
-    val imageLayers = mutableStateListOf<ImageLayer>()
+//    val shapes = mutableStateListOf<ShapeItem>()
+//    val texts = mutableStateListOf<EditableText>()
+//    val imageLayers = mutableStateListOf<ImageLayer>()
     val groups = mutableStateListOf<ItemGroup>()
     val selectedItems = mutableStateListOf<Movable>()
     val guideLines = mutableStateListOf<GuideLine>()

@@ -57,7 +57,7 @@ fun NarrowLinedPage(
             onNameCreate = { name ->
                 showTextInput = false
                 journalViewModel.addPageToSection(journalViewModel.selectedSectionIndex)
-                val newPage = journalViewModel.sections[journalViewModel.selectedSectionIndex].pages.last() as JournalPage.PlainPage
+                val newPage = journalViewModel.sections[journalViewModel.selectedSectionIndex].pages.last() as JournalPage.NarrowLinedPage
                 newPage.name = name
                 journalViewModel.changeSelectedPageIndex(
                     journalViewModel.sections[journalViewModel.selectedSectionIndex].pages.lastIndex
