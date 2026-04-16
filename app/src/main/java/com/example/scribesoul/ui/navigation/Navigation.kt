@@ -16,7 +16,11 @@ import com.example.scribesoul.viewModels.JournalListViewModel
 import com.example.scribesoul.viewModels.JournalViewModel
 import androidx.navigation.NavType
 import androidx.navigation.navArgument
+import com.example.scribesoul.ui.screens.therapist.ClientDetailScreen
 import com.example.scribesoul.viewModels.CommunityViewModel
+import com.example.scribesoul.ui.screens.therapist.TherapistHomeScreen
+import com.example.scribesoul.ui.screens.therapist.ClientTherapistScreen
+import com.example.scribesoul.ui.screens.therapist.TherapistScheduleScreen
 
 
 @RequiresApi(Build.VERSION_CODES.VANILLA_ICE_CREAM)
@@ -47,6 +51,11 @@ fun AppNavigation(
         composable("home") {
             HomeScreen(navController, viewModel =  homeViewModel)
         }
+
+        composable("sos_screen") {
+            SOSScreen(navController)
+        }
+
         composable("therapist") {
             TherapistRecommendationScreen(navController)
         }
@@ -100,7 +109,7 @@ fun AppNavigation(
         }
 
         composable("explore") {
-            AnonymousChatScreen(navController, communityViewModel)
+            AnonymousChatScreen(navController, communityViewModel, isTherapist = false)
         }
 
         composable("join_chat") {
@@ -126,5 +135,31 @@ fun AppNavigation(
         composable("anxiety") {
             MentalTip(navController)
         }
+
+        // --- NAVIGASI KHUSUS THERAPIST ---
+        composable("home_therapist") {
+            TherapistHomeScreen(navController, homeViewModel)
+        }
+
+        composable("client_therapist") {
+            ClientTherapistScreen(navController, homeViewModel)
+        }
+
+        composable(
+            route = "client_detail/{clientName}",
+            arguments = listOf(navArgument("clientName") { type = NavType.StringType })
+        ) { backStackEntry ->
+            val name = backStackEntry.arguments?.getString("clientName") ?: "Sarah Gibson"
+            ClientDetailScreen(navController, homeViewModel, name)
+        }
+
+        composable("explore_therapist") {
+            AnonymousChatScreen(navController, communityViewModel, isTherapist = true)
+        }
+
+        composable("schedule_therapist") {
+            TherapistScheduleScreen(navController, homeViewModel)
+        }
+
     }
 }

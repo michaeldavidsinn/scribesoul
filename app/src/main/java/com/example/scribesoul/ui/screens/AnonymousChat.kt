@@ -55,7 +55,11 @@ import com.example.scribesoul.viewModels.CommunityViewModel
 
 
 @Composable
-fun AnonymousChatScreen(navController: NavController, communityViewModel: CommunityViewModel) {
+fun AnonymousChatScreen(
+    navController: NavController,
+    communityViewModel: CommunityViewModel,
+    isTherapist: Boolean = false // Tambahkan parameter ini
+){
 
     var isSearchActive by remember { mutableStateOf(false) }
     var searchQuery by remember { mutableStateOf("") }
@@ -297,7 +301,11 @@ fun AnonymousChatScreen(navController: NavController, communityViewModel: Commun
                     }
                 }
             )
-            BottomBarAnonymous(navController = navController)
+            if (isTherapist) {
+                BottomBarTherapistAnonymous(navController = navController)
+            } else {
+                BottomBarAnonymous(navController = navController)
+            }
         }
         if (showCommentDialog) {
             AlertDialog(
@@ -439,6 +447,39 @@ fun ChatCard(
                         Text(text = "$commentCount", style = MaterialTheme.typography.bodySmall, color = Color(0xFF2B395B))
                     }
                 }
+            }
+        }
+    }
+}
+
+@Composable
+fun BottomBarTherapistAnonymous(navController: NavController, modifier: Modifier = Modifier) {
+    Box(
+        modifier = modifier
+            .padding(start = 24.dp, end = 24.dp, top = 6.dp, bottom = 20.dp)
+            .shadow(elevation = 6.dp, shape = RoundedCornerShape(30.dp), clip = false)
+            .clip(RoundedCornerShape(30.dp))
+            .background(Color.White)
+            .height(70.dp)
+            .fillMaxWidth(),
+        contentAlignment = Alignment.Center
+    ) {
+        Row(
+            modifier = Modifier.fillMaxWidth().padding(horizontal = 24.dp),
+            horizontalArrangement = Arrangement.SpaceBetween,
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            BottomNavItem(R.drawable.home_icon, "Home", iconSize = 28.dp) {
+                navController.navigate("home_therapist") { launchSingleTop = true }
+            }
+            BottomNavItem(R.drawable.therapist_icon, "Clients", iconSize = 25.dp) {
+                navController.navigate("client_therapist") { launchSingleTop = true }
+            }
+            BottomNavItem(R.drawable.explore_icon_clicked, "Explore", iconSize = 40.dp) {
+                navController.navigate("explore_therapist") { launchSingleTop = true }
+            }
+            BottomNavItem(R.drawable.schedule_icon, "Schedule", iconSize = 40.dp) {
+                navController.navigate("schedule_therapist") { launchSingleTop = true }
             }
         }
     }
