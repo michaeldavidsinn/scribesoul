@@ -27,6 +27,9 @@ import com.example.scribesoul.R
 import com.example.scribesoul.ui.navigation.BottomNavItem
 import android.content.Intent
 import android.net.Uri
+import androidx.compose.foundation.lazy.itemsIndexed
+import coil.compose.AsyncImage
+import androidx.compose.ui.layout.ContentScale
 
 @Composable
 fun TherapistRecommendationScreen(navController: NavController) {
@@ -83,7 +86,14 @@ fun TherapistRecommendationScreen(navController: NavController) {
                 }
             }
 
-            items(therapistList) { (name, specialization, issue) ->
+            itemsIndexed(therapistList) { index, (name, specialization, issue) ->
+
+                val imageRes = when (index % 3) {
+                    0 -> R.drawable.therapistman_1
+                    1 -> R.drawable.therapistman_2
+                    else -> R.drawable.therapistman_3
+                }
+
                 TherapistCard(
                     name = name,
                     specialization = specialization,
@@ -91,18 +101,12 @@ fun TherapistRecommendationScreen(navController: NavController) {
                     experienceYears = (5..15).random(),
                     compatibility = (90..100).random(),
                     price = "Rp 250.000,00",
-
+                    imageRes = imageRes, // <-- Masukkan gambarnya di sini
                     onInfoClick = {
-                        // --- REVISI: KIRIM DATA NAMA KE DETAIL ---
-                        // Menggunakan route dengan parameter: therapist_detail/{nama}
                         navController.navigate("therapist_detail/$name")
                     },
                     onChatClick = {
-
-                        val intent = Intent(
-                            Intent.ACTION_VIEW,
-                            Uri.parse("https://play.google.com/store/account/subscriptions")
-                        )
+                        val intent = Intent(Intent.ACTION_VIEW, Uri.parse("https://play.google.com/store/account/subscriptions"))
                         context.startActivity(intent)
                     }
                 )
@@ -132,6 +136,7 @@ fun TherapistCard(
     experienceYears: Int,
     compatibility: Int,
     price: String,
+    imageRes: Int,
     onInfoClick: () -> Unit,
     onChatClick: () -> Unit
 ) {
@@ -161,11 +166,10 @@ fun TherapistCard(
                 contentAlignment = Alignment.Center
             ) {
                 Image(
-                    painter = painterResource(id = R.drawable.cat2),
+                    painter = painterResource(id = imageRes), // <-- Gunakan imageRes di sini
                     contentDescription = "Therapist Avatar",
-                    modifier = Modifier
-                        .fillMaxSize(0.85f) // Ukuran gambar diperkecil jadi 85% dari Box
-                        .clip(RoundedCornerShape(12.dp))
+                    modifier = Modifier.fillMaxSize(), // Ubah ke fillMaxSize agar pas di kotak
+                    contentScale = ContentScale.Crop // Supaya foto orangnya rapi memenuhi kotak
                 )
             }
 
