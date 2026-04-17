@@ -10,6 +10,8 @@ import androidx.compose.ui.graphics.Color
 import com.example.scribesoul.models.DrawablePath
 import com.example.scribesoul.models.ToolMode
 import com.example.scribesoul.commands.Command
+import com.example.scribesoul.models.EditableText
+import com.example.scribesoul.models.ImageLayer
 import com.example.scribesoul.models.ShapeItem
 import java.time.LocalDate
 import java.time.YearMonth
@@ -52,7 +54,9 @@ sealed class JournalPage(
     val undoStack: SnapshotStateList<Command> = mutableStateListOf(),
     val redoStack: SnapshotStateList<Command> = mutableStateListOf(),
     val paths: SnapshotStateList<DrawablePath> = mutableStateListOf(),
-    val shapes: SnapshotStateList<ShapeItem> = mutableStateListOf()
+    val shapes: SnapshotStateList<ShapeItem> = mutableStateListOf(),
+    val imageLayers: SnapshotStateList<ImageLayer> = mutableStateListOf(),
+    val texts: SnapshotStateList<EditableText> = mutableStateListOf()
 ) {
     data class PlainPage(
         override val id: Int,

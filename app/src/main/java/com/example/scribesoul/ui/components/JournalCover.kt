@@ -54,7 +54,6 @@ fun JournalCover(navController: NavController, journalTitle: String, journalDate
     Column(
         modifier = Modifier.clickable{
             onClick()
-//            navController.navigate("journal")
         },
         horizontalAlignment = Alignment.CenterHorizontally
     ) {

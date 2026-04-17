@@ -1,5 +1,6 @@
 package com.example.scribesoul.ui.components.journalPages
 
+import JournalPage
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
@@ -68,7 +69,7 @@ fun WideLinedLargeMarginsPage(
             onNameCreate = { name ->
                 showTextInput = false
                 journalViewModel.addPageToSection(journalViewModel.selectedSectionIndex)
-                val newPage = journalViewModel.sections[journalViewModel.selectedSectionIndex].pages.last() as JournalPage.PlainPage
+                val newPage = journalViewModel.sections[journalViewModel.selectedSectionIndex].pages.last() as JournalPage.WideLinedLargeMarginPage
                 newPage.name = name
                 journalViewModel.changeSelectedPageIndex(
                     journalViewModel.sections[journalViewModel.selectedSectionIndex].pages.lastIndex

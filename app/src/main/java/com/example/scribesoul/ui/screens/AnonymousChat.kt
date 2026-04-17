@@ -49,6 +49,7 @@ import androidx.compose.material.icons.filled.Close
 import androidx.compose.runtime.mutableStateListOf
 import com.example.scribesoul.model.PostData
 import androidx.compose.foundation.lazy.items
+import androidx.compose.ui.platform.LocalDensity
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.scribesoul.viewModels.CommunityViewModel
 
@@ -273,11 +274,16 @@ fun AnonymousChatScreen(
             }
         }
 
+        val density = LocalDensity.current
+        val imeBottom = WindowInsets.ime.getBottom(density)
+
         // Konten yang menempel di bawah (InputBar + BottomBar)
         Column(
             modifier = Modifier
                 .align(Alignment.BottomCenter)
-                .padding(bottom = 30.dp),
+                .padding(bottom = 30.dp)
+                .padding(bottom = with(density) { (imeBottom * 0.3f).toDp() })
+                ,
             verticalArrangement = Arrangement.spacedBy(1.dp)
         ) {
             InputBar(

@@ -69,7 +69,7 @@ fun DottedPage(
             onNameCreate = { name ->
                 showTextInput = false
                 journalViewModel.addPageToSection(journalViewModel.selectedSectionIndex)
-                val newPage = journalViewModel.sections[journalViewModel.selectedSectionIndex].pages.last() as JournalPage.PlainPage
+                val newPage = journalViewModel.sections[journalViewModel.selectedSectionIndex].pages.last() as JournalPage.DottedPage
                 newPage.name = name
                 journalViewModel.changeSelectedPageIndex(
                     journalViewModel.sections[journalViewModel.selectedSectionIndex].pages.lastIndex

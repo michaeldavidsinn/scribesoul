@@ -15,6 +15,7 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.imePadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
@@ -260,14 +261,19 @@ fun CommunityGroupScreen(navController: NavController, communityViewModel: Commu
 
             Spacer(modifier = Modifier.height(15.dp))
 
-            InputBar(
-                onSend = { message ->
-                    if (message.isNotBlank()) {
-                        // Tambahkan postingan baru ke index 0 (paling atas)
-                        communityViewModel.chat(message)
+            Box(
+                modifier = Modifier
+                    .align(Alignment.CenterHorizontally)
+                    .imePadding()
+            ) {
+                InputBar(
+                    onSend = { message ->
+                        if (message.isNotBlank()) {
+                            communityViewModel.chat(message)
+                        }
                     }
-                }
-            )
+                )
+            }
             BottomBarAnonymous(navController = navController)
         }
     }

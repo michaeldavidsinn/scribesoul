@@ -76,6 +76,22 @@ class HomeViewModel : ViewModel() {
     }
 
     // ────────────────────────────────────────────────────────────────────────────────
+    // NEW: Automatically update steps if a "Steps" habit exists
+    // ────────────────────────────────────────────────────────────────────────────────
+    fun updateStepHabitIfExists(stepsToday: Int) {
+        // Find the habit where the metric is exactly "Steps"
+        val stepHabit = _habits.find { it.metric.equals("Steps", ignoreCase = true) }
+
+        if (stepHabit != null) {
+            // Only auto-update if the user is currently viewing today's date
+            // This prevents the sensor from accidentally overwriting historical data
+            if (currentDay == LocalDate.now()) {
+                updateHabitForDay(stepHabit, currentDay, stepsToday)
+            }
+        }
+    }
+
+    // ────────────────────────────────────────────────────────────────────────────────
     // 2. Get value for specific habit on a specific day
     // ────────────────────────────────────────────────────────────────────────────────
     fun getValueForDay(habit: Habit, day: LocalDate): Int {

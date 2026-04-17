@@ -98,6 +98,18 @@ import kotlinx.coroutines.launch
 import java.time.LocalDate
 import java.time.format.DateTimeFormatter
 import kotlin.text.ifEmpty
+import android.Manifest
+import android.content.Context
+import android.content.pm.PackageManager
+import android.hardware.Sensor
+import android.hardware.SensorEvent
+import android.hardware.SensorEventListener
+import android.hardware.SensorManager
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
+import androidx.compose.runtime.DisposableEffect
+import androidx.compose.runtime.LaunchedEffect
+import androidx.core.content.ContextCompat
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -108,10 +120,14 @@ fun HomeScreen(navController: NavController, viewModel: HomeViewModel) {
             Color(0xFFF74a8ff),
         )
     )
+    StepCounterEffect(viewModel = viewModel)
+
+
     var showTextInput by remember { mutableStateOf(false) }
     var showAddHabit by remember { mutableStateOf(false) }
     var selectedHabit by remember { mutableStateOf<Habit?>(null) }
     var showUnavailable by remember { mutableStateOf(false) }
+    var showTimerDialog by remember { mutableStateOf(false) }
 
 
     var name by remember {mutableStateOf("")}
@@ -162,6 +178,30 @@ fun HomeScreen(navController: NavController, viewModel: HomeViewModel) {
             },
             onDismissRequest = {
                 showTextInput = false
+                selectedHabit = null
+            }
+        )
+    }
+
+    if (showTimerDialog && selectedHabit != null) {
+        val currentValue = viewModel.getValueForDay(selectedHabit!!, viewModel.currentDay)
+
+        TimerDialog(
+            habitName = selectedHabit!!.habitName,
+            metric = selectedHabit!!.metric,
+            initialValue = currentValue,
+            onDismissRequest = {
+                showTimerDialog = false
+                selectedHabit = null
+            },
+            onSave = { newValue ->
+                // This utilizes your existing pairing logic for today's date!
+                viewModel.updateHabitForDay(
+                    selectedHabit!!,
+                    viewModel.currentDay,
+                    newValue
+                )
+                showTimerDialog = false
                 selectedHabit = null
             }
         )
@@ -262,7 +302,7 @@ fun HomeScreen(navController: NavController, viewModel: HomeViewModel) {
                 modifier = Modifier
                     .padding(top = 15.dp)
                     .align(Alignment.CenterHorizontally),
-                contentPadding = PaddingValues(start = 16.dp, end = 16.dp)
+
             ) {
                 items(viewModel.dates) { date ->
                     Column(
@@ -339,38 +379,6 @@ fun HomeScreen(navController: NavController, viewModel: HomeViewModel) {
                     }
                 }
             }
-
-            LazyRow(
-                horizontalArrangement = Arrangement.spacedBy(10.dp), modifier = Modifier
-                    .padding(top = 16.dp)
-                    .align(alignment = Alignment.Start), contentPadding = PaddingValues(start = 16.dp, end = 16.dp)
-            ) {
-                item{
-
-                    ProblemBubble("Stress", onClick = {showUnavailable = true})
-                }
-                item{
-                    ProblemBubble("Anxiety", onClick = {navController.navigate("anxiety")})
-                }
-                item{
-                    ProblemBubble("Insomnia", onClick = {showUnavailable = true})
-                }
-                item{
-                    ProblemBubble("Overthinking", onClick = {showUnavailable = true})
-                }
-                item{
-                    ProblemBubble("Fatigue", onClick = {showUnavailable = true})
-                }
-                item{
-                    ProblemBubble("Mood Swings", onClick = {showUnavailable = true})
-                }
-
-                item{
-                    ProblemBubble("Panic Attack", onClick = {showUnavailable = true})
-                }
-
-
-            }
             Row(
                 modifier = Modifier
                     .padding(horizontal = 16.dp)
@@ -380,7 +388,7 @@ fun HomeScreen(navController: NavController, viewModel: HomeViewModel) {
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 Text(
-                    "Your Habits",
+                    "Your Goals",
                     style = TextStyle(
                         fontSize = 20.sp,
                         fontFamily = FontFamily(Font(R.font.verdana)),
@@ -456,7 +464,7 @@ fun HomeScreen(navController: NavController, viewModel: HomeViewModel) {
                                 )
                             }
                             Text(
-                                text = "All Habits",
+                                text = "All Goals",
                                 style = TextStyle(
                                     fontSize = 12.sp,
                                     fontFamily = FontFamily(Font(R.font.verdana)),
@@ -506,7 +514,12 @@ fun HomeScreen(navController: NavController, viewModel: HomeViewModel) {
                                 )
                                 .clickable {
                                     selectedHabit = habit
-                                    showTextInput = true
+                                    // Check if the metric is time-based
+                                    if (habit.metric.equals("Minutes", ignoreCase = true) || habit.metric.equals("Hours", ignoreCase = true)) {
+                                        showTimerDialog = true
+                                    } else {
+                                        showTextInput = true
+                                    }
                                 }
 
                                 .clip(RoundedCornerShape(16.dp))
@@ -584,7 +597,12 @@ fun HomeScreen(navController: NavController, viewModel: HomeViewModel) {
                                 )
                                 .clickable {
                                     selectedHabit = habit
-                                    showTextInput = true
+                                    // Check if the metric is time-based
+                                    if (habit.metric.equals("Minutes", ignoreCase = true) || habit.metric.equals("Hours", ignoreCase = true)) {
+                                        showTimerDialog = true
+                                    } else {
+                                        showTextInput = true
+                                    }
                                 }
 
                                 .clip(RoundedCornerShape(16.dp))
@@ -662,7 +680,12 @@ fun HomeScreen(navController: NavController, viewModel: HomeViewModel) {
                                 )
                                 .clickable {
                                     selectedHabit = habit
-                                    showTextInput = true
+                                    // Check if the metric is time-based
+                                    if (habit.metric.equals("Minutes", ignoreCase = true) || habit.metric.equals("Hours", ignoreCase = true)) {
+                                        showTimerDialog = true
+                                    } else {
+                                        showTextInput = true
+                                    }
                                 }
 
                                 .clip(RoundedCornerShape(16.dp))
@@ -740,7 +763,12 @@ fun HomeScreen(navController: NavController, viewModel: HomeViewModel) {
                                 )
                                 .clickable {
                                     selectedHabit = habit
-                                    showTextInput = true
+                                    // Check if the metric is time-based
+                                    if (habit.metric.equals("Minutes", ignoreCase = true) || habit.metric.equals("Hours", ignoreCase = true)) {
+                                        showTimerDialog = true
+                                    } else {
+                                        showTextInput = true
+                                    }
                                 }
 
                                 .clip(RoundedCornerShape(16.dp))
@@ -818,7 +846,12 @@ fun HomeScreen(navController: NavController, viewModel: HomeViewModel) {
                                 )
                                 .clickable {
                                     selectedHabit = habit
-                                    showTextInput = true
+                                    // Check if the metric is time-based
+                                    if (habit.metric.equals("Minutes", ignoreCase = true) || habit.metric.equals("Hours", ignoreCase = true)) {
+                                        showTimerDialog = true
+                                    } else {
+                                        showTextInput = true
+                                    }
                                 }
 
                                 .clip(RoundedCornerShape(16.dp))
@@ -896,7 +929,12 @@ fun HomeScreen(navController: NavController, viewModel: HomeViewModel) {
                                 )
                                 .clickable {
                                     selectedHabit = habit
-                                    showTextInput = true
+                                    // Check if the metric is time-based
+                                    if (habit.metric.equals("Minutes", ignoreCase = true) || habit.metric.equals("Hours", ignoreCase = true)) {
+                                        showTimerDialog = true
+                                    } else {
+                                        showTextInput = true
+                                    }
                                 }
 
                                 .clip(RoundedCornerShape(16.dp))
@@ -965,325 +1003,6 @@ fun HomeScreen(navController: NavController, viewModel: HomeViewModel) {
                     }
 
                 }
-
-//                item {
-//                    Column(
-//                        modifier = Modifier
-//                            .width(120.dp)
-//                            .height(160.dp)
-//                            .clickable{
-//                                name = "Exercise Hours"
-//                                showTextInput = true
-//                            }
-//
-//                            .clip(RoundedCornerShape(16.dp))
-//                            .background(
-//                                color = Color(0XFFE0ECFF)
-//                            )
-//                            .padding(20.dp)
-//                            ,
-//                        horizontalAlignment = Alignment.CenterHorizontally,
-//                        verticalArrangement = Arrangement.Center
-//                    ) {
-//                        Column{
-//                            Box(
-//                                modifier = Modifier.clip(RoundedCornerShape(16.dp)).size(56.dp).background(Color(0XFFF9F9F9)), contentAlignment = Alignment.Center
-//                            ){
-//                                Image(
-//                                    painter = painterResource(R.drawable.exercise_icon),
-//                                    contentDescription = null,
-//                                    modifier = Modifier
-//                                        .width(37.dp)
-//                                        .height(37.dp),
-//                                )
-//                            }
-//                            Text(
-//                                text = "Exercise",
-//                                style = TextStyle(
-//                                    fontSize = 12.sp,
-//                                    fontFamily = FontFamily(Font(R.font.verdana)),
-//                                    fontWeight = FontWeight(400),
-//                                    color = Color(0xFF313632),
-//                                    letterSpacing = 1.sp,
-//                                ),
-//                                modifier = Modifier.padding(top = 5.dp)
-//                            )
-//                            Text(
-//                                text = "${viewModel.exercise} hours",
-//                                style = TextStyle(
-//                                    fontSize = 16.sp,
-//                                    fontFamily = FontFamily(Font(R.font.poppins_medium)),
-//                                    fontWeight = FontWeight(400),
-//                                    color = Color(0xFF313632),
-//
-//                                    letterSpacing = 1.sp,
-//                                ),
-//                                modifier = Modifier.padding(top = 2.dp)
-//                            )
-//                            LinearProgressIndicator(
-//                                progress = { 1F },
-//                                modifier = Modifier.fillMaxWidth().height(8.dp).clip(RoundedCornerShape(3.dp)).padding(top = 2.dp),
-//                                color = Color(0XFF5373FF),
-//                                trackColor = Color(0XFFF9F9F9)
-//                            )
-//                        }
-//                    }
-//
-//
-//                }
-//                item {
-//                    Column(
-//                        modifier = Modifier
-//                            .width(120.dp)
-//                            .height(160.dp)
-//                            .clip(RoundedCornerShape(16.dp))
-//                            .background(
-//                                color = Color(0XFFEEE3FF)
-//                            )
-//                            .clickable{
-//                                name = "Drink Amount"
-//                                showTextInput = true
-//                            }
-//                            .padding(20.dp),
-//                        horizontalAlignment = Alignment.CenterHorizontally,
-//                        verticalArrangement = Arrangement.Center
-//                    ) {
-//                        Column{
-//                            Box(
-//                                modifier = Modifier.clip(RoundedCornerShape(16.dp)).size(56.dp).background(Color(0XFFF9F9F9)), contentAlignment = Alignment.Center
-//                            ){
-//                                Image(
-//                                    painter = painterResource(R.drawable.water_icon),
-//                                    contentDescription = null,
-//                                    modifier = Modifier
-//                                        .width(18.dp)
-//                                        .height(37.dp),
-//                                )
-//                            }
-//                            Text(
-//                                text = "Drink Water",
-//                                style = TextStyle(
-//                                    fontSize = 12.sp,
-//                                    fontFamily = FontFamily(Font(R.font.verdana)),
-//                                    fontWeight = FontWeight(400),
-//                                    color = Color(0xFF313632),
-//                                    letterSpacing = 1.sp,
-//                                ),
-//                                modifier = Modifier.padding(top = 5.dp)
-//                            )
-//                            Text(
-//                                text = "${viewModel.drink} lt",
-//                                style = TextStyle(
-//                                    fontSize = 16.sp,
-//                                    fontFamily = FontFamily(Font(R.font.poppins_medium)),
-//                                    fontWeight = FontWeight(400),
-//                                    color = Color(0xFF313632),
-//
-//                                    letterSpacing = 1.sp,
-//                                ),
-//                                modifier = Modifier.padding(top = 5.dp)
-//                            )
-//                            LinearProgressIndicator(
-//                                progress = { 1F },
-//                                modifier = Modifier.fillMaxWidth().height(8.dp).clip(RoundedCornerShape(3.dp)).padding(top = 2.dp),
-//                                color = Color(0XFF9747FF),
-//                                trackColor = Color(0XFFF9F9F9)
-//                            )
-//                        }
-//
-//                    }
-//
-//
-//                }
-//                item {
-//                    Column(
-//                        modifier = Modifier
-//                            .width(120.dp)
-//                            .height(160.dp)
-//                            .clip(RoundedCornerShape(16.dp))
-//                            .background(
-//                                color = Color(0XFFFFE6F7)
-//                            )
-//                            .clickable{
-//                                name = "Meditation Hours"
-//                                showTextInput = true
-//                            }
-//                            .padding(20.dp),
-//                        horizontalAlignment = Alignment.CenterHorizontally,
-//                        verticalArrangement = Arrangement.Center
-//                    ) {
-//                        Column{
-//                            Box(
-//                                modifier = Modifier.clip(RoundedCornerShape(16.dp)).size(56.dp).background(Color(0XFFF9F9F9)), contentAlignment = Alignment.Center
-//                            ){
-//                                Image(
-//                                    painter = painterResource(R.drawable.meditation_icon),
-//                                    contentDescription = null,
-//                                    modifier = Modifier
-//                                        .width(37.dp)
-//                                        .height(37.dp),
-//                                )
-//                            }
-//                            Text(
-//                                text = "Meditation",
-//                                style = TextStyle(
-//                                    fontSize = 12.sp,
-//                                    fontFamily = FontFamily(Font(R.font.verdana)),
-//                                    fontWeight = FontWeight(400),
-//                                    color = Color(0xFF313632),
-//                                    letterSpacing = 1.sp,
-//                                ),
-//                                modifier = Modifier.padding(top = 5.dp)
-//                            )
-//                            Text(
-//                                text = "${viewModel.meditation} hour",
-//                                style = TextStyle(
-//                                    fontSize = 16.sp,
-//                                    fontFamily = FontFamily(Font(R.font.poppins_medium)),
-//                                    fontWeight = FontWeight(400),
-//                                    color = Color(0xFF313632),
-//
-//                                    letterSpacing = 1.sp,
-//                                ),
-//                                modifier = Modifier.padding(top = 5.dp)
-//                            )
-//                            LinearProgressIndicator(
-//                                progress = { 1F },
-//                                modifier = Modifier.fillMaxWidth().height(8.dp).clip(RoundedCornerShape(3.dp)).padding(top = 2.dp),
-//                                color = Color(0XFFDC30AD),
-//                                trackColor = Color(0XFFF9F9F9)
-//                            )
-//                        }
-//                    }
-//
-//
-//                }
-//                item {
-//                    Column(
-//                        modifier = Modifier
-//                            .width(120.dp)
-//                            .height(160.dp)
-//                            .clip(RoundedCornerShape(16.dp))
-//                            .background(
-//                                color = Color(0XFFFFB4B4)
-//                            )
-//                            .clickable{
-//                                name = "Steps Amount"
-//                                showTextInput = true
-//                            }
-//                            .padding(20.dp),
-//                        horizontalAlignment = Alignment.CenterHorizontally,
-//                        verticalArrangement = Arrangement.Center
-//                    ) {
-//                        Column{
-//                            Box(
-//                                modifier = Modifier.clip(RoundedCornerShape(16.dp)).size(56.dp).background(Color(0XFFF9F9F9)), contentAlignment = Alignment.Center
-//                            ){
-//                                Image(
-//                                    painter = painterResource(R.drawable.running_icon),
-//                                    contentDescription = null,
-//                                    modifier = Modifier
-//                                        .width(37.dp)
-//                                        .height(37.dp),
-//                                )
-//                            }
-//                            Text(
-//                                text = "Running",
-//                                style = TextStyle(
-//                                    fontSize = 12.sp,
-//                                    fontFamily = FontFamily(Font(R.font.verdana)),
-//                                    fontWeight = FontWeight(400),
-//                                    color = Color(0xFF313632),
-//                                    letterSpacing = 1.sp,
-//                                ),
-//                                modifier = Modifier.padding(top = 5.dp)
-//                            )
-//                            Text(
-//                                text = "${viewModel.running} steps",
-//                                style = TextStyle(
-//                                    fontSize = 16.sp,
-//                                    fontFamily = FontFamily(Font(R.font.poppins_medium)),
-//                                    fontWeight = FontWeight(400),
-//                                    color = Color(0xFF313632),
-//
-//                                    letterSpacing = 1.sp,
-//                                ),
-//                                modifier = Modifier.padding(top = 5.dp)
-//                            )
-//                            LinearProgressIndicator(
-//                                progress = { 1F },
-//                                modifier = Modifier.fillMaxWidth().height(8.dp).clip(RoundedCornerShape(3.dp)).padding(top = 2.dp),
-//                                color = Color(0XFFDC30AD),
-//                                trackColor = Color(0XFFF9F9F9)
-//                            )
-//                        }
-//                    }
-//
-//
-//                }
-//                item {
-//                    Column(
-//                        modifier = Modifier
-//                            .width(120.dp)
-//                            .height(160.dp)
-//                            .clip(RoundedCornerShape(16.dp))
-//                            .background(
-//                                color = Color(0XFFFFD6B4)
-//                            )
-//                            .clickable{
-//                                name = "Pages Read"
-//                                showTextInput = true
-//                            }
-//                         .padding(20.dp),
-//                        horizontalAlignment = Alignment.CenterHorizontally,
-//                        verticalArrangement = Arrangement.Center
-//                    ) {
-//                        Column{
-//                            Box(
-//                                modifier = Modifier.clip(RoundedCornerShape(16.dp)).size(56.dp).background(Color(0XFFF9F9F9)), contentAlignment = Alignment.Center
-//                            ){
-//                                Image(
-//                                    painter = painterResource(R.drawable.read_icon),
-//                                    contentDescription = null,
-//                                    modifier = Modifier
-//                                        .width(37.dp)
-//                                        .height(37.dp),
-//                                )
-//                            }
-//                            Text(
-//                                text = "Read Book",
-//                                style = TextStyle(
-//                                    fontSize = 12.sp,
-//                                    fontFamily = FontFamily(Font(R.font.verdana)),
-//                                    fontWeight = FontWeight(400),
-//                                    color = Color(0xFF313632),
-//                                    letterSpacing = 1.sp,
-//                                ),
-//                                modifier = Modifier.padding(top = 5.dp)
-//                            )
-//                            Text(
-//                                text = "${viewModel.read} pages",
-//                                style = TextStyle(
-//                                    fontSize = 16.sp,
-//                                    fontFamily = FontFamily(Font(R.font.poppins_medium)),
-//                                    fontWeight = FontWeight(400),
-//                                    color = Color(0xFF313632),
-//
-//                                    letterSpacing = 1.sp,
-//                                ),
-//                                modifier = Modifier.padding(top = 5.dp)
-//                            )
-//                            LinearProgressIndicator(
-//                                progress = { 1F },
-//                                modifier = Modifier.fillMaxWidth().height(8.dp).clip(RoundedCornerShape(3.dp)).padding(top = 2.dp),
-//                                color = Color(0XFFFD7A16),
-//                                trackColor = Color(0XFF8433D1)
-//                            )
-//                        }
-//                    }
-//
-//
-//                }
 
             }
         }
@@ -1393,9 +1112,9 @@ fun AddHabitDialog(
     onSubmit: (String, String, Int, Int) -> Unit
 ) {
     var name by remember { mutableStateOf("") }
-    var metric by remember { mutableStateOf("") }
+
     var goal by remember { mutableStateOf("") }
-    var icon by remember { mutableStateOf("") }
+    var icon by remember { mutableStateOf("1") }
 
     val iconOptions = listOf(
         R.drawable.habits_icon,
@@ -1405,8 +1124,12 @@ fun AddHabitDialog(
         R.drawable.water_icon,
         R.drawable.read_icon
     )
+    val metricList = arrayOf("Minutes", "Hours", "Times", "Litres", "Steps", "Kilometers", "Calories", "Percentage")
 
-    var expanded by remember { mutableStateOf(false) }
+    var expandedMetric by remember { mutableStateOf(false) }
+    var metric by remember { mutableStateOf(metricList.first()) }
+    var expandedIcon by remember { mutableStateOf(false) }
+    var selectedMetric by remember { mutableStateOf(metricList.first()) }
     var selectedIcon by remember { mutableStateOf(iconOptions.first()) }
 
     AlertDialog(
@@ -1419,8 +1142,47 @@ fun AddHabitDialog(
 
                 Spacer(Modifier.height(10.dp))
 
-                Text("Metric (e.g. hours, steps, ml)")
-                TextField(value = metric, onValueChange = { metric = it })
+                Text("Metric")
+                Box{
+                    Row(
+                        Modifier
+                            .fillMaxWidth()
+                            .clickable { expandedMetric = true }
+                            .background(MaterialTheme.colorScheme.surfaceVariant)
+                            .padding(12.dp),
+                        horizontalArrangement = Arrangement.SpaceBetween,
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+
+                        Row(verticalAlignment = Alignment.CenterVertically) {
+                            Spacer(Modifier.width(12.dp))
+                            Text("$selectedMetric")
+                        }
+
+                        Icon(Icons.Default.ArrowDropDown, contentDescription = null)
+                    }
+
+                    DropdownMenu(
+                        expanded = expandedMetric,
+                        onDismissRequest = { expandedMetric = false }
+                    ) {
+                        metricList.forEachIndexed { index, metricsSelect ->
+                            DropdownMenuItem(
+                                text = {
+                                    Row(verticalAlignment = Alignment.CenterVertically) {
+                                        Text(metricList.get(index))
+                                    }
+                                },
+                                onClick = {
+                                    selectedMetric = metricList.get(index)
+                                    metric = metricList.get(index)
+                                    expandedMetric = false
+                                }
+                            )
+                        }
+                    }
+                }
+
 
                 Spacer(Modifier.height(10.dp))
 
@@ -1436,7 +1198,7 @@ fun AddHabitDialog(
                     Row(
                         Modifier
                             .fillMaxWidth()
-                            .clickable { expanded = true }
+                            .clickable { expandedIcon = true }
                             .background(MaterialTheme.colorScheme.surfaceVariant)
                             .padding(12.dp),
                         horizontalArrangement = Arrangement.SpaceBetween,
@@ -1457,8 +1219,8 @@ fun AddHabitDialog(
                     }
 
                     DropdownMenu(
-                        expanded = expanded,
-                        onDismissRequest = { expanded = false }
+                        expanded = expandedIcon,
+                        onDismissRequest = { expandedIcon = false }
                     ) {
                         iconOptions.forEachIndexed { index, iconRes ->
                             DropdownMenuItem(
@@ -1476,7 +1238,7 @@ fun AddHabitDialog(
                                 onClick = {
                                     selectedIcon = iconRes
                                     icon = (index + 1).toString()
-                                    expanded = false
+                                    expandedIcon = false
                                 }
                             )
                         }
@@ -1500,6 +1262,172 @@ fun AddHabitDialog(
         },
         dismissButton = {
             TextButton(onClick = onDismiss) { Text("Cancel") }
+        }
+    )
+}
+
+
+@Composable
+fun StepCounterEffect(viewModel: HomeViewModel) {
+    val context = LocalContext.current
+
+    // Check if we already have permission
+    var hasPermission by remember {
+        mutableStateOf(
+            ContextCompat.checkSelfPermission(
+                context,
+                Manifest.permission.ACTIVITY_RECOGNITION
+            ) == PackageManager.PERMISSION_GRANTED
+        )
+    }
+
+    // Launcher to ask the user for permission
+    val permissionLauncher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.RequestPermission(),
+        onResult = { isGranted -> hasPermission = isGranted }
+    )
+
+    // Request permission automatically on launch for Android 10+
+    LaunchedEffect(Unit) {
+        if (!hasPermission && Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+            permissionLauncher.launch(Manifest.permission.ACTIVITY_RECOGNITION)
+        }
+    }
+
+    // If permission is granted, start the sensor
+    if (hasPermission) {
+        DisposableEffect(Unit) {
+            val sensorManager = context.getSystemService(Context.SENSOR_SERVICE) as SensorManager
+            val stepSensor = sensorManager.getDefaultSensor(Sensor.TYPE_STEP_COUNTER)
+
+            val sharedPrefs = context.getSharedPreferences("ScribeSoulPrefs", Context.MODE_PRIVATE)
+            val todayStr = LocalDate.now().toString()
+
+            val listener = object : SensorEventListener {
+                override fun onSensorChanged(event: SensorEvent?) {
+                    event?.let {
+                        val totalStepsSinceReboot = it.values[0].toInt()
+
+                        // Get today's baseline, or set it if it's the first step of the day
+                        var baseline = sharedPrefs.getInt("baseline_$todayStr", -1)
+
+                        if (baseline == -1 || totalStepsSinceReboot < baseline) {
+                            baseline = totalStepsSinceReboot
+                            sharedPrefs.edit().putInt("baseline_$todayStr", baseline).apply()
+                        }
+
+                        // Calculate steps for today and push to ViewModel
+                        val stepsToday = totalStepsSinceReboot - baseline
+                        viewModel.updateStepHabitIfExists(stepsToday)
+                    }
+                }
+
+                override fun onAccuracyChanged(sensor: Sensor?, accuracy: Int) {}
+            }
+
+            // Start listening
+            stepSensor?.let {
+                sensorManager.registerListener(listener, it, SensorManager.SENSOR_DELAY_UI)
+            }
+
+            // Stop listening when the screen is closed
+            onDispose {
+                sensorManager.unregisterListener(listener)
+            }
+        }
+    }
+}
+
+@Composable
+fun TimerDialog(
+    habitName: String,
+    metric: String,
+    initialValue: Int, // The amount already tracked today
+    onDismissRequest: () -> Unit,
+    onSave: (Int) -> Unit
+) {
+    // Determine the conversion factor.
+    // If the metric is Hours, 1 unit = 3600 seconds. If Minutes, 1 unit = 60 seconds.
+    val isHours = metric.equals("Hours", ignoreCase = true)
+    val multiplier = if (isHours) 3600 else 60
+
+    // Start the timer at the already accumulated time
+    var elapsedSeconds by remember { mutableStateOf(initialValue * multiplier) }
+    var isRunning by remember { mutableStateOf(false) }
+
+    // Coroutine that runs every second when isRunning is true
+    LaunchedEffect(isRunning) {
+        while (isRunning) {
+            delay(1000)
+            elapsedSeconds++
+        }
+    }
+
+    // Format the time for display (HH:MM:SS)
+    val hours = elapsedSeconds / 3600
+    val minutes = (elapsedSeconds % 3600) / 60
+    val seconds = elapsedSeconds % 60
+    val timeString = String.format("%02d:%02d:%02d", hours, minutes, seconds)
+
+    AlertDialog(
+        onDismissRequest = onDismissRequest,
+        title = {
+            Text(
+                text = "Tracking: $habitName",
+                style = TextStyle(
+                    fontSize = 20.sp,
+                    fontFamily = FontFamily(Font(R.font.verdana_bold)),
+                    color = Color(0xFF2B395B)
+                )
+            )
+        },
+        text = {
+            Column(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalAlignment = Alignment.CenterHorizontally
+            ) {
+                Text(
+                    text = timeString,
+                    style = TextStyle(
+                        fontSize = 48.sp,
+                        fontFamily = FontFamily.Monospace,
+                        fontWeight = FontWeight.Bold,
+                        color = Color(0xFF74A8FF)
+                    ),
+                    modifier = Modifier.padding(vertical = 16.dp)
+                )
+
+                Button(
+                    onClick = { isRunning = !isRunning },
+                    colors = ButtonDefaults.buttonColors(
+                        containerColor = if (isRunning) Color(0xFFFD7A16) else Color(0xFF40B490)
+                    ),
+                    modifier = Modifier.fillMaxWidth(0.6f)
+                ) {
+                    Text(if (isRunning) "Pause" else if (elapsedSeconds == 0) "Start" else "Resume")
+                }
+            }
+        },
+        confirmButton = {
+            Button(
+                onClick = {
+                    // Convert the total seconds back to the correct integer metric
+                    val valueToSave = elapsedSeconds / multiplier
+                    onSave(valueToSave)
+                }
+            ) {
+                Text("Save")
+            }
+        },
+        dismissButton = {
+            TextButton(
+                onClick = {
+                    isRunning = false
+                    onDismissRequest()
+                }
+            ) {
+                Text("Cancel")
+            }
         }
     )
 }
