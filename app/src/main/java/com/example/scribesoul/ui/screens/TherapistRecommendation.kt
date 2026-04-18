@@ -88,10 +88,16 @@ fun TherapistRecommendationScreen(navController: NavController) {
 
             itemsIndexed(therapistList) { index, (name, specialization, issue) ->
 
-                val imageRes = when (index % 3) {
-                    0 -> R.drawable.therapistman_1
-                    1 -> R.drawable.therapistman_2
-                    else -> R.drawable.therapistman_3
+                val imageRes = when (index % 8) {
+                    0 -> R.drawable.ther_1_f
+                    1 -> R.drawable.ther_1_m
+                    2 -> R.drawable.ther_2_f
+                    3 -> R.drawable.ther_2_m
+                    4 -> R.drawable.ther_3_f
+                    5 -> R.drawable.ther_3_m
+                    6 -> R.drawable.ther_4_f
+                    7 -> R.drawable.ther_4_m
+                    else -> R.drawable.ther_4_m
                 }
 
                 TherapistCard(

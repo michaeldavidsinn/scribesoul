@@ -184,7 +184,7 @@ fun TherapistDetailScreen(navController: NavController, therapistName: String) {
                         }
                         Spacer(modifier = Modifier.width(16.dp))
                         Image(
-                            painter = painterResource(id = R.drawable.therapistman_1), // GANTI DI SINI
+                            painter = painterResource(id = R.drawable.ther_1_f), // GANTI DI SINI
                             contentDescription = "Therapist Avatar",
                             modifier = Modifier
                                 .size(150.dp)
