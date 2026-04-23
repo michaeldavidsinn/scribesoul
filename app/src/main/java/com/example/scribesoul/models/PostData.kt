@@ -6,5 +6,6 @@ data class PostData(
     val description: String,
     val initialLikeCount: Int,
     val commentCount: Int,
-    var isLiked: Boolean = false
+    var isLiked: Boolean = false,
+    val date: String = "Just Now"
 )
