@@ -5,11 +5,11 @@ plugins {
 }
 
 android {
-    namespace = "com.example.scribesoul"
+    namespace = "com.scribesoul.app"
     compileSdk = 35
 
     defaultConfig {
-        applicationId = "com.example.scribesoul"
+        applicationId = "com.scribesoul.app"
         minSdk = 26
         targetSdk = 35
         versionCode = 1
