@@ -3,7 +3,9 @@ package com.example.scribesoul.ui.screens
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
@@ -31,13 +33,21 @@ import com.example.scribesoul.R
 
 @Composable
 fun SOSScreen(navController: NavController) {
+    val gradientBorderBrush = Brush.horizontalGradient(
+        colors = listOf(
+            Color(0xFFFFF47A), // Kuning
+            Color(0xFFFFA8CF), // Pink
+            Color(0xFFA774FF)  // Ungu
+        )
+    )
+
     Box(
         modifier = Modifier
             .fillMaxSize()
             .background(
                 brush = Brush.radialGradient(
                     colors = listOf(
-                        Color(0xFFFFA8CF).copy(alpha = 0.5f),
+                        Color(0xFFFFA8CF).copy(alpha = 0.3f),
                         Color.White
                     ),
                     radius = 1200f
@@ -46,9 +56,11 @@ fun SOSScreen(navController: NavController) {
     ) {
         Column(
             modifier = Modifier.fillMaxSize(),
-            horizontalAlignment = Alignment.CenterHorizontally,
-            verticalArrangement = Arrangement.Center
+            horizontalAlignment = Alignment.CenterHorizontally
         ) {
+            Spacer(modifier = Modifier.height(110.dp))
+
+            // Title
             Text(
                 text = "Emergency\nhelp needed?",
                 style = TextStyle(
@@ -70,9 +82,10 @@ fun SOSScreen(navController: NavController) {
                 modifier = Modifier.padding(top = 8.dp, bottom = 40.dp)
             )
 
+            // SOS Button
             Box(
                 modifier = Modifier
-                    .size(330.dp)
+                    .size(310.dp)
                     .clip(CircleShape)
                     .border(
                         width = 10.dp,
@@ -80,9 +93,7 @@ fun SOSScreen(navController: NavController) {
                         shape = CircleShape
                     )
                     .background(Color(0xFFD10000))
-                    .clickable {
-
-                    },
+                    .clickable { /* Handle SOS */ },
                 contentAlignment = Alignment.Center
             ) {
                 Text(
@@ -96,9 +107,51 @@ fun SOSScreen(navController: NavController) {
                 )
             }
 
-            Spacer(modifier = Modifier.height(130.dp))
+            Spacer(modifier = Modifier.height(30.dp))
+
+            // Use this feature section
+            Column(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalAlignment = Alignment.Start
+            ) {
+                Text(
+                    text = "Use this feature if you:",
+                    style = TextStyle(
+                        fontSize = 16.sp,
+                        fontWeight = FontWeight.Bold,
+                        color = Color(0xFF2B395B)
+                    ),
+                    modifier = Modifier.padding(start = 40.dp, bottom = 12.dp)
+                )
+
+                // Horizontal Scroll for Cards
+                Row(
+                    modifier = Modifier
+                        .horizontalScroll(rememberScrollState())
+                        .padding(horizontal = 20.dp),
+                    horizontalArrangement = Arrangement.spacedBy(12.dp)
+                ) {
+                    EmergencyReasonCard(
+                        text = "Feel overwhelmed, panicked, or out of control",
+                        gradient = gradientBorderBrush
+                    )
+                    EmergencyReasonCard(
+                        text = "Experience anxiety attacks or panic attacks",
+                        gradient = gradientBorderBrush
+                    )
+                    EmergencyReasonCard(
+                        text = "Have intense negative thoughts and need immediate help",
+                        gradient = gradientBorderBrush
+                    )
+                    EmergencyReasonCard(
+                        text = "Need someone to contact as soon as possible",
+                        gradient = gradientBorderBrush
+                    )
+                }
+            }
         }
 
+        // Back Button
         Box(
             modifier = Modifier
                 .padding(top = 56.dp, start = 8.dp)
@@ -111,17 +164,47 @@ fun SOSScreen(navController: NavController) {
                 imageVector = Icons.Default.ArrowBack,
                 contentDescription = "Back",
                 tint = Color.Black,
-                modifier = Modifier.size(20.dp)
+                modifier = Modifier.size(24.dp)
             )
         }
 
-        Column(
-            modifier = Modifier
-                .align(Alignment.BottomCenter)
-                .padding(bottom = 0.dp),
-            verticalArrangement = Arrangement.spacedBy(1.dp)
+        // Bottom Bar
+        Box(
+            modifier = Modifier.align(Alignment.BottomCenter)
         ) {
             BottomBarHome(navController)
+        }
+    }
+}
+
+@Composable
+fun EmergencyReasonCard(text: String, gradient: Brush) {
+    Box(
+        modifier = Modifier
+            .width(140.dp) // Sesuaikan lebar agar terlihat seperti di screenshot
+            .height(130.dp)
+            .clip(RoundedCornerShape(16.dp))
+            .background(brush = gradient)
+            .padding(1.5.dp) // Ketebalan border gradient
+    ) {
+        Box(
+            modifier = Modifier
+                .fillMaxSize()
+                .clip(RoundedCornerShape(15.dp)) // Sedikit lebih kecil dari parent agar rapi
+                .background(Color.White)
+                .padding(12.dp),
+            contentAlignment = Alignment.Center
+        ) {
+            Text(
+                text = text,
+                style = TextStyle(
+                    fontSize = 15.sp,
+                    fontWeight = FontWeight.Bold,
+                    color = Color(0xFF2B395B),
+                    textAlign = TextAlign.Center,
+                    lineHeight = 14.sp
+                )
+            )
         }
     }
 }
