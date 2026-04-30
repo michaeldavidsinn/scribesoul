@@ -47,6 +47,7 @@ import androidx.navigation.NavController
 import com.scribesoul.app.R
 import com.google.accompanist.flowlayout.FlowRow
 import com.google.accompanist.flowlayout.MainAxisAlignment
+import androidx.compose.ui.layout.ContentScale
 
 @Composable
 fun TherapistDetailScreen(navController: NavController, therapistName: String) {
@@ -183,11 +184,12 @@ fun TherapistDetailScreen(navController: NavController, therapistName: String) {
                         }
                         Spacer(modifier = Modifier.width(16.dp))
                         Image(
-                            painter = painterResource(id = R.drawable.cat2),
+                            painter = painterResource(id = R.drawable.ther_1_f), // GANTI DI SINI
                             contentDescription = "Therapist Avatar",
                             modifier = Modifier
                                 .size(150.dp)
-                                .clip(RoundedCornerShape(24.dp))
+                                .clip(RoundedCornerShape(24.dp)),
+                            contentScale = ContentScale.Crop // Tambahkan ini agar foto terlihat proporsional
                         )
                     }
 
