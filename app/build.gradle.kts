@@ -2,14 +2,16 @@ plugins {
     alias(libs.plugins.android.application)
     alias(libs.plugins.kotlin.android)
     alias(libs.plugins.kotlin.compose)
+    id("org.jetbrains.kotlin.plugin.serialization") version "1.9.0"
+    id("com.google.gms.google-services")
 }
 
 android {
-    namespace = "com.scribesoul.app"
+    namespace = "com.scribesoul"
     compileSdk = 35
 
     defaultConfig {
-        applicationId = "com.scribesoul.app"
+        applicationId = "com.scribesoul"
         minSdk = 26
         targetSdk = 35
         versionCode = 1
@@ -41,6 +43,13 @@ android {
 
 dependencies {
 
+    //firebase
+    implementation(platform("com.google.firebase:firebase-bom:34.12.0"))
+    implementation("com.google.firebase:firebase-auth")
+    implementation("com.google.firebase:firebase-firestore")
+    implementation("com.google.firebase:firebase-storage") // Add this!
+    implementation("org.jetbrains.kotlinx:kotlinx-coroutines-play-services:1.7.3")
+
     // Compose
     implementation("androidx.compose.ui:ui")
     implementation("androidx.compose.material3:material3")
@@ -50,6 +59,9 @@ dependencies {
 
     // Coil
     implementation("io.coil-kt:coil-compose:2.4.0")
+
+    // Serialization
+    implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:1.6.0")
 
     implementation("androidx.lifecycle:lifecycle-viewmodel-compose:2.8.6")
     implementation("com.squareup.retrofit2:retrofit:2.9.0")

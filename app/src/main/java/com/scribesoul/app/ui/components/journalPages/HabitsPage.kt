@@ -44,7 +44,7 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
-import com.scribesoul.app.R
+import com.scribesoul.R
 import com.scribesoul.app.viewModels.DrawingViewModel
 import com.scribesoul.app.viewModels.JournalViewModel
 import java.time.YearMonth

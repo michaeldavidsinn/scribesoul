@@ -73,7 +73,7 @@ import androidx.navigation.NavController
 import androidx.navigation.compose.rememberNavController
 import coil.compose.rememberAsyncImagePainter
 import coil.request.ImageRequest
-import com.scribesoul.app.R
+import com.scribesoul.R
 import com.scribesoul.app.commands.*
 import com.scribesoul.app.models.*
 import com.scribesoul.app.models.LinearGradient as LinearGradientFill

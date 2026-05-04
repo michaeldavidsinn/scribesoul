@@ -19,7 +19,7 @@ import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.res.painterResource
-import com.scribesoul.app.R
+import com.scribesoul.R
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.MoreVert
 

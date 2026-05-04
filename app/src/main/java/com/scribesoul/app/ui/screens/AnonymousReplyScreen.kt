@@ -28,10 +28,12 @@ import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
 import androidx.navigation.compose.rememberNavController
-import com.example.scribesoul.R
-import com.example.scribesoul.model.PostData
-import com.example.scribesoul.ui.components.InputBar
-import com.example.scribesoul.viewModels.CommunityViewModel
+import com.scribesoul.R
+import com.scribesoul.app.ui.components.InputBar
+import com.scribesoul.app.model.PostData
+import com.scribesoul.app.ui.screens.BottomBarAnonymous
+import com.scribesoul.app.ui.screens.BottomBarTherapistAnonymous
+import com.scribesoul.app.viewModels.CommunityViewModel
 
 @Composable
 fun AnonymousReplyScreen(

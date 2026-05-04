@@ -34,7 +34,7 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
 import com.scribesoul.app.ui.navigation.BottomNavItem
 import com.scribesoul.app.viewModels.HomeViewModel
-import com.scribesoul.app.R
+import com.scribesoul.R
 
 @Composable
 fun TherapistScheduleScreen(navController: NavController, viewModel: HomeViewModel) {

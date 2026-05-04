@@ -28,7 +28,7 @@ import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
 import androidx.navigation.compose.rememberNavController
-import com.scribesoul.app.R
+import com.scribesoul.R
 import com.scribesoul.app.ui.navigation.BottomNavItem
 import com.scribesoul.app.viewModels.HomeViewModel
 

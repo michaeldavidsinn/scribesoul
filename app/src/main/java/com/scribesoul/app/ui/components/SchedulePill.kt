@@ -23,7 +23,7 @@ import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import com.scribesoul.app.R // Sesuaikan dengan package name project kamu
+import com.scribesoul.R // Sesuaikan dengan package name project kamu
 
 @Composable
 fun SchedulePill(name: String, category: String, time: String, statusColor: Color) {

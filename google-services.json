@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "776634924296",
+    "project_id": "scribesoul-4beb9",
+    "storage_bucket": "scribesoul-4beb9.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:776634924296:android:7562d7ea8323240164c0bd",
+        "android_client_info": {
+          "package_name": "com.scribesoul"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyDbLQSWr5FAyvecb-164tn2RURSo4TiFxY"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

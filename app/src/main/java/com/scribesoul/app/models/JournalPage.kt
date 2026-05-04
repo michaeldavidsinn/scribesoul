@@ -31,6 +31,14 @@ sealed class SectionType {
     object LargeGrid: SectionType()
 }
 
+data class FirestoreJournalMeta(
+    val id: Int = 0,
+    val uid: String = "",
+    val name: String = "",
+    val lastUpdated: Long = System.currentTimeMillis(),
+    val storageFilePath: String = "" // e.g., "users/{uid}/journals/journal_1.json"
+)
+
 data class Journal(
     val id: Int,
     val uid: Int,

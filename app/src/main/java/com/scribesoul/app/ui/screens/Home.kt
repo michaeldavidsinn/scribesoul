@@ -69,7 +69,7 @@ import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.Dialog
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
-import com.scribesoul.app.R
+import com.scribesoul.R
 import com.scribesoul.app.models.Habit
 import com.scribesoul.app.ui.navigation.BottomNavItem
 import com.scribesoul.app.utils.softShadow

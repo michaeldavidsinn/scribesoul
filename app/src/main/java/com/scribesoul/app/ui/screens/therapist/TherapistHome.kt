@@ -32,7 +32,7 @@ import androidx.navigation.NavController
 import com.scribesoul.app.ui.components.SchedulePill
 import com.scribesoul.app.ui.navigation.BottomNavItem
 import com.scribesoul.app.viewModels.HomeViewModel
-import com.scribesoul.app.R
+import com.scribesoul.R
 
 @Composable
 fun TherapistHomeScreen(navController: NavController, viewModel: HomeViewModel) {

@@ -20,7 +20,7 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import com.scribesoul.app.R
+import com.scribesoul.R
 import com.scribesoul.app.utils.softShadow
 
 @Composable
