@@ -44,17 +44,27 @@ import androidx.compose.material.icons.filled.Close
 import androidx.compose.runtime.mutableStateListOf
 import com.scribesoul.app.model.PostData
 import androidx.compose.foundation.lazy.items
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
 import androidx.compose.ui.platform.LocalDensity
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.scribesoul.app.viewModels.CommunityViewModel
+import com.scribesoul.app.viewModels.PostViewModel
 
 
 @Composable
 fun AnonymousChatScreen(
     navController: NavController,
+    postViewModel: PostViewModel,
     communityViewModel: CommunityViewModel,
     isTherapist: Boolean = false // Tambahkan parameter ini
 ){
+
+    val postList by postViewModel.posts.collectAsState()
+
+    LaunchedEffect(Unit) {
+        postViewModel.fetchPosts()
+    }
 
     var isSearchActive by remember { mutableStateOf(false) }
     var searchQuery by remember { mutableStateOf("") }
@@ -62,16 +72,6 @@ fun AnonymousChatScreen(
     var showCommentDialog by remember { mutableStateOf(false) }
     var commentText by remember { mutableStateOf("") }
     var selectedPostIndex by remember { mutableStateOf(-1) }
-
-    val postList = remember {
-        mutableStateListOf(
-            PostData(1, "Anonymous", "Sometimes I feel like...", 24, 12),
-            PostData(2, "Anonymous", "Coding is fun but tiring...", 10, 5),
-            PostData(3, "Anonymous", "Anyone knows good coffee in Sby?", 5, 2),
-            PostData(4, "Anonymous", "Just want to share my story...", 100, 45),
-            PostData(5, "Anonymous", "Is it okay to cry?", 50, 20),
-        )
-    }
 
 
 
@@ -241,21 +241,18 @@ fun AnonymousChatScreen(
                     ChatCard(
                         title = post.title,
                         description = post.description,
+                        // UI akan otomatis update saat data di Firebase berubah
                         likeCount = if (post.isLiked) post.initialLikeCount + 1 else post.initialLikeCount,
                         commentCount = post.commentCount,
                         isLiked = post.isLiked,
 
                         onLikeClick = {
-                            if (originalIndex != -1) {
-                                postList[originalIndex] = post.copy(isLiked = !post.isLiked)
-                            }
+                            // Panggil fungsi toggleLike di ViewModel
+                            postViewModel.toggleLike(post)
                         },
-
                         onCommentClick = {
-                            // Logika dialog komentar (seperti sebelumnya)
-                            selectedPostIndex = originalIndex
-                            commentText = ""
-                            showCommentDialog = true
+                            // Untuk reply, kamu bisa navigasi ke AnonymousReplyScreen
+                            navController.navigate("reply_screen/${post.id}")
                         }
                     )
 
@@ -284,15 +281,8 @@ fun AnonymousChatScreen(
             InputBar(
                 onSend = { message ->
                     if (message.isNotBlank()) {
-                        // Tambahkan postingan baru ke index 0 (paling atas)
-                        postList.add(0, PostData(
-                            id = (postList.maxOfOrNull { it.id } ?: 0) + 1,
-                            title = "Anonymous", // Default user
-                            description = message,
-                            initialLikeCount = 0,
-                            commentCount = 0,
-                            isLiked = false
-                        ))
+                        // Panggil fungsi ViewModel untuk simpan ke Firebase
+                        postViewModel.uploadPost(message)
                     }
                 }
             )
@@ -333,11 +323,12 @@ fun AnonymousChatScreen(
                 confirmButton = {
                     Button(
                         onClick = {
-                            // --- LOGIKA UPDATE JUMLAH KOMEN ---
                             if (selectedPostIndex != -1 && commentText.isNotEmpty()) {
-                                val currentPost = postList[selectedPostIndex]
-                                // Update post di list: copy post lama, tapi commentCount + 1
-                                postList[selectedPostIndex] = currentPost.copy(commentCount = currentPost.commentCount + 1)
+                                // Ambil post yang sedang dipilih
+                                val targetPost = postList[selectedPostIndex]
+
+                                // Panggil fungsi ViewModel, jangan edit list secara manual
+                                postViewModel.addComment(targetPost, commentText)
                             }
                             showCommentDialog = false // Tutup dialog
                         },
@@ -536,5 +527,11 @@ fun BottomBarAnonymous(navController: NavController, modifier: Modifier = Modifi
 @Composable
 fun AnonymousChatPreview() {
     val dummyController = rememberNavController()
-    AnonymousChatScreen(navController = dummyController, communityViewModel = viewModel(factory = CommunityViewModel.Factory))
+
+    AnonymousChatScreen(
+        navController = dummyController,
+        // Tambahkan baris ini untuk PostViewModel
+        postViewModel = viewModel(factory = PostViewModel.Factory),
+        communityViewModel = viewModel(factory = CommunityViewModel.Factory)
+    )
 }

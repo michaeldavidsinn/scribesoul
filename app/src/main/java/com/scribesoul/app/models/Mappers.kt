@@ -4,6 +4,7 @@ import Journal
 import JournalPage
 import JournalSection
 import androidx.compose.runtime.mutableStateListOf
+import com.scribesoul.app.model.PostData
 
 // 1. UI Model -> DTO (Called when SAVING)
 fun Journal.toDTO(): JournalDTO {
@@ -74,4 +75,29 @@ fun JournalPageDTO.toUIModel(): JournalPage {
         is CalendarPageDTO -> JournalPage.CalendarPage(this.id) // Parse initialMonthStr here
         // Map all your other page types...
     }
+}
+
+// Dari Firebase (DTO) ke UI (PostData)
+fun PostDTO.toUIModel(currentUserId: String): PostData {
+    return PostData(
+        // Cukup ambil id langsung karena keduanya sekarang String
+        id = this.id,
+        title = this.title,
+        description = this.description,
+        initialLikeCount = this.initialLikeCount,
+        commentCount = this.commentCount,
+        date = this.date
+    )
+}
+
+// Dari UI ke Firebase
+fun PostData.toDTO(): PostDTO {
+    return PostDTO(
+        id = this.id, // Pastikan ID juga dipetakan kembali
+        title = this.title,
+        description = this.description,
+        initialLikeCount = this.initialLikeCount,
+        commentCount = this.commentCount,
+        date = this.date
+    )
 }

@@ -21,6 +21,7 @@ import com.scribesoul.app.viewModels.CommunityViewModel
 import com.scribesoul.app.ui.screens.therapist.TherapistHomeScreen
 import com.scribesoul.app.ui.screens.therapist.ClientTherapistScreen
 import com.scribesoul.app.ui.screens.therapist.TherapistScheduleScreen
+import com.scribesoul.app.viewModels.PostViewModel
 
 
 @RequiresApi(Build.VERSION_CODES.VANILLA_ICE_CREAM)
@@ -31,7 +32,8 @@ fun AppNavigation(
     journalListViewModel: JournalListViewModel = viewModel(factory = JournalListViewModel.Factory),
     homeViewModel: HomeViewModel = viewModel(factory = HomeViewModel.Factory),
     drawingViewModel: DrawingViewModel = viewModel(factory = DrawingViewModel.Factory ),
-    communityViewModel: CommunityViewModel = viewModel(factory = CommunityViewModel.Factory)
+    communityViewModel: CommunityViewModel = viewModel(factory = CommunityViewModel.Factory),
+    postViewModel: PostViewModel = viewModel(factory = PostViewModel.Factory)
 
 ) {
 
@@ -109,7 +111,12 @@ fun AppNavigation(
         }
 
         composable("explore") {
-            AnonymousChatScreen(navController, communityViewModel, isTherapist = false)
+            AnonymousChatScreen(
+                navController = navController,
+                postViewModel = postViewModel, // Tambahkan parameter ini
+                communityViewModel = communityViewModel,
+                isTherapist = false
+            )
         }
 
         composable("join_chat") {
@@ -154,7 +161,12 @@ fun AppNavigation(
         }
 
         composable("explore_therapist") {
-            AnonymousChatScreen(navController, communityViewModel, isTherapist = true)
+            AnonymousChatScreen(
+                navController = navController,
+                postViewModel = postViewModel, // Tambahkan parameter ini
+                communityViewModel = communityViewModel,
+                isTherapist = true
+            )
         }
 
         composable("schedule_therapist") {

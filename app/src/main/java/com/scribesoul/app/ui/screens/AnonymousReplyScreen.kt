@@ -1,4 +1,5 @@
 package com.example.scribesoul.ui.screens
+
 import androidx.compose.foundation.*
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
@@ -33,29 +34,33 @@ import com.scribesoul.app.ui.components.InputBar
 import com.scribesoul.app.model.PostData
 import com.scribesoul.app.ui.screens.BottomBarAnonymous
 import com.scribesoul.app.ui.screens.BottomBarTherapistAnonymous
-import com.scribesoul.app.viewModels.CommunityViewModel
+import com.scribesoul.app.viewModels.PostViewModel // IMPORT POSTVIEWMODEL
 
 @Composable
 fun AnonymousReplyScreen(
     navController: NavController,
-    communityViewModel: CommunityViewModel,
-    postId: Int, // Menerima ID Post untuk menampilkan post yang benar
+    postViewModel: PostViewModel, // GANTI JADI PostViewModel
+    postId: String,
     isTherapist: Boolean = false
 ) {
-    // Dummy Data untuk Post Utama (Nantinya ambil dari ViewModel berdasarkan postId)
-    val mainPost = remember {
-        PostData(postId, "Anonymous", "Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua...", 24, 12)
+    val postList by postViewModel.posts.collectAsState()
+    val replyList by postViewModel.comments.collectAsState() // GANTI DUMMY KE INI
+
+    // 2. Ambil data saat pertama kali layar dibuka
+    LaunchedEffect(postId) {
+        postViewModel.fetchComments(postId.toString())
     }
 
-    // Dummy Data untuk Replies
-    val replyList = remember {
-        mutableStateListOf(
-            PostData(101, "Anonymous", "Wah, relate banget kak. Semangat ya!", 5, 0, date = "21-11-2024"),
-            PostData(102, "Anonymous", "I feel you, coding emang kadang bikin burn out.", 2, 0, date = "21-11-2024"),
-            PostData(103, "Anonymous", "Keep going! You're not alone.", 10, 0, date = "21-11-2024"),
-            PostData(104, "Anonymous", "Ada yang mau mabar 2K25 buat refresh otak?", 1, 0, date = "22-11-2024")
-        )
-    }
+    // 3. Cari Post Utama (Perbaikan agar tidak error merah)
+    val mainPost = postList.find { it.id == postId } ?: PostData(
+        id = postId,
+        title = "Anonymous",
+        description = "Loading...",
+        initialLikeCount = 0,
+        commentCount = 0,
+        isLiked = false,
+        date = "..."
+    )
 
     Box(
         modifier = Modifier
@@ -93,7 +98,7 @@ fun AnonymousReplyScreen(
                     )
                 }
                 Text(
-                    text = "Profile", // Sesuai Screenshot Figma
+                    text = "Profile",
                     modifier = Modifier.weight(1f),
                     textAlign = TextAlign.Center,
                     style = MaterialTheme.typography.titleLarge.copy(
@@ -102,22 +107,24 @@ fun AnonymousReplyScreen(
                         color = Color(0xFF2B395B)
                     )
                 )
-                Spacer(modifier = Modifier.width(48.dp)) // Spacer penyeimbang Back Button
+                Spacer(modifier = Modifier.width(48.dp))
             }
 
             // --- CONTENT (POST + REPLIES) ---
             LazyColumn(
                 modifier = Modifier.fillMaxSize(),
-                contentPadding = PaddingValues(bottom = 180.dp) // Ruang untuk Input & BottomBar
+                contentPadding = PaddingValues(bottom = 180.dp)
             ) {
                 // Post Utama
                 item {
                     ReplyCard(
                         post = mainPost,
                         isMainPost = true,
-                        onLikeClick = { /* Logic Like */ }
+                        onLikeClick = {
+                            // HUBUNGKAN LIKE KE VIEWMODEL
+                            postViewModel.toggleLike(mainPost)
+                        }
                     )
-                    // Garis Pemisah (gariswarna)
                     Image(
                         painter = painterResource(id = R.drawable.gariswarna),
                         contentDescription = null,
@@ -130,7 +137,7 @@ fun AnonymousReplyScreen(
                     ReplyCard(
                         post = reply,
                         isMainPost = false,
-                        onLikeClick = { /* Logic Like Reply */ }
+                        onLikeClick = { postViewModel.toggleLike(reply) }
                     )
                     Divider(
                         color = Color(0xFF2B395B).copy(alpha = 0.1f),
@@ -155,7 +162,8 @@ fun AnonymousReplyScreen(
             InputBar(
                 onSend = { message ->
                     if (message.isNotBlank()) {
-                        replyList.add(0, PostData(999, "Anonymous", message, 0, 0, date = "Just Now"))
+                        // 5. Kirim komen ke ViewModel (Firebase)
+                        postViewModel.addComment(mainPost, message)
                     }
                 }
             )
@@ -182,11 +190,9 @@ fun ReplyCard(
         Row(
             modifier = Modifier
                 .padding(vertical = 12.dp)
-                // MODIFIKASI: Jika reply, padding start ditambah (misal dari 28 ke 52)
                 .padding(start = if (isMainPost) 28.dp else 60.dp, end = 24.dp),
             verticalAlignment = Alignment.Top
         ) {
-            // --- AVATAR SECTION ---
             Box(modifier = Modifier.size(if (isMainPost) 52.dp else 38.dp)) {
                 Canvas(modifier = Modifier.matchParentSize()) {
                     drawCircle(
@@ -206,7 +212,6 @@ fun ReplyCard(
 
             Spacer(modifier = Modifier.width(12.dp))
 
-            // --- CONTENT SECTION ---
             Column(modifier = Modifier.weight(1f)) {
                 Row(verticalAlignment = Alignment.CenterVertically) {
                     Text(
@@ -224,20 +229,18 @@ fun ReplyCard(
                         color = Color.Gray
                     )
                     Spacer(modifier = Modifier.weight(1f))
-                    // Ikon MoreVert di kanan atas
                     Icon(Icons.Default.MoreVert, contentDescription = null, tint = Color.Gray, modifier = Modifier.size(16.dp))
                 }
 
                 Spacer(modifier = Modifier.height(2.dp))
 
-                // Row untuk bungkus Teks dan Like (khusus Reply agar Like bisa di kanan)
                 Row(
                     modifier = Modifier.fillMaxWidth(),
                     verticalAlignment = Alignment.CenterVertically
                 ) {
                     Text(
                         text = post.description,
-                        modifier = Modifier.weight(1f), // Teks ambil sisa ruang
+                        modifier = Modifier.weight(1f),
                         style = MaterialTheme.typography.bodyMedium.copy(
                             fontSize = if (isMainPost) 14.sp else 13.sp,
                             lineHeight = 18.sp
@@ -245,7 +248,6 @@ fun ReplyCard(
                         color = Color(0xFF2B395B)
                     )
 
-                    // MODIFIKASI: Jika Reply, tampilkan Like di sebelah kanan teks
                     if (!isMainPost) {
                         Column(
                             horizontalAlignment = Alignment.CenterHorizontally,
@@ -253,22 +255,24 @@ fun ReplyCard(
                                 .padding(start = 8.dp)
                                 .clickable { onLikeClick() }
                         ) {
+                            val iconColor = if (post.isLiked) Color(0xFFE91E63) else Color(0xFF2B395B)
+                            val iconRes = if (post.isLiked) R.drawable.ic_heart_filled else R.drawable.like
                             Icon(
-                                painter = painterResource(id = R.drawable.like),
+                                painter = painterResource(id = iconRes),
                                 contentDescription = null,
                                 modifier = Modifier.size(20.dp),
-                                tint = if (post.isLiked) Color.Red else Color(0xFF2B395B)
+                                tint = iconColor
                             )
+                            val displayLikes = if (post.isLiked) post.initialLikeCount + 1 else post.initialLikeCount
                             Text(
-                                text = "${post.initialLikeCount}",
+                                text = "$displayLikes",
                                 style = MaterialTheme.typography.bodySmall.copy(fontSize = 10.sp),
-                                color = Color(0xFF2B395B)
+                                color = iconColor
                             )
                         }
                     }
                 }
 
-                // MODIFIKASI: Jika Post Utama, Like & Comment tetap di bawah teks
                 if (isMainPost) {
                     Spacer(modifier = Modifier.height(12.dp))
                     Row(horizontalArrangement = Arrangement.spacedBy(16.dp)) {
@@ -278,9 +282,12 @@ fun ReplyCard(
                             Text("${post.commentCount}", style = MaterialTheme.typography.bodySmall, color = Color(0xFF2B395B))
                         }
                         Row(verticalAlignment = Alignment.CenterVertically, modifier = Modifier.clickable { onLikeClick() }) {
-                            Icon(painter = painterResource(id = R.drawable.like), contentDescription = null, modifier = Modifier.size(18.dp), tint = Color(0xFF2B395B))
+                            val likeIconColor = if (post.isLiked) Color(0xFFE91E63) else Color(0xFF2B395B)
+                            val likeIconRes = if (post.isLiked) R.drawable.ic_heart_filled else R.drawable.like
+                            Icon(painter = painterResource(id = likeIconRes), contentDescription = null, modifier = Modifier.size(18.dp), tint = likeIconColor)
                             Spacer(modifier = Modifier.width(4.dp))
-                            Text("${post.initialLikeCount}", style = MaterialTheme.typography.bodySmall, color = Color(0xFF2B395B))
+                            val displayLikes = if (post.isLiked) post.initialLikeCount + 1 else post.initialLikeCount
+                            Text("$displayLikes", style = MaterialTheme.typography.bodySmall, color = likeIconColor)
                         }
                     }
                 }
@@ -292,16 +299,13 @@ fun ReplyCard(
 @Preview(showBackground = true, showSystemUi = true)
 @Composable
 fun AnonymousReplyPreview() {
-    // Mock NavController untuk preview
     val dummyController = rememberNavController()
 
-    // Gunakan factory yang sama dengan yang ada di Screen utama kamu
-    val dummyViewModel: CommunityViewModel = viewModel(factory = CommunityViewModel.Factory)
-
+    // GANTI PREVIEW INI UNTUK MENGGUNAKAN PostViewModel
     AnonymousReplyScreen(
         navController = dummyController,
-        communityViewModel = dummyViewModel,
-        postId = 1, // Dummy ID
-        isTherapist = false // Bisa kamu ganti true untuk cek tampilan terapis
+        postViewModel = viewModel(factory = PostViewModel.Factory),
+        postId = "1",
+        isTherapist = false
     )
 }
