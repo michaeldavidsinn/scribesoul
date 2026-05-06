@@ -3,8 +3,13 @@ package com.scribesoul.app
 import android.content.Context
 import androidx.datastore.core.DataStore
 import androidx.datastore.preferences.core.Preferences
+import com.google.firebase.firestore.FirebaseFirestore
+import com.scribesoul.app.repository.FirebaseGroupChatRepository
 import com.scribesoul.app.repository.JournalRepository
 import com.scribesoul.app.repository.FirebaseJournalRepository
+import com.scribesoul.app.repository.FirebasePostRepository
+import com.scribesoul.app.repository.GroupChatRepository
+import com.scribesoul.app.repository.PostRepository
 import okhttp3.OkHttpClient
 import okhttp3.logging.HttpLoggingInterceptor
 import retrofit2.Retrofit
@@ -13,12 +18,19 @@ import retrofit2.converter.gson.GsonConverterFactory
 interface AppContainer {
 
  val journalRepository: JournalRepository
+ val groupChatRepository: GroupChatRepository
+ val postRepository: PostRepository
 }
 
 class DefaultAppContainer(
     private val context: Context,
     private val userDataStore: DataStore<Preferences>
 ): AppContainer {
+
+    private val firestore: FirebaseFirestore by lazy {
+        FirebaseFirestore.getInstance()
+    }
+
     private val baseUrl = "http://10.0.2.2:3000/"
 
 //    private val journalRetrofitService: JournalService by lazy {
@@ -49,6 +61,15 @@ class DefaultAppContainer(
 
     override val journalRepository: JournalRepository by lazy {
         FirebaseJournalRepository()
+    }
+
+    // 2. Tambahkan Implementasi untuk GroupChatRepository
+    override val groupChatRepository: GroupChatRepository by lazy {
+        FirebaseGroupChatRepository(firestore)
+    }
+
+    override val postRepository: PostRepository by lazy {
+        FirebasePostRepository(firestore)
     }
 
 }
