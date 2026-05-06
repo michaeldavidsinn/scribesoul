@@ -101,3 +101,24 @@ fun PostData.toDTO(): PostDTO {
         date = this.date
     )
 }
+
+fun ChatDTO.toUIModel(): Chat {
+    return Chat(
+        id = this.id,
+        message = this.message,
+        sender = this.sender,
+        senderId = this.senderId,
+        timestamp = this.timestamp
+    )
+}
+
+// Dari UI ke Firebase (DTO)
+fun Chat.toDTO(): ChatDTO {
+    return ChatDTO(
+        id = this.id,
+        message = this.message,
+        sender = this.sender,
+        senderId = this.senderId,
+        timestamp = this.timestamp
+    )
+}

@@ -52,10 +52,13 @@ import com.scribesoul.app.ui.components.ChatBubble
 import androidx.compose.runtime.getValue
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.scribesoul.app.viewModels.CommunityViewModel
+import androidx.compose.runtime.collectAsState
 
 
 @Composable
 fun CommunityGroupScreen(navController: NavController, communityViewModel: CommunityViewModel) {
+
+    val chatList by communityViewModel.chats.collectAsState()
     // --- STATE MANAGEMENT ---
     // State untuk Search
     var isSearchActive by remember { mutableStateOf(false) }
@@ -233,12 +236,19 @@ fun CommunityGroupScreen(navController: NavController, communityViewModel: Commu
 
 
             LazyColumn {
-                items(communityViewModel.chats){ chat ->
+                items(chatList) { chat ->
+                    // Cek apakah chat ini milikku atau orang lain
+                    val isMine = communityViewModel.isMyChat(chat)
+
                     ChatBubble(
                         message = chat.message,
                         sender = chat.sender,
-                        isMine = true,
-                        modifier = Modifier.padding(start = 48.dp, end = 12.dp)
+                        isMine = isMine,
+                        // Ubah padding otomatis: kalau punya kita di kanan, kalau orang lain di kiri
+                        modifier = Modifier.padding(
+                            start = if (isMine) 48.dp else 12.dp,
+                            end = if (isMine) 12.dp else 48.dp
+                        )
                     )
                 }
             }
