@@ -1,4 +1,4 @@
-package com.scribesoul.app.ui.screens
+package com.scribesoul.app.ui.screens.therapist
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
@@ -43,7 +43,7 @@ import com.google.accompanist.flowlayout.FlowRow
 
 @OptIn(ExperimentalLayoutApi::class)
 @Composable
-fun TherapistHistoryScreen(navController: NavController) {
+fun TherapistBirthdayScreen(navController: NavController) {
 
     val gradientBrushs = Brush.horizontalGradient(
         colors = listOf(
@@ -84,7 +84,7 @@ fun TherapistHistoryScreen(navController: NavController) {
                     modifier = Modifier
                         .align(Alignment.CenterStart) // << PENTING: Menyelaraskan item ini ke kiri tengah
                         .clip(RoundedCornerShape(50))
-                        .clickable { navController.popBackStack() }
+                        .clickable { /* TODO: action back */ }
                         .padding(horizontal = 16.dp, vertical = 8.dp)
                 ) {
                     Icon(
@@ -97,7 +97,7 @@ fun TherapistHistoryScreen(navController: NavController) {
 
                 // Teks Judul (otomatis di tengah karena contentAlignment Box)
                 Text(
-                    text = "Therapy History",
+                    text = "Birthday",
                     style = MaterialTheme.typography.titleLarge.copy(
                         fontWeight = FontWeight(650),
                         fontSize = 25.sp
@@ -139,10 +139,10 @@ fun TherapistHistoryScreen(navController: NavController) {
                         )
 
                         val chipItems = listOf(
-                            Triple("Dr. Lisa", "3 hours session", "Date/ Time")
+                            "Birthday" to "December 25, 2004"
                         )
 
-                        chipItems.forEach { (title, subtitle1, subtitle2) ->
+                        chipItems.forEach { (title, subtitle) ->
                             Box(
                                 modifier = Modifier
                                     .background(brush = gradientBrush, shape = RoundedCornerShape(25))
@@ -160,7 +160,7 @@ fun TherapistHistoryScreen(navController: NavController) {
                                     Column(
                                         verticalArrangement = Arrangement.Center
                                     ) {
-                                        // Title
+                                        // Teks Utama
                                         Text(
                                             text = title,
                                             style = MaterialTheme.typography.labelSmall.copy(
@@ -171,20 +171,9 @@ fun TherapistHistoryScreen(navController: NavController) {
                                             maxLines = 1
                                         )
 
-                                        // Subtitle 1
+                                        // Teks Tambahan
                                         Text(
-                                            text = subtitle1,
-                                            style = MaterialTheme.typography.labelSmall.copy(
-                                                fontSize = 11.sp,
-                                                fontWeight = FontWeight.Normal
-                                            ),
-                                            color = Color.Black,
-                                            maxLines = 1
-                                        )
-
-                                        // Subtitle 2 (baru ditambahkan)
-                                        Text(
-                                            text = subtitle2,
+                                            text = subtitle,
                                             style = MaterialTheme.typography.labelSmall.copy(
                                                 fontSize = 11.sp,
                                                 fontWeight = FontWeight.Normal
@@ -194,7 +183,7 @@ fun TherapistHistoryScreen(navController: NavController) {
                                         )
                                     }
 
-                                    // Icon
+                                    // Ikon
                                     Icon(
                                         imageVector = Icons.AutoMirrored.Filled.ArrowForwardIos,
                                         contentDescription = "Arrow Icon",
@@ -216,16 +205,43 @@ fun TherapistHistoryScreen(navController: NavController) {
                 }
             }
         }
+        Column(
+            modifier = Modifier
+                .align(Alignment.BottomCenter)
+                .padding(bottom = 80.dp)
+        ) {
+            Box(
+                modifier = Modifier
+                    .background(
+                        brush = Brush.horizontalGradient(
+                            colors = listOf(
+                                Color(0xFF82D9D2),
+                                Color(0xFF7CC3E6),
+                                Color(0xFF74A8FF)
+                            )
+                        ),
+                        shape = RoundedCornerShape(50)
+                    )
+                    .padding(horizontal = 50.dp, vertical = 13.dp)
+            ) {
+                Text(
+                    text = "BACK",
+                    modifier = Modifier.padding(horizontal = 20.dp),
+                    color = Color.White,
+                    style = MaterialTheme.typography.labelMedium.copy(fontWeight = FontWeight.Bold)
+                )
+            }
+        }
     }
 }
 
 @Preview(showBackground = true)
 @Composable
-fun TherapistHistoryPreview() {
+fun TherapistBirthdayPreview() {
     val context = LocalContext.current
     val navController = remember { NavController(context) }
 
     Surface(modifier = Modifier.fillMaxSize()) {
-        TherapistHistoryScreen(navController = navController)
+        TherapistBirthdayScreen(navController = navController)
     }
 }

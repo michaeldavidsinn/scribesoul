@@ -11,15 +11,22 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.graphics.Color
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
+import androidx.lifecycle.viewModelScope
 //import androidx.lifecycle.ViewModelProvider.AndroidViewModelFactory.Companion.APPLICATION_KEY
 import androidx.lifecycle.viewmodel.initializer
 import androidx.lifecycle.viewmodel.viewModelFactory
 import androidx.navigation.NavController
+import com.scribesoul.app.repository.JournalRepository
 import com.scribesoul.app.ui.screens.ColorPickerTarget
+import kotlinx.coroutines.launch
+import toDTO
+import toUIModel
 
 //import com.example.scribesoul.ScribeSoulApplication
 
-class JournalViewModel : ViewModel() {
+class JournalViewModel(
+    private val repository: JournalRepository
+) : ViewModel() {
     // --- Sections and Pages ---
     private var _sections = mutableStateListOf<JournalSection>()
     val sections: List<JournalSection> = _sections
@@ -42,6 +49,9 @@ class JournalViewModel : ViewModel() {
     fun changeJournalId(jid: Int){
         journalId = jid
     }
+
+    var journalName by mutableStateOf("")
+        private set
 
     // --- UI Flags ---
     var showLayerMenu = mutableStateOf(false)
@@ -82,11 +92,12 @@ class JournalViewModel : ViewModel() {
     }
 
     fun loadJournal(journal: Journal, navController: NavController){
-        _sections.clear()
-        _sections.addAll(journal.sections)
-
         changeJournalId(journal.id)
-        init()
+        journalName = journal.name // Store the real name
+
+        // Start downloading the canvas data from Firebase!
+        loadJournalFromCloud(journal.id)
+
         changeSelectedSection(0)
         navController.navigate("journal")
     }
@@ -133,6 +144,7 @@ class JournalViewModel : ViewModel() {
                     SectionType.WideLinedLargeMargin -> WideLinedLargeMarginPage(firstPageId)
                     SectionType.NarrowLinedSmallMargin -> NarrowLinedSmallMarginPage(firstPageId)
                     SectionType.NarrowLinedLargeMargin -> NarrowLinedLargeMarginPage(firstPageId)
+                    else -> PlainPage(firstPageId)
                 }
             ),
             color = color
@@ -162,14 +174,55 @@ class JournalViewModel : ViewModel() {
             SectionType.NarrowLinedSmallMargin -> NarrowLinedSmallMarginPage(newPageId)
             SectionType.WideLinedLargeMargin -> WideLinedLargeMarginPage(newPageId)
             SectionType.WideLinedSmallMargin -> WideLinedSmallMarginPage(newPageId)
+            else -> PlainPage(newPageId)
         }
         section.pages.add(newPage)
         selectedPageIndex = section.pages.lastIndex
     }
 
 
-    fun saveJournal(){
+    fun saveJournal() {
+        viewModelScope.launch {
+            try {
+                val currentJournal = Journal(
+                    id = journalId,
+                    uid = 0,
+                    name = journalName,
+                    sections = _sections
+                )
 
+                val dtoToSave = currentJournal.toDTO()
+                repository.saveJournal(dtoToSave)
+                println("✅ Firebase Save Successful!")
+            } catch (e: Exception) {
+                // This is where you see serialization errors!
+                println("❌ FIREBASE SAVE ERROR: ${e.localizedMessage}")
+                e.printStackTrace()
+            }
+        }
+    }
+    // --- FIREBASE LOADING ---
+    fun loadJournalFromCloud(id: Int) {
+        viewModelScope.launch {
+            try {
+                val loadedDTO = repository.getJournal(id)
+
+                if (loadedDTO != null) {
+                    val loadedJournal = loadedDTO.toUIModel()
+                    journalId = loadedJournal.id
+                    _sections.clear()
+                    _sections.addAll(loadedJournal.sections)
+                    println("Firebase: Journal successfully loaded!")
+                } else {
+                    // If Firebase returns null, it means this is a brand new journal!
+                    // We must initialize the default Creation page.
+                    _sections.clear()
+                    init()
+                }
+            } catch (e: Exception) {
+                e.printStackTrace()
+            }
+        }
     }
 
     fun convertToJournalUpload(){
@@ -180,7 +233,14 @@ class JournalViewModel : ViewModel() {
 
     companion object {
         val Factory: ViewModelProvider.Factory = viewModelFactory {
-            initializer { JournalViewModel() }
+            initializer {
+                // Get the application context to access the AppContainer
+                val application = (this[ViewModelProvider.AndroidViewModelFactory.APPLICATION_KEY] as com.scribesoul.app.ScribeSoulApplication)
+                val repository = application.container.journalRepository
+
+                // Pass the repository into the ViewModel!
+                JournalViewModel(repository = repository)
+            }
         }
     }
 }

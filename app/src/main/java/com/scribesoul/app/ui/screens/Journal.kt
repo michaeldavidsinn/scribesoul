@@ -37,6 +37,7 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Slider
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.key
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -85,12 +86,14 @@ import com.scribesoul.app.viewModels.JournalListViewModel
 
 //fix undo redo to implement for each pages, scribble still needs revamping
 
+
 @Composable
 fun JournalScreen(navController: NavController, journalViewModel: JournalViewModel,journalListViewModel: JournalListViewModel, drawingViewModel: DrawingViewModel){
     val section = journalViewModel.sections.getOrNull(journalViewModel.selectedSectionIndex)
     val page = section?.pages?.getOrNull(journalViewModel.selectedPageIndex)
     BackHandler {
         journalViewModel.syncBackTo(journalListViewModel)
+        journalViewModel.saveJournal() // <-- ADD THIS to force save on back!
         navController.navigate("journalList")
     }
 
@@ -353,6 +356,8 @@ fun JournalScreen(navController: NavController, journalViewModel: JournalViewMod
                         DropdownMenuItem(
                             text = { Text("Exit") },
                             onClick = {
+                                journalViewModel.syncBackTo(journalListViewModel)
+                                journalViewModel.saveJournal() // <-- ADD THIS HERE TOO!
                                 navController.popBackStack()
                             }
                         )

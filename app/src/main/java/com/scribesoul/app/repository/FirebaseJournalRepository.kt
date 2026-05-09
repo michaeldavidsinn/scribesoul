@@ -9,6 +9,7 @@ import com.scribesoul.app.models.JournalDTO
 import kotlinx.coroutines.tasks.await
 import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
+import com.google.firebase.storage.StorageException
 
 class FirebaseJournalRepository : JournalRepository {
 
@@ -53,12 +54,23 @@ class FirebaseJournalRepository : JournalRepository {
             val filePath = "users/$uid/journals/journal_$journalId.json"
             val storageRef = storage.reference.child(filePath)
 
-            // Download into memory (Max 15MB limit set here)
             val maxDownloadSizeBytes: Long = 15 * 1024 * 1024
             val bytes = storageRef.getBytes(maxDownloadSizeBytes).await()
 
             json.decodeFromString<JournalDTO>(String(bytes))
+
+        } catch (e: StorageException) {
+            // Check if the error is just a missing file (404)
+            if (e.errorCode == StorageException.ERROR_OBJECT_NOT_FOUND) {
+                println("Firebase: No existing save file found. Starting a fresh journal.")
+                null
+            } else {
+                // If it's a different storage error (like missing permissions), print it
+                e.printStackTrace()
+                null
+            }
         } catch (e: Exception) {
+            // Catch any JSON parsing errors
             e.printStackTrace()
             null
         }

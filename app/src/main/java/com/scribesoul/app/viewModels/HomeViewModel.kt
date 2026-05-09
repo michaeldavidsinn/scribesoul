@@ -4,20 +4,23 @@ import androidx.compose.runtime.*
 import androidx.compose.runtime.snapshots.SnapshotStateList
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
+import androidx.lifecycle.viewModelScope
 import androidx.lifecycle.viewmodel.initializer
 import androidx.lifecycle.viewmodel.viewModelFactory
+import com.google.firebase.auth.FirebaseAuth
 import com.scribesoul.app.models.Habit
 import com.scribesoul.app.models.User
+import com.scribesoul.app.models.toDTO
+import com.scribesoul.app.models.toUIModel
+import com.scribesoul.app.repository.FirebaseHabitRepository
+import kotlinx.coroutines.launch
 import java.time.LocalDate
 import java.time.LocalTime
 
-class HomeViewModel : ViewModel() {
-    var user by mutableStateOf<User>(User(
-        id = 1,
-        name = "Jake",
-        email = "Jake@gmail.com",
-        birthday = LocalDate.of(2005, 11, 6)
-    ))
+class HomeViewModel(
+    private val habitRepository: FirebaseHabitRepository
+) : ViewModel() {
+    var userName by mutableStateOf("User")
         private set
 
     val currentTime = LocalTime.now()
@@ -39,6 +42,13 @@ class HomeViewModel : ViewModel() {
     var read by mutableIntStateOf(0)
 
     init {
+        val firebaseUser = FirebaseAuth.getInstance().currentUser
+        if (firebaseUser != null) {
+            // Use the display name if they have one, otherwise use the first part of their email
+            userName = firebaseUser.displayName?.takeIf { it.isNotBlank() }
+                ?: firebaseUser.email?.substringBefore("@")?.replaceFirstChar { it.uppercase() }
+                        ?: "User"
+        }
         // Create a 7-day week rangez
         val today = currentDay
         val daysToSubtract = today.dayOfWeek.value % 7L
@@ -47,7 +57,15 @@ class HomeViewModel : ViewModel() {
             dates.add(startOfWeek.plusDays(i.toLong()))
         }
 
+        loadHabits()
+    }
 
+    private fun loadHabits() {
+        viewModelScope.launch {
+            val loadedDTOs = habitRepository.getHabits()
+            _habits.clear()
+            _habits.addAll(loadedDTOs.map { it.toUIModel() })
+        }
     }
 
     fun getGreetinng(): String{
@@ -73,6 +91,9 @@ class HomeViewModel : ViewModel() {
             goal = goal
         )
         _habits.add(newHabit)
+        viewModelScope.launch {
+            habitRepository.saveHabit(newHabit.toDTO())
+        }
     }
 
     // ────────────────────────────────────────────────────────────────────────────────
@@ -101,7 +122,7 @@ class HomeViewModel : ViewModel() {
     // ────────────────────────────────────────────────────────────────────────────────
     // 3. Update a habit for a specific day
     // ────────────────────────────────────────────────────────────────────────────────
-    fun updateHabitForDay(habit: Habit, day: LocalDate, newValue: Int) {
+    fun updateHabitForDay(habit: Habit, day: LocalDate, newValue: Int, syncToCloud: Boolean = true) {
         val existing = habit.value.firstOrNull { it.first == day }
 
         if (existing != null) {
@@ -111,6 +132,12 @@ class HomeViewModel : ViewModel() {
         } else {
             // Create new entry
             habit.value.add(day to newValue)
+        }
+
+        if (syncToCloud) {
+            viewModelScope.launch {
+                habitRepository.saveHabit(habit.toDTO())
+            }
         }
     }
 
@@ -150,7 +177,11 @@ class HomeViewModel : ViewModel() {
 
     companion object {
         val Factory: ViewModelProvider.Factory = viewModelFactory {
-            initializer { HomeViewModel() }
+            initializer {
+                // 5. Provide the repository to the ViewModel
+                val application = (this[ViewModelProvider.AndroidViewModelFactory.APPLICATION_KEY] as com.scribesoul.app.ScribeSoulApplication)
+                HomeViewModel(application.container.habitRepository)
+            }
         }
     }
 }

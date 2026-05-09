@@ -1,4 +1,4 @@
-package com.scribesoul.app.ui.screens
+package com.scribesoul.app.ui.screens.therapist
 
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
@@ -143,7 +143,7 @@ fun TherapistProfileScreen(navController: NavController, homeViewModel: HomeView
 
             // Name
             Text(
-                text = homeViewModel.user.name,
+                text = homeViewModel.userName,
                 fontSize = 20.sp,
                 fontWeight = FontWeight.Bold,
                 color = Color(0xFF2B395B),

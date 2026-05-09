@@ -20,7 +20,15 @@ import com.scribesoul.app.ui.screens.therapist.ClientDetailScreen
 import com.scribesoul.app.viewModels.CommunityViewModel
 import com.scribesoul.app.ui.screens.therapist.TherapistHomeScreen
 import com.scribesoul.app.ui.screens.therapist.ClientTherapistScreen
+import com.scribesoul.app.ui.screens.therapist.TherapistAccountInfoScreen
+import com.scribesoul.app.ui.screens.therapist.TherapistBirthdayScreen
+import com.scribesoul.app.ui.screens.therapist.TherapistChangePasswordScreen
+import com.scribesoul.app.ui.screens.therapist.TherapistHistoryScreen
+import com.scribesoul.app.ui.screens.therapist.TherapistPrivacyPolicyScreen
+import com.scribesoul.app.ui.screens.therapist.TherapistProAndConsScreen
+import com.scribesoul.app.ui.screens.therapist.TherapistProfileScreen
 import com.scribesoul.app.ui.screens.therapist.TherapistScheduleScreen
+import com.scribesoul.app.viewModels.AuthViewModel
 import com.scribesoul.app.viewModels.PostViewModel
 
 
@@ -33,11 +41,12 @@ fun AppNavigation(
     homeViewModel: HomeViewModel = viewModel(factory = HomeViewModel.Factory),
     drawingViewModel: DrawingViewModel = viewModel(factory = DrawingViewModel.Factory ),
     communityViewModel: CommunityViewModel = viewModel(factory = CommunityViewModel.Factory),
-    postViewModel: PostViewModel = viewModel(factory = PostViewModel.Factory)
+    postViewModel: PostViewModel = viewModel(factory = PostViewModel.Factory),
+    authViewModel: AuthViewModel = viewModel(factory = AuthViewModel.Factory)
 
 ) {
-
-    NavHost(navController = navController, startDestination = "home",
+    val startScreen = if (authViewModel.isLoggedIn) "home" else "initial"
+    NavHost(navController = navController, startDestination = startScreen,
         enterTransition = {
             EnterTransition.None
         },
@@ -60,6 +69,18 @@ fun AppNavigation(
 
         composable("therapist") {
             TherapistRecommendationScreen(navController)
+        }
+
+        composable("initial") {
+            InitialScreen(navController)
+        }
+
+        composable("login") {
+            Login(navController, viewModel = authViewModel)
+        }
+
+        composable("register") {
+            Register(navController, viewModel = authViewModel)
         }
 
         composable(

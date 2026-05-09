@@ -1,4 +1,4 @@
-package com.scribesoul.app.ui.screens
+package com.scribesoul.app.ui.screens.therapist
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
@@ -42,10 +42,12 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
 import com.scribesoul.app.viewModels.HomeViewModel
 import com.google.accompanist.flowlayout.FlowRow
+import com.google.firebase.auth.FirebaseAuth
 
 @OptIn(ExperimentalLayoutApi::class)
 @Composable
 fun TherapistAccountInfoScreen(navController: NavController, homeViewModel: HomeViewModel) {
+    val currentUserEmail = FirebaseAuth.getInstance().currentUser?.email ?: "No email linked"
 
     val gradientBrushs = Brush.horizontalGradient(
         colors = listOf(
@@ -141,8 +143,8 @@ fun TherapistAccountInfoScreen(navController: NavController, homeViewModel: Home
                         )
 
                         val chipItems = listOf(
-                            "E-mail" to homeViewModel.user.email,
-                            "Birthday" to homeViewModel.user.birthday.toString(),
+                            "E-mail" to currentUserEmail,
+                            "Birthday" to "Not set",
                             "Password" to "Change password"
                         )
 

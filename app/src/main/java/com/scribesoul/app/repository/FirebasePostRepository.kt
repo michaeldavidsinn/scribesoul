@@ -4,12 +4,12 @@ import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.firestore.Query
 import com.scribesoul.app.model.PostData
 import com.scribesoul.app.models.PostDTO
-import com.scribesoul.app.models.toDTO
-import com.scribesoul.app.models.toUIModel
 import kotlinx.coroutines.channels.awaitClose
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.callbackFlow
 import kotlinx.coroutines.tasks.await
+import toDTO
+import toUIModel
 
 class FirebasePostRepository(
     private val firestore: FirebaseFirestore

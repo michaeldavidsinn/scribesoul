@@ -13,22 +13,11 @@ import com.scribesoul.app.models.ShapeItem
 import java.time.LocalDate
 import java.time.YearMonth
 
-sealed class SectionType {
-    object Plain : SectionType()
-    object Habits : SectionType()
-    object Calendar : SectionType()
-    object Creation : SectionType()
-    object Todo : SectionType()
-    object Dotted: SectionType()
-    object Mood: SectionType()
-    object WideLined: SectionType()
-    object WideLinedSmallMargin: SectionType()
-    object WideLinedLargeMargin: SectionType()
-    object NarrowLined: SectionType()
-    object NarrowLinedSmallMargin: SectionType()
-    object NarrowLinedLargeMargin: SectionType()
-    object SmallGrid: SectionType()
-    object LargeGrid: SectionType()
+enum class SectionType {
+    Plain, Habits, Calendar, Creation, Todo, Dotted, Mood,
+    WideLined, WideLinedSmallMargin, WideLinedLargeMargin,
+    NarrowLined, NarrowLinedSmallMargin, NarrowLinedLargeMargin,
+    SmallGrid, LargeGrid
 }
 
 data class FirestoreJournalMeta(

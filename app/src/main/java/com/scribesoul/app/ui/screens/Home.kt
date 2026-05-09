@@ -108,8 +108,6 @@ fun HomeScreen(navController: NavController, viewModel: HomeViewModel) {
     var showTimerDialog by remember { mutableStateOf(false) }
 
 
-    var name by remember {mutableStateOf("")}
-
     if (showAddHabit) {
         AddHabitDialog(
             onDismiss = { showAddHabit = false },
@@ -208,7 +206,7 @@ fun HomeScreen(navController: NavController, viewModel: HomeViewModel) {
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 Column {
-                    Text("Hi, ${viewModel.user.name}",
+                    Text("Hi, ${viewModel.userName}",
                         style =
                             TextStyle(
                                 fontSize = 16.sp,
