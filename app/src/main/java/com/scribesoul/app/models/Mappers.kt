@@ -122,3 +122,163 @@ fun Chat.toDTO(): ChatDTO {
         timestamp = this.timestamp
     )
 }
+
+// ==========================================================
+// THERAPIST MAPPERS
+// ==========================================================
+
+fun TherapistDTO.toUIModel(): Therapist {
+    return Therapist(
+        id = this.id,
+        name = this.name,
+        title = this.title,
+        strNumber = this.strNumber,
+        pricePerSession = this.pricePerSession,
+        experienceYears = this.experienceYears,
+        totalClients = this.totalClients,
+        rating = this.rating,
+        reviewCount = this.reviewCount,
+        biography = this.biography,
+        specializations = this.specializations,
+        languages = this.languages,
+        therapyApproaches = this.therapyApproaches,
+        educations = this.educations.map { it.toUIModel() },
+        workPractices = this.workPractices
+    )
+}
+
+fun Therapist.toDTO(): TherapistDTO {
+    return TherapistDTO(
+        id = this.id,
+        name = this.name,
+        title = this.title,
+        strNumber = this.strNumber,
+        pricePerSession = this.pricePerSession,
+        experienceYears = this.experienceYears,
+        totalClients = this.totalClients,
+        rating = this.rating,
+        reviewCount = this.reviewCount,
+        biography = this.biography,
+        specializations = this.specializations,
+        languages = this.languages,
+        therapyApproaches = this.therapyApproaches,
+        educations = this.educations.map { it.toDTO() },
+        workPractices = this.workPractices
+    )
+}
+
+fun EducationDTO.toUIModel(): Education = Education(
+    institution = this.institution,
+    degree = this.degree,
+    year = this.year
+)
+
+fun Education.toDTO(): EducationDTO = EducationDTO(
+    institution = this.institution,
+    degree = this.degree,
+    year = this.year
+)
+
+// ==========================================================
+// CLIENT INFO MAPPERS
+// ==========================================================
+
+fun ClientInfoDTO.toUIModel(): ClientInfo {
+    val enumUrgency = try {
+        UrgencyLevel.valueOf(this.urgencyLevel)
+    } catch (e: Exception) {
+        UrgencyLevel.MILD
+    }
+
+    return ClientInfo(
+        clientId = this.clientId,
+        name = this.name,
+        mainCondition = this.mainCondition,
+        urgencyLevel = enumUrgency,
+        lastSessionDate = this.lastSessionDate,
+        totalSessions = this.totalSessions,
+        latestNote = this.latestNote
+    )
+}
+
+fun ClientInfo.toDTO(): ClientInfoDTO {
+    return ClientInfoDTO(
+        clientId = this.clientId,
+        name = this.name,
+        mainCondition = this.mainCondition,
+        urgencyLevel = this.urgencyLevel.name,
+        lastSessionDate = this.lastSessionDate,
+        totalSessions = this.totalSessions,
+        latestNote = this.latestNote
+    )
+}
+
+// ==========================================================
+// SESSION MAPPERS
+// ==========================================================
+
+fun TherapySessionDTO.toUIModel(): TherapySession {
+    val enumStatus = try {
+        SessionStatus.valueOf(this.status)
+    } catch (e: Exception) {
+        SessionStatus.SCHEDULED
+    }
+
+    return TherapySession(
+        sessionId = this.sessionId,
+        therapistId = this.therapistId,
+        clientId = this.clientId,
+        dateTimestamp = this.dateTimestamp,
+        durationMinutes = this.durationMinutes,
+        location = this.location,
+        status = enumStatus,
+        therapistNote = this.therapistNote,
+        billingId = this.billingId
+    )
+}
+
+fun TherapySession.toDTO(): TherapySessionDTO {
+    return TherapySessionDTO(
+        sessionId = this.sessionId,
+        therapistId = this.therapistId,
+        clientId = this.clientId,
+        dateTimestamp = this.dateTimestamp,
+        durationMinutes = this.durationMinutes,
+        location = this.location,
+        status = this.status.name,
+        therapistNote = this.therapistNote,
+        billingId = this.billingId
+    )
+}
+
+fun BillingDTO.toUIModel(): Billing {
+    val enumStatus = try {
+        PaymentStatus.valueOf(this.status)
+    } catch (e: Exception) {
+        PaymentStatus.PENDING
+    }
+
+    return Billing(
+        billingId = this.billingId,
+        sessionId = this.sessionId,
+        paymentMethod = this.paymentMethod,
+        accountIdentifier = this.accountIdentifier,
+        payerFirstName = this.payerFirstName,
+        payerLastName = this.payerLastName,
+        amount = this.amount,
+        status = enumStatus
+    )
+}
+
+fun Billing.toDTO(): BillingDTO {
+    return BillingDTO(
+        billingId = this.billingId,
+        sessionId = this.sessionId,
+        paymentMethod = this.paymentMethod,
+        accountIdentifier = this.accountIdentifier,
+        payerFirstName = this.payerFirstName,
+        payerLastName = this.payerLastName,
+        amount = this.amount,
+        status = this.status.name
+    )
+}
