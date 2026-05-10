@@ -28,6 +28,15 @@ import com.scribesoul.app.ui.screens.therapist.TherapistPrivacyPolicyScreen
 import com.scribesoul.app.ui.screens.therapist.TherapistProAndConsScreen
 import com.scribesoul.app.ui.screens.therapist.TherapistProfileScreen
 import com.scribesoul.app.ui.screens.therapist.TherapistScheduleScreen
+import com.scribesoul.app.ui.screens.therapist.onboarding.TherapistDescriptionInfo
+import com.scribesoul.app.ui.screens.therapist.onboarding.TherapistExperienceInfo
+import com.scribesoul.app.ui.screens.therapist.onboarding.TherapistGenderScreen
+import com.scribesoul.app.ui.screens.therapist.onboarding.TherapistLicenseInfo
+import com.scribesoul.app.ui.screens.therapist.onboarding.TherapistPersonalInfo
+import com.scribesoul.app.ui.screens.therapist.onboarding.TherapistProfessionalInfo
+import com.scribesoul.app.ui.screens.therapist.onboarding.TherapistQualificationInfo
+import com.scribesoul.app.ui.screens.therapist.onboarding.TherapistSpecializationScreen
+import com.scribesoul.app.ui.screens.therapist.onboarding.TherapistTherapyApproachScreen
 import com.scribesoul.app.viewModels.AuthViewModel
 import com.scribesoul.app.viewModels.PostViewModel
 
@@ -162,6 +171,43 @@ fun AppNavigation(
         }
         composable("anxiety") {
             MentalTip(navController)
+        }
+
+        // --- ONBOARDING THERAPIST FLOW ---
+        composable("therapist_personal_info") {
+            TherapistPersonalInfo(navController)
+        }
+
+        composable("therapist_gender") {
+            TherapistGenderScreen(navController)
+        }
+
+        composable("therapist_professional_info") {
+            TherapistProfessionalInfo(navController)
+        }
+
+        composable("therapist_specialization") {
+            TherapistSpecializationScreen(navController)
+        }
+
+        composable("therapist_description") {
+            TherapistDescriptionInfo(navController)
+        }
+
+        composable("therapist_qualification") {
+            TherapistQualificationInfo(navController)
+        }
+
+        composable("therapist_experience") {
+            TherapistExperienceInfo(navController)
+        }
+
+        composable("therapist_license") {
+            TherapistLicenseInfo(navController)
+        }
+
+        composable("therapist_approaches") {
+            TherapistTherapyApproachScreen(navController)
         }
 
         // --- NAVIGASI KHUSUS THERAPIST ---
