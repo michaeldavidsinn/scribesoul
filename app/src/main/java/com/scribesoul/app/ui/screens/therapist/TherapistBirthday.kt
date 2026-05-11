@@ -40,10 +40,25 @@ import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.platform.LocalContext
 import androidx.navigation.NavController
 import com.google.accompanist.flowlayout.FlowRow
+import com.scribesoul.app.viewModels.TherapistHomeViewModel
 
 @OptIn(ExperimentalLayoutApi::class)
 @Composable
-fun TherapistBirthdayScreen(navController: NavController) {
+fun TherapistBirthdayScreen(
+    navController: NavController,
+    viewModel: TherapistHomeViewModel
+) {
+    val context = LocalContext.current
+    val birthdayDisplay = viewModel.therapistProfile?.birthday ?: "Not set"
+
+    val datePickerDialog = android.app.DatePickerDialog(
+        context,
+        { _, year, month, dayOfMonth ->
+            val formattedDate = "$dayOfMonth/${month + 1}/$year"
+            viewModel.updateBirthday(formattedDate) // Kirim ke Firebase
+        },
+        2000, 0, 1 // Tanggal default jika data kosong
+    )
 
     val gradientBrushs = Brush.horizontalGradient(
         colors = listOf(
@@ -84,7 +99,7 @@ fun TherapistBirthdayScreen(navController: NavController) {
                     modifier = Modifier
                         .align(Alignment.CenterStart) // << PENTING: Menyelaraskan item ini ke kiri tengah
                         .clip(RoundedCornerShape(50))
-                        .clickable { /* TODO: action back */ }
+                        .clickable { navController.popBackStack() }
                         .padding(horizontal = 16.dp, vertical = 8.dp)
                 ) {
                     Icon(
@@ -153,6 +168,7 @@ fun TherapistBirthdayScreen(navController: NavController) {
                                         .fillMaxWidth()
                                         .clip(RoundedCornerShape(25))
                                         .background(Color.White)
+                                        .clickable { datePickerDialog.show() }
                                         .padding(horizontal = 24.dp, vertical = 20.dp),
                                     horizontalArrangement = Arrangement.SpaceBetween,
                                     verticalAlignment = Alignment.CenterVertically
@@ -173,7 +189,7 @@ fun TherapistBirthdayScreen(navController: NavController) {
 
                                         // Teks Tambahan
                                         Text(
-                                            text = subtitle,
+                                            text = birthdayDisplay,
                                             style = MaterialTheme.typography.labelSmall.copy(
                                                 fontSize = 11.sp,
                                                 fontWeight = FontWeight.Normal
@@ -232,16 +248,5 @@ fun TherapistBirthdayScreen(navController: NavController) {
                 )
             }
         }
-    }
-}
-
-@Preview(showBackground = true)
-@Composable
-fun TherapistBirthdayPreview() {
-    val context = LocalContext.current
-    val navController = remember { NavController(context) }
-
-    Surface(modifier = Modifier.fillMaxSize()) {
-        TherapistBirthdayScreen(navController = navController)
     }
 }

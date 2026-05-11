@@ -21,6 +21,7 @@ import androidx.navigation.NavController
 import androidx.compose.ui.platform.LocalContext
 import com.scribesoul.app.ui.components.OnboardingTemplate
 import com.scribesoul.app.ui.components.OnboardingTextField
+import com.scribesoul.app.viewModels.TherapistOnboardingViewModel
 
 // 1. Data model untuk riwayat pekerjaan
 data class WorkExperienceEntry(
@@ -30,10 +31,10 @@ data class WorkExperienceEntry(
 )
 
 @Composable
-fun TherapistExperienceInfo(navController: NavController) {
-
-    // 2. List dinamis untuk menampung inputan pekerjaan
-    val experienceList = remember { mutableStateListOf(WorkExperienceEntry()) }
+fun TherapistExperienceInfo(
+    navController: NavController,
+    onboardingViewModel: TherapistOnboardingViewModel
+) {
 
     val darkBlue = Color(0xFF2B395B)
     val lightBlueTitle = Color(0xFF74A8FF)
@@ -56,20 +57,10 @@ fun TherapistExperienceInfo(navController: NavController) {
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
 
-            // 3. Render setiap blok inputan berdasarkan isi list
-            experienceList.forEachIndexed { index, experience ->
+            onboardingViewModel.experienceList.forEachIndexed { index, experience ->
 
-                // Jarak antar blok jika lebih dari satu
                 if (index > 0) {
                     Spacer(modifier = Modifier.height(30.dp))
-                    // Opsional: Text pemisah kecil
-                    Text(
-                        text = "",
-                        fontSize = 14.sp,
-                        color = lightBlueTitle,
-                        fontWeight = FontWeight.SemiBold,
-                        modifier = Modifier.padding(bottom = 12.dp)
-                    )
                 }
 
                 Column(
@@ -80,7 +71,9 @@ fun TherapistExperienceInfo(navController: NavController) {
                     OnboardingTextField(
                         value = experience.clinicName,
                         onValueChange = { newValue ->
-                            experienceList[index] = experienceList[index].copy(clinicName = newValue)
+                            // Update langsung ke list di ViewModel menggunakan .copy()
+                            onboardingViewModel.experienceList[index] =
+                                onboardingViewModel.experienceList[index].copy(clinicName = newValue)
                         },
                         placeholder = "Name of Clinic / Institution"
                     )
@@ -88,7 +81,8 @@ fun TherapistExperienceInfo(navController: NavController) {
                     OnboardingTextField(
                         value = experience.position,
                         onValueChange = { newValue ->
-                            experienceList[index] = experienceList[index].copy(position = newValue)
+                            onboardingViewModel.experienceList[index] =
+                                onboardingViewModel.experienceList[index].copy(position = newValue)
                         },
                         placeholder = "Position"
                     )
@@ -96,7 +90,8 @@ fun TherapistExperienceInfo(navController: NavController) {
                     OnboardingTextField(
                         value = experience.yearOfPractice,
                         onValueChange = { newValue ->
-                            experienceList[index] = experienceList[index].copy(yearOfPractice = newValue)
+                            onboardingViewModel.experienceList[index] =
+                                onboardingViewModel.experienceList[index].copy(yearOfPractice = newValue)
                         },
                         placeholder = "Year of Practice"
                     )
@@ -112,7 +107,7 @@ fun TherapistExperienceInfo(navController: NavController) {
                     .clip(RoundedCornerShape(50))
                     .background(Color.White)
                     .clickable {
-                        experienceList.add(WorkExperienceEntry())
+                        onboardingViewModel.experienceList.add(WorkExperienceEntry())
                     }
                     .padding(horizontal = 24.dp, vertical = 18.dp),
                 contentAlignment = Alignment.Center
@@ -129,10 +124,4 @@ fun TherapistExperienceInfo(navController: NavController) {
             Spacer(modifier = Modifier.height(120.dp))
         }
     }
-}
-
-@Preview(showBackground = true)
-@Composable
-fun PreviewTherapistExperienceInfo() {
-    TherapistExperienceInfo(navController = NavController(LocalContext.current))
 }

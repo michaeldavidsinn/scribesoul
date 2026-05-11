@@ -10,6 +10,7 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -33,12 +34,33 @@ import com.scribesoul.app.ui.components.SchedulePill
 import com.scribesoul.app.ui.navigation.BottomNavItem
 import com.scribesoul.app.viewModels.HomeViewModel
 import com.scribesoul.R
+import com.scribesoul.app.utils.DateTimeUtils.formatTimeRange
+import com.scribesoul.app.utils.DateTimeUtils.getFormattedDate
+import com.scribesoul.app.utils.DateTimeUtils.isSameDay
+import com.scribesoul.app.viewModels.TherapistHomeViewModel
+import java.time.LocalDate
 
 @Composable
-fun TherapistHomeScreen(navController: NavController, viewModel: HomeViewModel) {
+fun TherapistHomeScreen(navController: NavController, viewModel: TherapistHomeViewModel) {
+
+    LaunchedEffect(Unit) {
+        viewModel.loadTherapistDashboard()
+    }
+
     val bgGradient = Brush.linearGradient(
         colors = listOf(Color(0xFF82D9D2), Color(0xFF74A8FF))
     )
+
+    val pillColors = listOf(
+        Color(0xFF74A8FF), // Biru
+        Color(0xFFFFC107), // Kuning
+        Color(0xFFD10000)  // Merah
+    )
+
+    val today = LocalDate.now()
+    val tomorrow = today.plusDays(1)
+    val wednesday = today.with(java.time.temporal.TemporalAdjusters.nextOrSame(java.time.DayOfWeek.WEDNESDAY))
+
 
     Box(
         modifier = Modifier
@@ -63,7 +85,7 @@ fun TherapistHomeScreen(navController: NavController, viewModel: HomeViewModel) 
                 ) {
                     Column {
                         Text(
-                            "Hi, Dr. Lisa", // Bisa diganti viewModel.user.name
+                            "Hi, ${viewModel.therapistProfile?.name ?: "Therapist"}",
                             style = TextStyle(
                                 fontSize = 16.sp,
                                 fontFamily = FontFamily(Font(R.font.verdana)),
@@ -120,56 +142,41 @@ fun TherapistHomeScreen(navController: NavController, viewModel: HomeViewModel) 
             // --- SECTION JADWAL (Dikecilkan) ---
             item {
                 Box(
-                    modifier = Modifier
-                        .padding(horizontal = 16.dp)
-                        .fillMaxWidth()
-                        .clip(RoundedCornerShape(20.dp))
-                        .background(Color(0xFFE0ECFF))
-                        .padding(14.dp) // Pengecilan padding internal dari 20.dp ke 14.dp
+                    modifier = Modifier.padding(horizontal = 16.dp).fillMaxWidth().clip(RoundedCornerShape(20.dp)).background(Color(0xFFE0ECFF)).padding(14.dp)
                 ) {
-                    Row(
-                        modifier = Modifier.fillMaxWidth(),
-                        horizontalArrangement = Arrangement.spacedBy(16.dp) // Jarak antar kolom dipersempit
-                    ) {
-                        // KOLOM KIRI
+                    Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(16.dp)) {
+                        // KOLOM KIRI (TODAY / MONDAY)
                         Column(modifier = Modifier.weight(1f)) {
-                            Text(
-                                text = "Monday",
-                                style = TextStyle(fontSize = 14.sp, color = Color(0xFF2B395B)) // Font lebih kecil
-                            )
-                            Text(
-                                text = "23",
-                                style = TextStyle(
-                                    fontSize = 36.sp, // Pengecilan dari 48.sp ke 36.sp
-                                    fontWeight = FontWeight.Bold,
-                                    color = Color(0xFF2B395B)
-                                )
-                            )
+                            Text(text = today.dayOfWeek.name.lowercase().replaceFirstChar { it.uppercase() }, style = TextStyle(fontSize = 14.sp, color = Color(0xFF2B395B)))
+                            Text(text = today.dayOfMonth.toString(), style = TextStyle(fontSize = 36.sp, fontWeight = FontWeight.Bold, color = Color(0xFF2B395B)))
                             Spacer(modifier = Modifier.height(10.dp))
-                            SchedulePill("Jake", "Anxiety", "09.00 - 10.00", Color(0xFF74A8FF))
-                            SchedulePill("Jane Hoppers", "Depression", "10.00 - 11.00", Color(0xFFFFC107))
-                            SchedulePill("Howard", "PTSD", "14.00 - 16.00", Color(0xFFD10000))
+
+                            // Ambil sesi hari ini
+                            val todaySessions = viewModel.therapistSessions.filter { isSameDay(it.dateTimestamp, today) }
+                            todaySessions.forEachIndexed { index, session ->
+                                SchedulePill(
+                                    name = "Client ${session.clientId.takeLast(4)}",
+                                    category = "Session",
+                                    time = formatTimeRange(session.dateTimestamp, session.durationMinutes),
+                                    statusColor = pillColors[index % pillColors.size] // Ganti dari 'color' ke 'statusColor'
+                                )
+                            }
                         }
 
-                        // KOLOM KANAN
+                        // KOLOM KANAN (TOMORROW & WEDNESDAY)
                         Column(modifier = Modifier.weight(1.2f)) {
-                            Text(
-                                text = "Tomorrow",
-                                style = TextStyle(fontSize = 14.sp, fontWeight = FontWeight.Bold, color = Color(0xFF2B395B))
-                            )
-                            Spacer(modifier = Modifier.height(4.dp))
-                            SchedulePill("Jake", "Anxiety", "09.00 - 10.00", Color(0xFF74A8FF))
-                            SchedulePill("Jane Hoppers", "Depression", "09.00 - 10.00", Color(0xFFFFC107))
-                            Text("see other schedules", fontSize = 9.sp, color = Color.Gray, modifier = Modifier.padding(start = 4.dp))
+                            Text(text = "Tomorrow", style = TextStyle(fontSize = 14.sp, fontWeight = FontWeight.Bold, color = Color(0xFF2B395B)))
+                            val tomorrowSessions = viewModel.therapistSessions.filter { isSameDay(it.dateTimestamp, tomorrow) }
+                            tomorrowSessions.take(2).forEachIndexed { index, session ->
+                                SchedulePill("Client ${session.clientId.takeLast(4)}", "Session", formatTimeRange(session.dateTimestamp, session.durationMinutes), pillColors[(index + 1) % pillColors.size])
+                            }
+                            if (tomorrowSessions.size > 2) Text("see other schedules", fontSize = 9.sp, color = Color.Gray)
 
                             Spacer(modifier = Modifier.height(12.dp))
-
-                            Text(
-                                text = "Wednesday, 25 Mar",
-                                style = TextStyle(fontSize = 13.sp, fontWeight = FontWeight.Bold, color = Color(0xFF2B395B))
-                            )
-                            Spacer(modifier = Modifier.height(4.dp))
-                            SchedulePill("Jake", "Anxiety", "09.00 - 10.00", Color(0xFF74A8FF))
+                            Text(text = "Wed, ${wednesday.dayOfMonth} ${wednesday.month.name.take(3)}", style = TextStyle(fontSize = 13.sp, fontWeight = FontWeight.Bold, color = Color(0xFF2B395B)))
+                            viewModel.therapistSessions.filter { isSameDay(it.dateTimestamp, wednesday) }.take(1).forEach { session ->
+                                SchedulePill("Client ${session.clientId.takeLast(4)}", "Session", formatTimeRange(session.dateTimestamp, session.durationMinutes), pillColors[0])
+                            }
                         }
                     }
                 }
@@ -178,28 +185,19 @@ fun TherapistHomeScreen(navController: NavController, viewModel: HomeViewModel) 
 // --- SECTION ACTIVE CLIENTS (Dikecilkan) ---
             item {
                 Column(modifier = Modifier.padding(bottom = 20.dp)) {
-                    Text(
-                        text = "Active Clients",
-                        style = TextStyle(
-                            fontSize = 24.sp, // Pengecilan dari 32.sp ke 24.sp
-                            fontWeight = FontWeight.Bold,
-                            color = Color(0xFF2B395B)
-                        ),
-                        modifier = Modifier.padding(start = 16.dp, top = 20.dp, bottom = 12.dp)
-                    )
-
-                    Box(
-                        modifier = Modifier
-                            .padding(horizontal = 16.dp)
-                            .fillMaxWidth()
-                            .clip(RoundedCornerShape(20.dp))
-                            .background(Color(0xFFFFEBF2))
-                            .padding(14.dp) // Pengecilan padding internal
-                    ) {
+                    Text("Active Clients", style = TextStyle(fontSize = 24.sp, fontWeight = FontWeight.Bold, color = Color(0xFF2B395B)), modifier = Modifier.padding(start = 16.dp, top = 20.dp, bottom = 12.dp))
+                    Box(modifier = Modifier.padding(horizontal = 16.dp).fillMaxWidth().clip(RoundedCornerShape(20.dp)).background(Color(0xFFFFEBF2)).padding(14.dp)) {
                         Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
-                            ActiveClientItem("Sarah Gibson", "Anxiety", "Last Session: 3 days ago", Color(0xFF74A8FF))
-                            ActiveClientItem("Jane Hoppers", "Depression", "Last Session: Yesterday", Color(0xFFFFC107))
-                            ActiveClientItem("Eloise Bridgerton", "PTSD", "Last Session: 21 March 2026", Color(0xFFD10000))
+                            // Mencari client unik dari riwayat sesi
+                            val uniqueClients = viewModel.therapistSessions.distinctBy { it.clientId }.take(3)
+                            uniqueClients.forEachIndexed { index, session ->
+                                ActiveClientItem(
+                                    name = "Client ${session.clientId.takeLast(6)}",
+                                    category = "Mental Health",
+                                    sessionDetail = "Last: ${getFormattedDate(session.dateTimestamp)}",
+                                    statusColor = pillColors[index % pillColors.size]
+                                )
+                            }
                         }
                     }
                 }
@@ -301,7 +299,7 @@ fun TherapistHomePreview() {
     val navController = NavController(context)
 
     // Menggunakan viewModel factory yang sudah kamu miliki di kode sebelumnya
-    val viewModel: HomeViewModel = viewModel(factory = HomeViewModel.Factory)
+    val viewModel: TherapistHomeViewModel = viewModel(factory = HomeViewModel.Factory)
 
     Surface(
         modifier = Modifier.fillMaxSize(),

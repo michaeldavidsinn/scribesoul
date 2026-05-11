@@ -14,13 +14,13 @@ import androidx.navigation.NavController
 import androidx.compose.ui.platform.LocalContext
 import com.scribesoul.app.ui.components.OnboardingTemplate
 import com.scribesoul.app.ui.components.OnboardingTextField
+import com.scribesoul.app.viewModels.TherapistOnboardingViewModel
 
 @Composable
-fun TherapistProfessionalInfo(navController: NavController) {
-    // State untuk menyimpan input
-    var professionalTitle by remember { mutableStateOf("") }
-    var yearsOfExperience by remember { mutableStateOf("") }
-    var sessionFee by remember { mutableStateOf("") }
+fun TherapistProfessionalInfo(
+    navController: NavController,
+    onboardingViewModel: TherapistOnboardingViewModel
+) {
 
     val darkBlue = Color(0xFF2B395B)
 
@@ -42,8 +42,8 @@ fun TherapistProfessionalInfo(navController: NavController) {
             // 1. Professional Title Input
             Column(horizontalAlignment = Alignment.CenterHorizontally) {
                 OnboardingTextField(
-                    value = professionalTitle,
-                    onValueChange = { professionalTitle = it },
+                    value = onboardingViewModel.professionalTitle, // Pindah ke ViewModel
+                    onValueChange = { onboardingViewModel.professionalTitle = it },
                     placeholder = "Professional Title"
                 )
                 Text(
@@ -57,23 +57,17 @@ fun TherapistProfessionalInfo(navController: NavController) {
 
             // 2. Years of Experience Input
             OnboardingTextField(
-                value = yearsOfExperience,
-                onValueChange = { yearsOfExperience = it },
+                value = onboardingViewModel.yearsOfExperience, // Pindah ke ViewModel
+                onValueChange = { onboardingViewModel.yearsOfExperience = it },
                 placeholder = "Years of Experience"
             )
 
             // 3. Session Fee Input
             OnboardingTextField(
-                value = sessionFee,
-                onValueChange = { sessionFee = it },
+                value = onboardingViewModel.sessionFee, // Pindah ke ViewModel
+                onValueChange = { onboardingViewModel.sessionFee = it },
                 placeholder = "Session Fee (per session)"
             )
         }
     }
-}
-
-@Preview(showBackground = true)
-@Composable
-fun PreviewTherapistProfessionalInfo() {
-    TherapistProfessionalInfo(navController = NavController(LocalContext.current))
 }

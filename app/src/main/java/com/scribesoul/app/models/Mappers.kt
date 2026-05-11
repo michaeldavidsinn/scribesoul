@@ -262,6 +262,7 @@ fun TherapistDTO.toUIModel(): Therapist {
         id = this.id,
         name = this.name,
         title = this.title,
+        birthday = this.birthday,
         strNumber = this.strNumber,
         pricePerSession = this.pricePerSession,
         experienceYears = this.experienceYears,

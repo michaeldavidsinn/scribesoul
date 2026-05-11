@@ -11,7 +11,7 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
-import androidx.compose.runtime.Composable
+import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -33,11 +33,32 @@ import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
 import com.scribesoul.app.ui.navigation.BottomNavItem
-import com.scribesoul.app.viewModels.HomeViewModel
+import com.scribesoul.app.viewModels.TherapistHomeViewModel
 import com.scribesoul.R
+import com.scribesoul.app.utils.DateTimeUtils
+import java.time.Instant
+import java.time.LocalDate
+import java.time.ZoneId
 
 @Composable
-fun TherapistScheduleScreen(navController: NavController, viewModel: HomeViewModel) {
+fun TherapistScheduleScreen(
+    navController: NavController,
+    viewModel: TherapistHomeViewModel
+) {
+    // Ambil data dari dashboard saat pertama kali dibuka
+    LaunchedEffect(Unit) {
+        viewModel.loadTherapistDashboard()
+    }
+
+    val pillColors = listOf(Color(0xFF74A8FF), Color(0xFFFFC107), Color(0xFFD10000))
+
+    // Logic untuk mendapatkan 7 hari dalam seminggu (dari hari Senin minggu ini)
+    val weekDays = remember {
+        val today = LocalDate.now()
+        val startOfWeek = today.with(java.time.DayOfWeek.MONDAY)
+        (0..6).map { startOfWeek.plusDays(it.toLong()) }
+    }
+
     val bgGradient = Brush.linearGradient(
         colors = listOf(Color(0xFF82D9D2), Color(0xFF74A8FF))
     )
@@ -48,7 +69,7 @@ fun TherapistScheduleScreen(navController: NavController, viewModel: HomeViewMod
             .background(Color.White)
     ) {
         Column(modifier = Modifier.fillMaxSize()) {
-            // --- HEADER (Persis seperti TherapistHomeScreen) ---
+            // --- HEADER (Dinamis berdasarkan Profile & Greeting) ---
             Row(
                 modifier = Modifier
                     .padding(start = 16.dp, end = 16.dp, top = 56.dp, bottom = 10.dp)
@@ -57,7 +78,7 @@ fun TherapistScheduleScreen(navController: NavController, viewModel: HomeViewMod
             ) {
                 Column {
                     Text(
-                        "Hi, Dr. Lisa",
+                        "Hi, ${viewModel.therapistProfile?.name ?: "Therapist"}",
                         style = TextStyle(
                             fontSize = 16.sp,
                             fontFamily = FontFamily(Font(R.font.verdana)),
@@ -65,7 +86,7 @@ fun TherapistScheduleScreen(navController: NavController, viewModel: HomeViewMod
                         )
                     )
                     Text(
-                        "Good Morning",
+                        viewModel.getGreeting(),
                         style = TextStyle(
                             fontSize = 24.sp,
                             fontFamily = FontFamily(Font(R.font.verdana_bold)),
@@ -95,6 +116,7 @@ fun TherapistScheduleScreen(navController: NavController, viewModel: HomeViewMod
                             .clip(CircleShape)
                             .background(brush = bgGradient, shape = CircleShape)
                             .padding(3.dp)
+                            .clickable { navController.navigate("profile") }
                     ) {
                         Box(modifier = Modifier.clip(CircleShape).background(Color.White).padding(10.dp)) {
                             Image(
@@ -108,18 +130,24 @@ fun TherapistScheduleScreen(navController: NavController, viewModel: HomeViewMod
                 }
             }
 
-            // --- DATE SELECTOR (Mewakili hari dalam seminggu) ---
+            // --- DATE SELECTOR (Dinamis berdasarkan Hari Terpilih) ---
             Row(
                 modifier = Modifier
                     .fillMaxWidth()
                     .padding(vertical = 10.dp),
                 horizontalArrangement = Arrangement.SpaceEvenly
             ) {
-                val days = listOf("Sat" to "21", "Sun" to "22", "Mon" to "23", "Tue" to "24", "Wed" to "25", "Thu" to "26", "Fri" to "27")
-                days.forEach { (day, date) ->
-                    val isSelected = date == "23" // Contoh hari aktif sesuai Figma
-                    Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                        Text(day, fontSize = 12.sp, color = if (isSelected) Color(0xFF2B395B) else Color.Gray)
+                weekDays.forEach { date ->
+                    val isSelected = date == viewModel.selectedDate
+                    Column(
+                        horizontalAlignment = Alignment.CenterHorizontally,
+                        modifier = Modifier.clickable { viewModel.selectDate(date) }
+                    ) {
+                        Text(
+                            text = date.dayOfWeek.name.take(3).lowercase().replaceFirstChar { it.uppercase() },
+                            fontSize = 12.sp,
+                            color = if (isSelected) Color(0xFF2B395B) else Color.Gray
+                        )
                         Box(
                             modifier = Modifier
                                 .size(32.dp)
@@ -128,7 +156,7 @@ fun TherapistScheduleScreen(navController: NavController, viewModel: HomeViewMod
                             contentAlignment = Alignment.Center
                         ) {
                             Text(
-                                date,
+                                text = date.dayOfMonth.toString(),
                                 fontSize = 14.sp,
                                 fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Normal,
                                 color = if (isSelected) Color.White else Color.Black
@@ -148,7 +176,7 @@ fun TherapistScheduleScreen(navController: NavController, viewModel: HomeViewMod
                     .fillMaxWidth()
                     .weight(1f)
                     .clip(RoundedCornerShape(24.dp))
-                    .background(Color(0xFFBCD5FF)) // Background biru muda kontainer
+                    .background(Color(0xFFBCD5FF))
             ) {
                 Column(modifier = Modifier.fillMaxSize()) {
                     Text(
@@ -173,12 +201,12 @@ fun TherapistScheduleScreen(navController: NavController, viewModel: HomeViewMod
                                 Row(
                                     modifier = Modifier
                                         .fillMaxWidth()
-                                        .height(30.dp), // Sesuaikan tinggi row agar tidak terlalu rapat
+                                        .height(60.dp), // Tinggi 60.dp agar 1 jam = 60dp untuk math pill
                                     verticalAlignment = Alignment.Top
                                 ) {
                                     Text(
                                         text = hour,
-                                        modifier = Modifier.width(55.dp).padding(start = 8.dp), // Lebar disesuaikan sedikit
+                                        modifier = Modifier.width(55.dp).padding(start = 8.dp),
                                         style = TextStyle(
                                             fontSize = 12.sp,
                                             fontWeight = FontWeight.Bold,
@@ -187,56 +215,69 @@ fun TherapistScheduleScreen(navController: NavController, viewModel: HomeViewMod
                                         )
                                     )
 
-                                    // --- TAMBAHKAN SPACER DI SINI ---
                                     Spacer(modifier = Modifier.width(12.dp))
 
                                     HorizontalDivider(
                                         modifier = Modifier
-                                            .padding(top = 8.dp) // Sesuaikan posisi vertikal garis agar sejajar tengah teks
-                                            .weight(1f), // Agar garis memenuhi sisa ruang ke kanan
-                                        thickness = 1.dp, // Ketebalan 1.dp biasanya lebih rapi untuk grid
-                                        color = Color.White.copy(alpha = 0.3f) // Transparansi dikurangi sedikit agar lebih halus
+                                            .padding(top = 8.dp)
+                                            .weight(1f),
+                                        thickness = 1.dp,
+                                        color = Color.White.copy(alpha = 0.3f)
                                     )
                                 }
                             }
                         }
 
-                        // Menaruh "Pills" Jadwal pada posisi tertentu
-                        Column(modifier = Modifier.padding(start = 55.dp)) {
-                            ScheduleGridItem("Jake", "Anxiety", "09:00 - 10:30", Color(0xFF74A8FF), durationHours = 1.5f)
+                        // Menaruh "Pills" Jadwal Dinamis dari Firebase
+                        Column(modifier = Modifier.padding(start = 65.dp)) {
+                            val sessionsToday = viewModel.getSessionsForSelectedDate()
 
-// Sesi 1 jam
-                            ScheduleGridItem("Jane Hoppers", "Depression", "10:30 - 11:30", Color(0xFFFFC107), durationHours = 1f)
+                            sessionsToday.forEachIndexed { index, session ->
+                                val startTime = Instant.ofEpochMilli(session.dateTimestamp)
+                                    .atZone(ZoneId.systemDefault()).toLocalTime()
+
+                                // Kalkulasi posisi vertikal: (Jam * 60dp) + Menit
+                                val topOffset = (startTime.hour * 60).dp + (startTime.minute).dp
+
+                                Box(modifier = Modifier.padding(top = if (index == 0) topOffset else 0.dp)) {
+                                    ScheduleGridItem(
+                                        name = "Client ${session.clientId.takeLast(4)}",
+                                        category = "Session",
+                                        time = DateTimeUtils.formatTimeRange(session.dateTimestamp, session.durationMinutes),
+                                        indicatorColor = pillColors[index % pillColors.size],
+                                        durationHours = session.durationMinutes / 60f
+                                    )
+                                }
+                            }
                         }
                     }
                 }
             }
 
-            Spacer(modifier = Modifier.height(100.dp)) // Ruang untuk BottomBar
+            Spacer(modifier = Modifier.height(100.dp))
         }
 
-        // --- BOTTOM NAVBAR (Tetap menggunakan BottomBarTherapist) ---
         Box(modifier = Modifier.align(Alignment.BottomCenter)) {
             BottomBarTherapistSchedule(navController)
         }
     }
 }
+
 @Composable
 fun ScheduleGridItem(
     name: String,
     category: String,
     time: String,
     indicatorColor: Color,
-    durationHours: Float = 1f // Tambahkan parameter durasi (misal 1.5f untuk 1,5 jam)
+    durationHours: Float = 1f
 ) {
-    // Menghitung tinggi berdasarkan durasi. Jika 1 jam = 60dp, maka durasi * 60.
     val cardHeight = (durationHours * 60).dp
 
     Box(
         modifier = Modifier
             .padding(top = 2.dp, bottom = 2.dp, end = 16.dp)
-            .width(200.dp) // Sedikit dikecilkan lebar totalnya
-            .height(cardHeight) // Tinggi dinamis berdasarkan durasi sesi
+            .width(200.dp)
+            .height(cardHeight)
             .shadow(
                 elevation = 4.dp,
                 shape = RoundedCornerShape(topStart = 4.dp, bottomStart = 4.dp, topEnd = 24.dp, bottomEnd = 24.dp)
@@ -248,11 +289,10 @@ fun ScheduleGridItem(
             modifier = Modifier.fillMaxSize(),
             verticalAlignment = Alignment.CenterVertically
         ) {
-            // Garis indikator tetap mengikuti tinggi kartu
             Box(
                 modifier = Modifier
                     .fillMaxHeight()
-                    .width(5.dp) // Sedikit lebih tipis
+                    .width(5.dp)
                     .background(indicatorColor)
             )
 
@@ -260,12 +300,12 @@ fun ScheduleGridItem(
                 modifier = Modifier
                     .padding(horizontal = 12.dp, vertical = 4.dp)
                     .fillMaxHeight(),
-                verticalArrangement = Arrangement.Center // Teks tetap di tengah secara vertikal
+                verticalArrangement = Arrangement.Center
             ) {
                 Text(
                     text = name,
                     style = TextStyle(
-                        fontSize = 13.sp, // Dikecilkan dari 16.sp
+                        fontSize = 13.sp,
                         fontFamily = FontFamily(Font(R.font.verdana_bold)),
                         fontWeight = FontWeight.Bold,
                         color = Color(0xFF2B395B)
@@ -276,7 +316,7 @@ fun ScheduleGridItem(
                 Text(
                     text = category,
                     style = TextStyle(
-                        fontSize = 10.sp, // Dikecilkan dari 11.sp
+                        fontSize = 10.sp,
                         fontFamily = FontFamily(Font(R.font.verdana)),
                         color = Color(0xFF2B395B).copy(alpha = 0.7f)
                     ),
@@ -285,7 +325,7 @@ fun ScheduleGridItem(
                 Text(
                     text = time,
                     style = TextStyle(
-                        fontSize = 10.sp, // Dikecilkan dari 11.sp
+                        fontSize = 10.sp,
                         fontFamily = FontFamily(Font(R.font.verdana)),
                         color = Color(0xFF2B395B).copy(alpha = 0.7f)
                     )
@@ -320,27 +360,19 @@ fun BottomBarTherapistSchedule(navController: NavController, modifier: Modifier 
         ) {
             BottomNavItem(
                 R.drawable.home_icon, "Home", iconSize = 46.dp, onClick = {
-                    navController.navigate("home_therapist") {
-                        launchSingleTop = true
-                    }
+                    navController.navigate("home_therapist") { launchSingleTop = true }
                 })
 
             BottomNavItem(R.drawable.therapist_icon, "Clients", iconSize = 25.dp, onClick = {
-                navController.navigate("client_therapist") {
-                    launchSingleTop = true
-                }
+                navController.navigate("client_therapist") { launchSingleTop = true }
             })
 
             BottomNavItem(R.drawable.explore_icon, "Explore", iconSize = 25.dp, onClick = {
-                navController.navigate("explore_therapist") {
-                    launchSingleTop = true
-                }
+                navController.navigate("explore_therapist") { launchSingleTop = true }
             })
 
             BottomNavItem(R.drawable.schedule_icon_clicked, "Schedule", iconSize = 50.dp, onClick = {
-                navController.navigate("schedule_therapist") {
-                    launchSingleTop = true
-                }
+                navController.navigate("schedule_therapist") { launchSingleTop = true }
             })
         }
     }
@@ -351,13 +383,11 @@ fun BottomBarTherapistSchedule(navController: NavController, modifier: Modifier 
 fun TherapistSchedulePreview() {
     val context = LocalContext.current
     val navController = NavController(context)
-
-    // Menggunakan factory yang sama dengan HomeScreen kamu
-    val viewModel: HomeViewModel = viewModel(factory = HomeViewModel.Factory)
+    val viewModel: TherapistHomeViewModel = viewModel(factory = TherapistHomeViewModel.Factory)
 
     Surface(
         modifier = Modifier.fillMaxSize(),
-        color = Color.White // Latar belakang putih bersih sesuai figma
+        color = Color.White
     ) {
         TherapistScheduleScreen(
             navController = navController,

@@ -13,6 +13,7 @@ import com.scribesoul.app.repository.FirebaseJournalRepository
 import com.scribesoul.app.repository.FirebasePostRepository
 import com.scribesoul.app.repository.GroupChatRepository
 import com.scribesoul.app.repository.PostRepository
+import com.scribesoul.app.repository.TherapistRepository
 import okhttp3.OkHttpClient
 import okhttp3.logging.HttpLoggingInterceptor
 import retrofit2.Retrofit
@@ -25,6 +26,7 @@ interface AppContainer {
  val postRepository: PostRepository
  val authRepository: AuthRepository
  val habitRepository: FirebaseHabitRepository
+ val therapistRepository: TherapistRepository
 }
 
 class DefaultAppContainer(
@@ -85,4 +87,7 @@ class DefaultAppContainer(
         FirebaseAuthRepository()
     }
 
+    override val therapistRepository: TherapistRepository by lazy {
+        TherapistRepository()
+    }
 }

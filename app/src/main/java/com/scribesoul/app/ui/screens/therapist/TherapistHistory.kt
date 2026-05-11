@@ -27,12 +27,15 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.ExperimentalLayoutApi
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowForwardIos
 import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.material3.Icon
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.remember
 import androidx.compose.ui.draw.drawWithCache
 import androidx.compose.ui.graphics.BlendMode
@@ -40,10 +43,18 @@ import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.platform.LocalContext
 import androidx.navigation.NavController
 import com.google.accompanist.flowlayout.FlowRow
+import com.scribesoul.app.viewModels.TherapistHomeViewModel
 
 @OptIn(ExperimentalLayoutApi::class)
 @Composable
-fun TherapistHistoryScreen(navController: NavController) {
+fun TherapistHistoryScreen(
+    navController: NavController,
+    viewModel: TherapistHomeViewModel
+) {
+
+    LaunchedEffect(Unit) {
+        viewModel.loadTherapistDashboard()
+    }
 
     val gradientBrushs = Brush.horizontalGradient(
         colors = listOf(
@@ -73,37 +84,21 @@ fun TherapistHistoryScreen(navController: NavController) {
             horizontalAlignment = Alignment.CenterHorizontally
 
         ) {
-            Box(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(vertical = 8.dp), // Menambahkan sedikit padding vertikal untuk header
-                contentAlignment = Alignment.Center // Menyelaraskan item di tengah secara default
-            ) {
-                // Tombol Kembali (diselaraskan ke kiri)
+            Box(modifier = Modifier.fillMaxWidth().padding(vertical = 8.dp), contentAlignment = Alignment.Center) {
                 Box(
                     modifier = Modifier
-                        .align(Alignment.CenterStart) // << PENTING: Menyelaraskan item ini ke kiri tengah
+                        .align(Alignment.CenterStart)
                         .clip(RoundedCornerShape(50))
                         .clickable { navController.popBackStack() }
                         .padding(horizontal = 16.dp, vertical = 8.dp)
                 ) {
-                    Icon(
-                        imageVector = Icons.Default.ArrowBack,
-                        contentDescription = "Back",
-                        tint = Color.Black,
-                        modifier = Modifier.size(20.dp)
-                    )
+                    Icon(imageVector = Icons.Default.ArrowBack, contentDescription = "Back", tint = Color.Black, modifier = Modifier.size(20.dp))
                 }
 
-                // Teks Judul (otomatis di tengah karena contentAlignment Box)
                 Text(
                     text = "Therapy History",
-                    style = MaterialTheme.typography.titleLarge.copy(
-                        fontWeight = FontWeight(650),
-                        fontSize = 25.sp
-                    ),
-                    color = Color(0xFF2B395B),
-                    textAlign = TextAlign.Center
+                    style = MaterialTheme.typography.titleLarge.copy(fontWeight = FontWeight(650), fontSize = 25.sp),
+                    color = Color(0xFF2B395B)
                 )
             }
 
@@ -157,58 +152,39 @@ fun TherapistHistoryScreen(navController: NavController) {
                                     horizontalArrangement = Arrangement.SpaceBetween,
                                     verticalAlignment = Alignment.CenterVertically
                                 ) {
-                                    Column(
-                                        verticalArrangement = Arrangement.Center
+                                    LazyColumn(
+                                        modifier = Modifier.fillMaxSize(),
+                                        verticalArrangement = Arrangement.spacedBy(12.dp),
+                                        contentPadding = PaddingValues(vertical = 10.dp)
                                     ) {
-                                        // Title
-                                        Text(
-                                            text = title,
-                                            style = MaterialTheme.typography.labelSmall.copy(
-                                                fontSize = 14.sp,
-                                                fontWeight = FontWeight.ExtraBold
-                                            ),
-                                            color = Color(0xFF2B395B),
-                                            maxLines = 1
-                                        )
+                                        val sessions = viewModel.therapistSessions
 
-                                        // Subtitle 1
-                                        Text(
-                                            text = subtitle1,
-                                            style = MaterialTheme.typography.labelSmall.copy(
-                                                fontSize = 11.sp,
-                                                fontWeight = FontWeight.Normal
-                                            ),
-                                            color = Color.Black,
-                                            maxLines = 1
-                                        )
-
-                                        // Subtitle 2 (baru ditambahkan)
-                                        Text(
-                                            text = subtitle2,
-                                            style = MaterialTheme.typography.labelSmall.copy(
-                                                fontSize = 11.sp,
-                                                fontWeight = FontWeight.Normal
-                                            ),
-                                            color = Color.Black,
-                                            maxLines = 1
-                                        )
-                                    }
-
-                                    // Icon
-                                    Icon(
-                                        imageVector = Icons.AutoMirrored.Filled.ArrowForwardIos,
-                                        contentDescription = "Arrow Icon",
-                                        tint = Color.Unspecified,
-                                        modifier = Modifier
-                                            .size(18.dp)
-                                            .graphicsLayer(alpha = 0.99f)
-                                            .drawWithCache {
-                                                onDrawWithContent {
-                                                    drawContent()
-                                                    drawRect(gradientBrushs, blendMode = BlendMode.SrcAtop)
-                                                }
+                                        if (sessions.isEmpty()) {
+                                            item {
+                                                Text(
+                                                    "No history found",
+                                                    modifier = Modifier.fillMaxWidth().padding(top = 50.dp),
+                                                    textAlign = TextAlign.Center,
+                                                    color = Color.Gray
+                                                )
                                             }
-                                    )
+                                        } else {
+                                            items(sessions.size) { index ->
+                                                val session = sessions[index]
+
+                                                // Cari nama client dari list client yang ada di ViewModel
+                                                val clientName = viewModel.therapistClients
+                                                    .find { it.clientId == session.clientId }?.name ?: "Client ${session.clientId.takeLast(4)}"
+
+                                                HistoryCardItem(
+                                                    title = clientName,
+                                                    subtitle1 = "${session.durationMinutes} minutes session",
+                                                    subtitle2 = com.scribesoul.app.utils.DateTimeUtils.getFormattedDate(session.dateTimestamp),
+                                                    gradientBrushs = gradientBrushs
+                                                )
+                                            }
+                                        }
+                                    }
                                 }
                             }
                         }
@@ -219,13 +195,62 @@ fun TherapistHistoryScreen(navController: NavController) {
     }
 }
 
-@Preview(showBackground = true)
 @Composable
-fun TherapistHistoryPreview() {
-    val context = LocalContext.current
-    val navController = remember { NavController(context) }
+fun HistoryCardItem(
+    title: String,
+    subtitle1: String,
+    subtitle2: String,
+    gradientBrushs: Brush
+) {
+    val gradientBrush = Brush.horizontalGradient(
+        colors = listOf(Color(0xFFFFF47A), Color(0xFFFFA8CF), Color(0xFFA774FF))
+    )
 
-    Surface(modifier = Modifier.fillMaxSize()) {
-        TherapistHistoryScreen(navController = navController)
+    Box(
+        modifier = Modifier
+            .background(brush = gradientBrush, shape = RoundedCornerShape(25))
+            .padding(1.dp)
+    ) {
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .clip(RoundedCornerShape(25))
+                .background(Color.White)
+                .padding(horizontal = 24.dp, vertical = 20.dp),
+            horizontalArrangement = Arrangement.SpaceBetween,
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Column(verticalArrangement = Arrangement.Center) {
+                Text(
+                    text = title,
+                    style = MaterialTheme.typography.labelSmall.copy(fontSize = 14.sp, fontWeight = FontWeight.ExtraBold),
+                    color = Color(0xFF2B395B)
+                )
+                Text(
+                    text = subtitle1,
+                    style = MaterialTheme.typography.labelSmall.copy(fontSize = 11.sp, fontWeight = FontWeight.Normal),
+                    color = Color.Black
+                )
+                Text(
+                    text = subtitle2,
+                    style = MaterialTheme.typography.labelSmall.copy(fontSize = 11.sp, fontWeight = FontWeight.Normal),
+                    color = Color.Black
+                )
+            }
+
+            Icon(
+                imageVector = Icons.AutoMirrored.Filled.ArrowForwardIos,
+                contentDescription = "Arrow Icon",
+                modifier = Modifier
+                    .size(18.dp)
+                    .graphicsLayer(alpha = 0.99f)
+                    .drawWithCache {
+                        onDrawWithContent {
+                            drawContent()
+                            drawRect(gradientBrushs, blendMode = BlendMode.SrcAtop)
+                        }
+                    }
+            )
+        }
     }
 }

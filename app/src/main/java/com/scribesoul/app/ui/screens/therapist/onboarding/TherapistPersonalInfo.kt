@@ -21,13 +21,13 @@ import androidx.navigation.NavController
 import androidx.compose.ui.platform.LocalContext
 import com.scribesoul.app.ui.components.OnboardingTemplate
 import com.scribesoul.app.ui.components.OnboardingTextField
+import com.scribesoul.app.viewModels.TherapistOnboardingViewModel
 
 @Composable
-fun TherapistPersonalInfo(navController: NavController) {
-    var fullName by remember { mutableStateOf("") }
-    var phoneNumber by remember { mutableStateOf("") }
-    var dateOfBirth by remember { mutableStateOf("") }
-
+fun TherapistPersonalInfo(
+    navController: NavController,
+    onboardingViewModel: TherapistOnboardingViewModel // Hubungkan ke sini
+) {
     OnboardingTemplate(
         title = "Personal\nInformation",
         backgroundColor = Color(0xFFBCD5FF),
@@ -41,8 +41,8 @@ fun TherapistPersonalInfo(navController: NavController) {
         ) {
             Column(horizontalAlignment = Alignment.CenterHorizontally) {
                 OnboardingTextField(
-                    value = fullName,
-                    onValueChange = { fullName = it },
+                    value = onboardingViewModel.fullName, // Pakai data dari ViewModel
+                    onValueChange = { onboardingViewModel.fullName = it }, // Update ke ViewModel
                     placeholder = "Full Name"
                 )
                 Text(
@@ -54,23 +54,16 @@ fun TherapistPersonalInfo(navController: NavController) {
             }
 
             OnboardingTextField(
-                value = phoneNumber,
-                onValueChange = { phoneNumber = it },
+                value = onboardingViewModel.phoneNumber, // Pakai data dari ViewModel
+                onValueChange = { onboardingViewModel.phoneNumber = it },
                 placeholder = "Phone Numbers"
             )
 
             OnboardingTextField(
-                value = dateOfBirth,
-                onValueChange = { dateOfBirth = it },
+                value = onboardingViewModel.dateOfBirth, // Pakai data dari ViewModel
+                onValueChange = { onboardingViewModel.dateOfBirth = it },
                 placeholder = "Date of Birth"
             )
         }
     }
-}
-
-
-@Preview(showBackground = true)
-@Composable
-fun PreviewTherapistPersonalInfo() {
-    TherapistPersonalInfo(navController = NavController(LocalContext.current))
 }

@@ -22,6 +22,7 @@ import androidx.navigation.NavController
 import androidx.compose.ui.platform.LocalContext
 import com.scribesoul.app.ui.components.OnboardingTemplate
 import com.scribesoul.app.ui.components.OnboardingTextField
+import com.scribesoul.app.viewModels.TherapistOnboardingViewModel
 
 data class EducationEntry(
     val degree: String = "",
@@ -30,9 +31,10 @@ data class EducationEntry(
 )
 
 @Composable
-fun TherapistQualificationInfo(navController: NavController) {
-
-    val educationList = remember { mutableStateListOf(EducationEntry()) }
+fun TherapistQualificationInfo(
+    navController: NavController,
+    onboardingViewModel: TherapistOnboardingViewModel
+) {
 
     val darkBlue = Color(0xFF2B395B)
     val lightBlueTitle = Color(0xFF74A8FF)
@@ -56,17 +58,10 @@ fun TherapistQualificationInfo(navController: NavController) {
         ) {
 
             // 4. Loop melalui list untuk merender setiap blok input
-            educationList.forEachIndexed { index, education ->
+            onboardingViewModel.educationList.forEachIndexed { index, education ->
 
-                // Header opsional jika ada lebih dari 1 pendidikan
                 if (index > 0) {
-                    Text(
-                        text = "",
-                        fontSize = 14.sp,
-                        color = lightBlueTitle,
-                        fontWeight = FontWeight.SemiBold,
-                        modifier = Modifier.padding(top = 20.dp, bottom = 12.dp)
-                    )
+                    Spacer(modifier = Modifier.height(20.dp)) // Beri sedikit jarak antar form
                 }
 
                 Column(
@@ -77,8 +72,9 @@ fun TherapistQualificationInfo(navController: NavController) {
                     OnboardingTextField(
                         value = education.degree,
                         onValueChange = { newValue ->
-                            // Update list pada index tertentu
-                            educationList[index] = educationList[index].copy(degree = newValue)
+                            // Update langsung ke list di ViewModel
+                            onboardingViewModel.educationList[index] =
+                                onboardingViewModel.educationList[index].copy(degree = newValue)
                         },
                         placeholder = "Degree"
                     )
@@ -86,7 +82,8 @@ fun TherapistQualificationInfo(navController: NavController) {
                     OnboardingTextField(
                         value = education.university,
                         onValueChange = { newValue ->
-                            educationList[index] = educationList[index].copy(university = newValue)
+                            onboardingViewModel.educationList[index] =
+                                onboardingViewModel.educationList[index].copy(university = newValue)
                         },
                         placeholder = "University"
                     )
@@ -94,7 +91,8 @@ fun TherapistQualificationInfo(navController: NavController) {
                     OnboardingTextField(
                         value = education.graduationYear,
                         onValueChange = { newValue ->
-                            educationList[index] = educationList[index].copy(graduationYear = newValue)
+                            onboardingViewModel.educationList[index] =
+                                onboardingViewModel.educationList[index].copy(graduationYear = newValue)
                         },
                         placeholder = "Year of Graduation"
                     )
@@ -110,7 +108,7 @@ fun TherapistQualificationInfo(navController: NavController) {
                     .clip(RoundedCornerShape(50))
                     .background(Color.White)
                     .clickable {
-                        educationList.add(EducationEntry())
+                        onboardingViewModel.educationList.add(EducationEntry())
                     }
                     .padding(horizontal = 24.dp, vertical = 18.dp), // Ditinggikan sedikit sesuai request sebelumnya
                 contentAlignment = Alignment.Center
@@ -127,10 +125,4 @@ fun TherapistQualificationInfo(navController: NavController) {
             Spacer(modifier = Modifier.height(100.dp))
         }
     }
-}
-
-@Preview(showBackground = true)
-@Composable
-fun PreviewTherapistQualificationInfo() {
-    TherapistQualificationInfo(navController = NavController(LocalContext.current))
 }

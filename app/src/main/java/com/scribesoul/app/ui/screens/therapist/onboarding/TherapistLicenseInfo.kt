@@ -26,24 +26,21 @@ import androidx.navigation.NavController
 import com.scribesoul.app.ui.components.OnboardingButton
 import com.scribesoul.app.ui.components.OnboardingTemplate
 import com.scribesoul.app.ui.components.OnboardingTextField
+import com.scribesoul.app.viewModels.TherapistOnboardingViewModel
 
 @Composable
-fun TherapistLicenseInfo(navController: NavController) {
-    // State untuk nomor STR
-    var strNumber by remember { mutableStateOf("") }
-
-    // State untuk menyimpan gambar hasil jepretan kamera
-    var capturedImage by remember { mutableStateOf<Bitmap?>(null) }
+fun TherapistLicenseInfo(
+    navController: NavController,
+    onboardingViewModel: TherapistOnboardingViewModel
+) {
 
     val darkBlue = Color(0xFF2B395B)
 
-    // Launcher untuk membuka kamera
     val cameraLauncher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.TakePicturePreview()
     ) { bitmap ->
-        // Simpan hasil foto ke state
         if (bitmap != null) {
-            capturedImage = bitmap
+            onboardingViewModel.capturedLicenseImage = bitmap // Simpan ke ViewModel
         }
     }
 
@@ -60,10 +57,9 @@ fun TherapistLicenseInfo(navController: NavController) {
             modifier = Modifier.fillMaxWidth(),
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
-            // 1. Input Nomor STR
             OnboardingTextField(
-                value = strNumber,
-                onValueChange = { strNumber = it },
+                value = onboardingViewModel.strNumber,
+                onValueChange = { onboardingViewModel.strNumber = it },
                 placeholder = "STR Number",
                 modifier = Modifier.width(280.dp)
             )
@@ -80,22 +76,18 @@ fun TherapistLicenseInfo(navController: NavController) {
                     .background(Color.White),
                 contentAlignment = Alignment.Center
             ) {
-                if (capturedImage != null) {
-                    // Jika gambar sudah diambil, tampilkan gambarnya
+                onboardingViewModel.capturedLicenseImage?.let { bitmap ->
                     Image(
-                        bitmap = capturedImage!!.asImageBitmap(),
+                        bitmap = bitmap.asImageBitmap(),
                         contentDescription = "Certificate Preview",
                         modifier = Modifier.fillMaxSize(),
-                        contentScale = ContentScale.Crop // Supaya gambar memenuhi kotak dengan rapi
+                        contentScale = ContentScale.Crop
                     )
-                } else {
-                    // Jika belum ada gambar, tampilkan instruksi atau biarkan kosong
-                    Text(
-                        text = "",
-                        color = darkBlue.copy(alpha = 0.3f),
-                        fontSize = 14.sp
-                    )
-                }
+                } ?: Text(
+                    text = "No image captured",
+                    color = darkBlue.copy(alpha = 0.3f),
+                    fontSize = 14.sp
+                )
             }
 
             Spacer(modifier = Modifier.height(30.dp))
@@ -122,10 +114,4 @@ fun TherapistLicenseInfo(navController: NavController) {
             }
         }
     }
-}
-
-@Preview(showBackground = true)
-@Composable
-fun PreviewTherapistLicenseInfo() {
-    TherapistLicenseInfo(navController = NavController(LocalContext.current))
 }

@@ -6,6 +6,7 @@ import kotlinx.serialization.Serializable
 data class TherapistDTO(
     val id: String = "",
     val name: String = "",
+    val birthday: String = "",
     val title: String = "",
     val strNumber: String = "",
     val pricePerSession: Double = 0.0,
@@ -18,7 +19,8 @@ data class TherapistDTO(
     val languages: List<String> = emptyList(),
     val therapyApproaches: List<String> = emptyList(),
     val educations: List<EducationDTO> = emptyList(),
-    val workPractices: List<String> = emptyList()
+    val workPractices: List<String> = emptyList(),
+    val licenseImageUrl: String = ""
 )
 
 @Serializable

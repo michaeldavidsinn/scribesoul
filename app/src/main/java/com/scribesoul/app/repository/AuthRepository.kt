@@ -10,6 +10,7 @@ interface AuthRepository {
     suspend fun login(email: String, pass: String): Result<FirebaseUser>
     suspend fun signUp(email: String, pass: String, username: String): Result<FirebaseUser>
     fun logout()
+    suspend fun updatePassword(newPassword: String): Result<Unit>
 }
 
 class FirebaseAuthRepository : AuthRepository {
@@ -36,6 +37,16 @@ class FirebaseAuthRepository : AuthRepository {
                 .build()
             user?.updateProfile(profileUpdates)?.await()
             Result.success(result.user!!)
+        } catch (e: Exception) {
+            Result.failure(e)
+        }
+    }
+
+    override suspend fun updatePassword(newPassword: String): Result<Unit> {
+        return try {
+            val user = auth.currentUser
+            user?.updatePassword(newPassword)?.await()
+            Result.success(Unit)
         } catch (e: Exception) {
             Result.failure(e)
         }

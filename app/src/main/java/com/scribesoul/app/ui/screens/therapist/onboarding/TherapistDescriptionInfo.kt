@@ -18,11 +18,13 @@ import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
 import androidx.compose.ui.platform.LocalContext
 import com.scribesoul.app.ui.components.OnboardingTemplate
+import com.scribesoul.app.viewModels.TherapistOnboardingViewModel
 
 @Composable
-fun TherapistDescriptionInfo(navController: NavController) {
-    // State untuk menyimpan deskripsi profesional
-    var description by remember { mutableStateOf("") }
+fun TherapistDescriptionInfo(
+    navController: NavController,
+    onboardingViewModel: TherapistOnboardingViewModel
+) {
 
     val darkBlue = Color(0xFF2B395B)
 
@@ -42,8 +44,8 @@ fun TherapistDescriptionInfo(navController: NavController) {
         ) {
             // Input Area Besar (TextArea)
             TextField(
-                value = description,
-                onValueChange = { description = it },
+                value = onboardingViewModel.description,
+                onValueChange = { onboardingViewModel.description = it },
                 modifier = Modifier
                     .fillMaxWidth()
                     .height(400.dp) // Ukuran tinggi kotak besar sesuai gambar
@@ -89,10 +91,4 @@ fun TherapistDescriptionInfo(navController: NavController) {
             )
         }
     }
-}
-
-@Preview(showBackground = true)
-@Composable
-fun PreviewTherapistDescriptionInfo() {
-    TherapistDescriptionInfo(navController = NavController(LocalContext.current))
 }

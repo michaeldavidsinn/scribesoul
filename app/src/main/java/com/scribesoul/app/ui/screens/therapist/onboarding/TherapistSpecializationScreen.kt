@@ -13,9 +13,13 @@ import androidx.navigation.NavController
 import androidx.compose.ui.platform.LocalContext
 import com.scribesoul.app.ui.components.OnboardingSelectableItem
 import com.scribesoul.app.ui.components.OnboardingTemplate
+import com.scribesoul.app.viewModels.TherapistOnboardingViewModel
 
 @Composable
-fun TherapistSpecializationScreen(navController: NavController) {
+fun TherapistSpecializationScreen(
+    navController: NavController,
+    onboardingViewModel: TherapistOnboardingViewModel
+) {
     // State untuk scroll agar tidak menabrak tombol navigasi di bawah
     val scrollState = rememberScrollState()
 
@@ -30,10 +34,6 @@ fun TherapistSpecializationScreen(navController: NavController) {
         "Self Esteem Issues",
         "Trauma Recovery"
     )
-
-    // State untuk menyimpan pilihan (Multi-select)
-    val selectedSpecializations = remember { mutableStateListOf<String>() }
-    var otherSelected by remember { mutableStateOf(false) }
 
     OnboardingTemplate(
         title = "Specialization",
@@ -60,27 +60,29 @@ fun TherapistSpecializationScreen(navController: NavController) {
                         pair.forEach { text ->
                             OnboardingSelectableItem(
                                 text = text,
-                                isSelected = selectedSpecializations.contains(text),
+                                // Cek ke list yang ada di ViewModel
+                                isSelected = onboardingViewModel.selectedSpecializations.contains(text),
                                 onClick = {
-                                    if (selectedSpecializations.contains(text)) {
-                                        selectedSpecializations.remove(text)
+                                    if (onboardingViewModel.selectedSpecializations.contains(text)) {
+                                        onboardingViewModel.selectedSpecializations.remove(text)
                                     } else {
-                                        selectedSpecializations.add(text)
+                                        onboardingViewModel.selectedSpecializations.add(text)
                                     }
                                 },
                                 modifier = Modifier
                                     .weight(1f)
-                                    .aspectRatio(1f) // Membuat bentuk bulat sempurna
+                                    .aspectRatio(1f)
                             )
                         }
                     }
                 }
 
-                // Tombol "Other" di bagian bawah daftar
                 OnboardingSelectableItem(
                     text = "Other",
-                    isSelected = otherSelected,
-                    onClick = { otherSelected = !otherSelected },
+                    isSelected = onboardingViewModel.otherSelected,
+                    onClick = {
+                        onboardingViewModel.otherSelected = !onboardingViewModel.otherSelected
+                    },
                     modifier = Modifier
                         .fillMaxWidth()
                         .height(70.dp)
@@ -91,10 +93,4 @@ fun TherapistSpecializationScreen(navController: NavController) {
             Spacer(modifier = Modifier.height(150.dp))
         }
     }
-}
-
-@Preview(showBackground = true)
-@Composable
-fun PreviewTherapistSpecialization() {
-    TherapistSpecializationScreen(navController = NavController(LocalContext.current))
 }

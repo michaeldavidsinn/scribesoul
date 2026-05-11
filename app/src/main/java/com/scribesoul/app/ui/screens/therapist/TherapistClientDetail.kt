@@ -6,6 +6,7 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
@@ -33,10 +34,32 @@ import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
 import com.scribesoul.R
+import com.scribesoul.app.utils.DateTimeUtils
 import com.scribesoul.app.viewModels.HomeViewModel
+import com.scribesoul.app.viewModels.TherapistHomeViewModel
 
 @Composable
-fun ClientDetailScreen(navController: NavController, viewModel: HomeViewModel, clientName: String) {
+fun ClientDetailScreen(
+    navController: NavController,
+    viewModel: TherapistHomeViewModel,
+    clientId: String
+) {
+
+    // Ambil data history dan info client saat layar dibuka
+    LaunchedEffect(clientId) {
+        viewModel.loadClientDetailData(clientId)
+    }
+
+    // Cari info client dari cache yang ada di ViewModel
+    val clientInfo = viewModel.therapistClients.find { it.clientId == clientId }
+
+    // List warna selang-seling (Biru, Kuning, Merah)
+    val pillColors = listOf(
+        Color(0xFF74A8FF),
+        Color(0xFFFFC107),
+        Color(0xFFD10000)
+    )
+
     Box(
         modifier = Modifier
             .fillMaxSize()
@@ -67,38 +90,66 @@ fun ClientDetailScreen(navController: NavController, viewModel: HomeViewModel, c
 
 // --- NAMA & DETAIL WAKTU (Rapat Kiri sesuai Figma) ---
             item {
+                val latestSession = viewModel.selectedClientSessions.firstOrNull()
+
                 Column(
                     modifier = Modifier
                         .fillMaxWidth()
                         .padding(start = 24.dp, end = 24.dp, top = 20.dp, bottom = 24.dp)
                 ) {
-
-                    // --- NAMA CLIENT ---
+                    // Nama Client
                     Text(
-                        text = clientName,
+                        text = clientInfo?.name ?: "Loading...",
                         style = TextStyle(
-                            fontSize = 31.sp, // Ditingkatkan agar kesan "Bold" menonjol
+                            fontSize = 31.sp,
                             fontFamily = FontFamily(Font(R.font.verdana_bold)),
                             fontWeight = FontWeight.Bold,
                             color = Color(0xFF2B395B),
-                            lineHeight = 44.sp // Jarak antar baris diperketat
+                            lineHeight = 44.sp
                         )
                     )
 
                     Spacer(modifier = Modifier.height(8.dp))
 
-                    // --- DETAIL SESI ---
+                    // Detail 4 Baris (Dinamis)
                     Column(verticalArrangement = Arrangement.spacedBy(2.dp)) {
+                        // 1. Tanggal (Dinamis)
                         Text(
-                            text = "Monday, 23 Mar 2026",
+                            text = if (latestSession != null)
+                                DateTimeUtils.getFormattedDate(latestSession.dateTimestamp)
+                            else "Date not set",
                             style = TextStyle(
-                                fontSize = 18.sp, // Diperbesar sesuai skala visual Figma
+                                fontSize = 18.sp,
                                 fontFamily = FontFamily(Font(R.font.verdana)),
                                 color = Color(0xFF2B395B).copy(alpha = 0.8f)
                             )
                         )
+
+                        // 2. Kondisi Utama (Dinamis)
                         Text(
-                            text = "09.00 - 10.00",
+                            text = clientInfo?.mainCondition ?: "General Consultation",
+                            style = TextStyle(
+                                fontSize = 18.sp,
+                                fontFamily = FontFamily(Font(R.font.verdana)),
+                                color = Color(0xFF2B395B).copy(alpha = 0.8f)
+                            )
+                        )
+
+                        // 3. Jam (Dinamis)
+                        Text(
+                            text = if (latestSession != null)
+                                DateTimeUtils.formatTimeRange(latestSession.dateTimestamp, latestSession.durationMinutes)
+                            else "00.00 - 00.00",
+                            style = TextStyle(
+                                fontSize = 18.sp,
+                                fontFamily = FontFamily(Font(R.font.verdana)),
+                                color = Color(0xFF2B395B).copy(alpha = 0.8f)
+                            )
+                        )
+
+                        // 4. Status (Dinamis)
+                        Text(
+                            text = "Status: ${latestSession?.status ?: "Scheduled"}",
                             style = TextStyle(
                                 fontSize = 18.sp,
                                 fontFamily = FontFamily(Font(R.font.verdana)),
@@ -109,72 +160,29 @@ fun ClientDetailScreen(navController: NavController, viewModel: HomeViewModel, c
                 }
             }
 
-            // --- SECTION JADWAL (Biru Navy) ---
             // --- SECTION JADWAL (Biru Muda Grid) ---
             item {
-                Box(
-                    modifier = Modifier
-                        .padding(horizontal = 16.dp, vertical = 24.dp)
-                        .fillMaxWidth()
-                        .clip(RoundedCornerShape(24.dp))
-                        .background(Color(0xFFBCD5FF)) // Warna biru muda sesuai figma
-                ) {
+                Box(modifier = Modifier.padding(horizontal = 16.dp, vertical = 24.dp).fillMaxWidth().clip(RoundedCornerShape(24.dp)).background(Color(0xFFBCD5FF))) {
                     Column(modifier = Modifier.fillMaxSize()) {
-                        // Tabel Waktu Scrollable (Mini grid)
-                        Box(
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .height(180.dp) // Tinggi kontainer grid
-                                .verticalScroll(rememberScrollState())
-                        ) {
-                            // 1. Layer Garis Jam & Divider
+                        Box(modifier = Modifier.fillMaxWidth().height(180.dp).verticalScroll(rememberScrollState())) {
                             Column {
-                                val hours = (5..10).map { String.format("%02d:00", it) } // Range jam sesuai figma
+                                val hours = (5..10).map { String.format("%02d:00", it) }
                                 hours.forEach { hour ->
-                                    Row(
-                                        modifier = Modifier
-                                            .fillMaxWidth()
-                                            .height(60.dp), // Tinggi baris jam harus sinkron dengan math di ScheduleGridItem
-                                        verticalAlignment = Alignment.Top
-                                    ) {
-                                        Text(
-                                            text = hour,
-                                            modifier = Modifier.width(55.dp).padding(start = 12.dp, top = 2.dp),
-                                            style = TextStyle(
-                                                fontSize = 12.sp,
-                                                fontWeight = FontWeight.Bold,
-                                                fontFamily = FontFamily(Font(R.font.verdana_bold)),
-                                                color = Color.White // Angka jam putih bersih
-                                            )
-                                        )
-
+                                    Row(modifier = Modifier.fillMaxWidth().height(60.dp), verticalAlignment = Alignment.Top) {
+                                        Text(text = hour, modifier = Modifier.width(55.dp).padding(start = 12.dp, top = 2.dp), style = TextStyle(fontSize = 12.sp, fontWeight = FontWeight.Bold, color = Color.White))
                                         Spacer(modifier = Modifier.width(8.dp))
-
-                                        HorizontalDivider(
-                                            modifier = Modifier
-                                                .padding(top = 10.dp)
-                                                .weight(1f),
-                                            thickness = 1.dp,
-                                            color = Color.White.copy(alpha = 0.5f) // Garis putih halus
-                                        )
+                                        HorizontalDivider(modifier = Modifier.padding(top = 10.dp).weight(1f), thickness = 1.dp, color = Color.White.copy(alpha = 0.5f))
                                     }
                                 }
                             }
-
-                            // 2. Layer Kartu Jadwal (Overlays)
                             Column(modifier = Modifier.padding(start = 65.dp)) {
-                                // Jake Connor (Mulai jam 07:00)
-                                // Spacer = (Target jam - Jam awal) * 60dp
-                                // (07:00 - 05:00) * 60 = 120dp
                                 Spacer(modifier = Modifier.height(40.dp))
                                 ScheduleGridItem(
-                                    name = "Jake",
-                                    category = "Anxiety",
-                                    time = "09:00 - 10.00",
-                                    indicatorColor = Color(0xFF74A8FF),
-                                    durationHours = 1f
+                                    name = clientInfo?.name?.split(" ")?.firstOrNull() ?: "Client",
+                                    category = clientInfo?.mainCondition ?: "Session",
+                                    time = "Upcoming",
+                                    indicatorColor = Color(0xFF74A8FF)
                                 )
-
                             }
                         }
                     }
@@ -185,9 +193,17 @@ fun ClientDetailScreen(navController: NavController, viewModel: HomeViewModel, c
             item {
                 SectionContainer(title = "Session History", bgColor = Color(0xFFEBE0FF).copy(alpha = 0.6f)) {
                     Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
-                        HistoryItemPill("Monday, 2 Mar 2026", "10.00 - 12.00", Color(0xFFD10000))
-                        HistoryItemPill("Monday, 9 Mar 2026", "12.00 - 14.00", Color(0xFFFFC107))
-                        HistoryItemPill("Monday, 16 Mar 2026", "13.00 - 15.00", Color(0xFF74A8FF))
+                        if (viewModel.selectedClientSessions.isEmpty()) {
+                            Text("No history recorded", fontSize = 12.sp, color = Color.Gray, modifier = Modifier.padding(start = 8.dp))
+                        } else {
+                            viewModel.selectedClientSessions.forEachIndexed { index, session ->
+                                HistoryItemPill(
+                                    date = DateTimeUtils.getFormattedDate(session.dateTimestamp),
+                                    time = DateTimeUtils.formatTimeRange(session.dateTimestamp, session.durationMinutes),
+                                    indicatorColor = pillColors[index % pillColors.size]
+                                )
+                            }
+                        }
                     }
                 }
             }
@@ -196,9 +212,19 @@ fun ClientDetailScreen(navController: NavController, viewModel: HomeViewModel, c
             item {
                 SectionContainer(title = "Therapist notes", bgColor = Color(0xFFFFE0EB).copy(alpha = 0.6f)) {
                     Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
-                        HistoryItemPill("Monday, 2 Mar 2026", "10.00 - 12.00", Color(0xFFD10000))
-                        HistoryItemPill("Monday, 9 Mar 2026", "12.00 - 14.00", Color(0xFFFFC107))
-                        HistoryItemPill("Monday, 16 Mar 2026", "13.00 - 15.00", Color(0xFF74A8FF))
+                        val sessionsWithNotes = viewModel.selectedClientSessions.filter { it.therapistNote.isNotEmpty() }
+                        if (sessionsWithNotes.isEmpty()) {
+                            Text("No notes found", fontSize = 12.sp, color = Color.Gray, modifier = Modifier.padding(start = 8.dp))
+                        } else {
+                            sessionsWithNotes.forEachIndexed { index, session ->
+                                // Menggunakan komponen Card yang sama agar desain tidak berubah
+                                NoteItemCard(
+                                    date = DateTimeUtils.getFormattedDate(session.dateTimestamp),
+                                    note = session.therapistNote,
+                                    indicatorColor = pillColors[index % pillColors.size]
+                                )
+                            }
+                        }
                     }
                 }
             }
@@ -351,19 +377,18 @@ fun ScheduleGridItem(name: String, category: String, time: String, indicatorColo
     }
 }
 
-// --- PREVIEW FUNCTION ---
-@Preview(showBackground = true, device = "id:pixel_9_pro_xl")
 @Composable
-fun ClientDetailPreview() {
-    val context = LocalContext.current
-    val dummyNavController = NavController(context)
-    val viewModel: HomeViewModel = viewModel(factory = HomeViewModel.Factory)
-
-    Surface(modifier = Modifier.fillMaxSize(), color = Color.White) {
-        ClientDetailScreen(
-            navController = dummyNavController,
-            viewModel = viewModel,
-            clientName = "Jake Connor"
-        )
+fun NoteItemCard(date: String, note: String, indicatorColor: Color) {
+    Box(
+        modifier = Modifier.fillMaxWidth().clip(RoundedCornerShape(20.dp)).background(Color.White).padding(16.dp)
+    ) {
+        Row(modifier = Modifier.height(IntrinsicSize.Min)) {
+            Box(modifier = Modifier.fillMaxHeight().width(4.dp).clip(CircleShape).background(indicatorColor))
+            Spacer(modifier = Modifier.width(12.dp))
+            Column {
+                Text(text = date, fontSize = 13.sp, fontWeight = FontWeight.Bold, color = Color(0xFF2B395B))
+                Text(text = note, fontSize = 11.sp, color = Color.DarkGray, lineHeight = 16.sp)
+            }
+        }
     }
 }

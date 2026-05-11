@@ -4,7 +4,8 @@ package com.scribesoul.app.models
 data class Therapist(
     val id: String = "",
     val name: String = "",
-    val title: String = "", // e.g., "Psikolog Klinis"
+    val title: String = "",
+    val birthday: String = "",
     val strNumber: String = "",
     val pricePerSession: Double = 0.0,
     val experienceYears: Int = 0,

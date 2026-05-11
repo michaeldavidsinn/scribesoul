@@ -43,11 +43,14 @@ import androidx.navigation.NavController
 import com.scribesoul.app.viewModels.HomeViewModel
 import com.google.accompanist.flowlayout.FlowRow
 import com.google.firebase.auth.FirebaseAuth
+import com.scribesoul.app.viewModels.TherapistHomeViewModel
 
 @OptIn(ExperimentalLayoutApi::class)
 @Composable
-fun TherapistAccountInfoScreen(navController: NavController, homeViewModel: HomeViewModel) {
+fun TherapistAccountInfoScreen(navController: NavController, therapistHomeViewModel: TherapistHomeViewModel) {
     val currentUserEmail = FirebaseAuth.getInstance().currentUser?.email ?: "No email linked"
+
+    val birthdayDisplay = therapistHomeViewModel.therapistProfile?.birthday ?: "Not set"
 
     val gradientBrushs = Brush.horizontalGradient(
         colors = listOf(
@@ -144,7 +147,7 @@ fun TherapistAccountInfoScreen(navController: NavController, homeViewModel: Home
 
                         val chipItems = listOf(
                             "E-mail" to currentUserEmail,
-                            "Birthday" to "Not set",
+                            "Birthday" to birthdayDisplay, // Data dari ViewModel
                             "Password" to "Change password"
                         )
 
@@ -217,16 +220,5 @@ fun TherapistAccountInfoScreen(navController: NavController, homeViewModel: Home
                 }
             }
         }
-    }
-}
-
-@Preview(showBackground = true)
-@Composable
-fun TherapistAccountInfoPreview() {
-    val context = LocalContext.current
-    val navController = remember { NavController(context) }
-
-    Surface(modifier = Modifier.fillMaxSize()) {
-        TherapistAccountInfoScreen(navController = navController, homeViewModel = viewModel(factory = HomeViewModel.Factory))
     }
 }

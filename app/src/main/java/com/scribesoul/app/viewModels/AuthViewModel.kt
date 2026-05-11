@@ -83,6 +83,17 @@ class AuthViewModel(private val authRepository: AuthRepository) : ViewModel() {
         }
     }
 
+    fun changePassword(newPassword: String, onResult: (Boolean, String?) -> Unit) {
+        viewModelScope.launch {
+            val result = authRepository.updatePassword(newPassword)
+            if (result.isSuccess) {
+                onResult(true, null)
+            } else {
+                onResult(false, result.exceptionOrNull()?.message)
+            }
+        }
+    }
+
     fun logout() {
         authRepository.logout()
         isLoggedIn = false

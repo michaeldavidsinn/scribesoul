@@ -23,12 +23,18 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
+import com.scribesoul.app.viewModels.AuthViewModel
 
 @Composable
-fun TherapistChangePasswordScreen(navController: NavController) {
+fun TherapistChangePasswordScreen(
+    navController: NavController,
+    authViewModel: AuthViewModel
+) {
 
     var newPassword by remember { mutableStateOf("") }
     var confirmPassword by remember { mutableStateOf("") }
+    var isLoading by remember { mutableStateOf(false) }
+    val context = LocalContext.current
 
     // Validasi password
     val hasUppercase = newPassword.any { it.isUpperCase() }
@@ -135,10 +141,17 @@ fun TherapistChangePasswordScreen(navController: NavController) {
                     ),
                     shape = RoundedCornerShape(50)
                 )
-                .clickable(enabled = isButtonEnabled) { // Hanya bisa diklik jika enabled
-                    navController.navigate("therapist_account_info") {
-                        // Opsi: Hapus halaman ini dari back stack setelah berhasil ganti password
-                        popUpTo("therapist_account_info") { inclusive = true }
+                .clickable(enabled = isButtonEnabled) {
+                    isLoading = true
+                    authViewModel.changePassword(newPassword) { success, error ->
+                        isLoading = false
+                        if (success) {
+                            android.widget.Toast.makeText(context, "Password updated successfully!", android.widget.Toast.LENGTH_SHORT).show()
+                            navController.popBackStack() // Kembali ke Account Info
+                        } else {
+                            // Jika error "Recent Login Required", user harus relogin
+                            android.widget.Toast.makeText(context, "Error: $error", android.widget.Toast.LENGTH_LONG).show()
+                        }
                     }
                 }
                 .padding(horizontal = 50.dp, vertical = 14.dp)
@@ -237,18 +250,5 @@ fun GradientTextField(
                 fontWeight = FontWeight.Bold // teks input bold
             )
         )
-    }
-}
-
-
-
-@Preview(showBackground = true)
-@Composable
-fun TherapistChangePasswordPreview() {
-    val context = LocalContext.current
-    val navController = remember { NavController(context) }
-
-    Surface(modifier = Modifier.fillMaxSize()) {
-        TherapistChangePasswordScreen(navController = navController)
     }
 }

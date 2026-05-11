@@ -27,6 +27,7 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -48,10 +49,19 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
 import com.scribesoul.R
 import com.scribesoul.app.viewModels.HomeViewModel
+import com.scribesoul.app.viewModels.TherapistHomeViewModel
 
 @OptIn(ExperimentalLayoutApi::class)
 @Composable
-fun TherapistProfileScreen(navController: NavController, homeViewModel: HomeViewModel) {
+fun TherapistProfileScreen(
+    navController: NavController,
+    viewModel: TherapistHomeViewModel, // Gunakan ViewModel Therapist
+    authViewModel: com.scribesoul.app.viewModels.AuthViewModel // Tambahkan untuk Logout
+) {
+
+    LaunchedEffect(Unit) {
+        viewModel.loadTherapistDashboard()
+    }
 
     val gradientBrushs = Brush.horizontalGradient(
         colors = listOf(
@@ -60,9 +70,6 @@ fun TherapistProfileScreen(navController: NavController, homeViewModel: HomeView
         )
     )
 
-    // --- KUNCI #1: Gunakan Box sebagai container utama ---
-    // Box memungkinkan elemen di dalamnya untuk ditumpuk (stack)
-    // atau diposisikan relatif terhadap Box itu sendiri.
     Box(
         modifier = Modifier
             .fillMaxSize()
@@ -143,7 +150,7 @@ fun TherapistProfileScreen(navController: NavController, homeViewModel: HomeView
 
             // Name
             Text(
-                text = homeViewModel.userName,
+                text = viewModel.therapistProfile?.name ?: "Loading...",
                 fontSize = 20.sp,
                 fontWeight = FontWeight.Bold,
                 color = Color(0xFF2B395B),
@@ -153,65 +160,22 @@ fun TherapistProfileScreen(navController: NavController, homeViewModel: HomeView
             Spacer(modifier = Modifier.height(16.dp))
 
             // Stats (Therapy Session & Completed Task)
-            Row(
-                horizontalArrangement = Arrangement.spacedBy(16.dp)
-            ) {
-                val gradientBrush = Brush.horizontalGradient(
-                    colors = listOf(Color(0xFF74A8FF), Color(0xFF82D9D2))
+            Row(horizontalArrangement = Arrangement.spacedBy(16.dp)) {
+                val gradientBrush = Brush.horizontalGradient(colors = listOf(Color(0xFF74A8FF), Color(0xFF82D9D2)))
+
+                // Therapy Sessions Count (Ambil dari size list sesi)
+                StatItem(
+                    count = viewModel.therapistSessions.size.toString(),
+                    label = "Therapy Session",
+                    gradientBrush = gradientBrush
                 )
 
-                // Stat Item 1
-                Box(
-                    modifier = Modifier
-                        .shadow(elevation = 8.dp, shape = RoundedCornerShape(50))
-                        .background(brush = gradientBrush, shape = RoundedCornerShape(50))
-                        .padding(1.dp)
-                ) {
-                    Column(
-                        modifier = Modifier
-                            .clip(RoundedCornerShape(50))
-                            .background(Color.White)
-                            .padding(horizontal = 24.dp, vertical = 8.dp),
-                        horizontalAlignment = Alignment.CenterHorizontally
-                    ) {
-                        Text(
-                            text = "0",
-                            style = MaterialTheme.typography.titleLarge.copy(fontWeight = FontWeight.Bold),
-                            color = Color(0xFF2B395B)
-                        )
-                        Text(
-                            text = "Therapy Session",
-                            style = MaterialTheme.typography.labelSmall,
-                            color = Color(0xFF2B395B)
-                        )
-                    }
-                }
-                // Stat Item 2
-                Box(
-                    modifier = Modifier
-                        .shadow(elevation = 8.dp, shape = RoundedCornerShape(50))
-                        .background(brush = gradientBrush, shape = RoundedCornerShape(50))
-                        .padding(1.dp)
-                ) {
-                    Column(
-                        modifier = Modifier
-                            .clip(RoundedCornerShape(50))
-                            .background(Color.White)
-                            .padding(horizontal = 24.dp, vertical = 8.dp),
-                        horizontalAlignment = Alignment.CenterHorizontally
-                    ) {
-                        Text(
-                            text = "0",
-                            style = MaterialTheme.typography.titleLarge.copy(fontWeight = FontWeight.Bold),
-                            color = Color(0xFF2B395B)
-                        )
-                        Text(
-                            text = "Completed Task",
-                            style = MaterialTheme.typography.labelSmall,
-                            color = Color(0xFF2B395B)
-                        )
-                    }
-                }
+                // Completed Tasks (Bisa diisi 0 dulu atau ambil dari data lain)
+                StatItem(
+                    count = "0",
+                    label = "Completed Task",
+                    gradientBrush = gradientBrush
+                )
             }
 
             Spacer(modifier = Modifier.height(24.dp))
@@ -275,31 +239,21 @@ fun TherapistProfileScreen(navController: NavController, homeViewModel: HomeView
                     }
                 }
             }
-
-            // --- SPACER TAMBAHAN UNTUK MEMASTIKAN KONTEN BISA DI-SCROLL ---
-            // Spacer ini berada di dalam Column yang bisa scroll.
-            // Anda bisa menghapus ini jika konten Anda sudah pasti lebih panjang dari layar.
             Spacer(modifier = Modifier.height(120.dp))
         }
 
-        // --- KUNCI #3: Tombol LOG OUT berada di dalam Box utama, BUKAN di dalam Column scroll ---
-        // Karena menjadi "sibling" dari Column scroll, posisinya tidak terpengaruh oleh scroll.
-        // Modifier .align akan memposisikannya relatif terhadap parent-nya (Box).
         Box(
             modifier = Modifier
-                .align(Alignment.BottomCenter) // Menempel di bawah
-                .padding(bottom = 45.dp) // Memberi jarak dari tepi bawah
+                .align(Alignment.BottomCenter)
+                .padding(bottom = 45.dp)
                 .clip(RoundedCornerShape(50))
-                .background(
-                    brush = Brush.horizontalGradient(
-                        colors = listOf(
-                            Color(0xFF82D9D2),
-                            Color(0xFF7CC3E6),
-                            Color(0xFF74A8FF)
-                        )
-                    )
-                )
-                .clickable { /* TODO: Log out logic */ }
+                .background(brush = Brush.horizontalGradient(colors = listOf(Color(0xFF82D9D2), Color(0xFF7CC3E6), Color(0xFF74A8FF))))
+                .clickable {
+                    authViewModel.logout()
+                    navController.navigate("initial") {
+                        popUpTo(0) // Bersihkan seluruh backstack agar tidak bisa 'back' ke profile
+                    }
+                }
         ) {
             Text(
                 text = "LOG OUT",
@@ -311,13 +265,20 @@ fun TherapistProfileScreen(navController: NavController, homeViewModel: HomeView
     }
 }
 
-@Preview(showBackground = true)
 @Composable
-fun TherapistProfilePreview() {
-    val context = LocalContext.current
-    val navController = remember { NavController(context) }
-
-    Surface(modifier = Modifier.fillMaxSize()) {
-        TherapistProfileScreen(navController = navController, homeViewModel = viewModel(factory = HomeViewModel.Factory))
+fun StatItem(count: String, label: String, gradientBrush: Brush) {
+    Box(
+        modifier = Modifier
+            .shadow(elevation = 8.dp, shape = RoundedCornerShape(50))
+            .background(brush = gradientBrush, shape = RoundedCornerShape(50))
+            .padding(1.dp)
+    ) {
+        Column(
+            modifier = Modifier.clip(RoundedCornerShape(50)).background(Color.White).padding(horizontal = 24.dp, vertical = 8.dp),
+            horizontalAlignment = Alignment.CenterHorizontally
+        ) {
+            Text(text = count, style = MaterialTheme.typography.titleLarge.copy(fontWeight = FontWeight.Bold), color = Color(0xFF2B395B))
+            Text(text = label, style = MaterialTheme.typography.labelSmall, color = Color(0xFF2B395B))
+        }
     }
 }

@@ -39,6 +39,8 @@ import com.scribesoul.app.ui.screens.therapist.onboarding.TherapistSpecializatio
 import com.scribesoul.app.ui.screens.therapist.onboarding.TherapistTherapyApproachScreen
 import com.scribesoul.app.viewModels.AuthViewModel
 import com.scribesoul.app.viewModels.PostViewModel
+import com.scribesoul.app.viewModels.TherapistHomeViewModel
+import com.scribesoul.app.viewModels.TherapistOnboardingViewModel
 
 
 @RequiresApi(Build.VERSION_CODES.VANILLA_ICE_CREAM)
@@ -48,6 +50,7 @@ fun AppNavigation(
     journalViewModel: JournalViewModel = viewModel(factory = JournalViewModel.Factory),
     journalListViewModel: JournalListViewModel = viewModel(factory = JournalListViewModel.Factory),
     homeViewModel: HomeViewModel = viewModel(factory = HomeViewModel.Factory),
+    therapistHomeViewModel: TherapistHomeViewModel = viewModel(factory = TherapistHomeViewModel.Factory),
     drawingViewModel: DrawingViewModel = viewModel(factory = DrawingViewModel.Factory ),
     communityViewModel: CommunityViewModel = viewModel(factory = CommunityViewModel.Factory),
     postViewModel: PostViewModel = viewModel(factory = PostViewModel.Factory),
@@ -55,6 +58,10 @@ fun AppNavigation(
 
 ) {
     val startScreen = if (authViewModel.isLoggedIn) "home" else "initial"
+    val onboardingViewModel: TherapistOnboardingViewModel = viewModel(
+        factory = TherapistOnboardingViewModel.Factory
+    )
+
     NavHost(navController = navController, startDestination = startScreen,
         enterTransition = {
             EnterTransition.None
@@ -105,11 +112,11 @@ fun AppNavigation(
         }
 
         composable("therapist_account_info") {
-            TherapistAccountInfoScreen(navController, homeViewModel)
+            TherapistAccountInfoScreen(navController, therapistHomeViewModel)
         }
 
         composable("therapist_history") {
-            TherapistHistoryScreen(navController)
+            TherapistHistoryScreen(navController, therapistHomeViewModel)
         }
 
         composable("therapist_customer_service") {
@@ -117,11 +124,11 @@ fun AppNavigation(
         }
 
         composable("therapist_birthday") {
-            TherapistBirthdayScreen(navController)
+            TherapistBirthdayScreen(navController, therapistHomeViewModel)
         }
 
         composable("therapist_change_password") {
-            TherapistChangePasswordScreen(navController)
+            TherapistChangePasswordScreen(navController, authViewModel)
         }
 
         composable("therapist_faq") {
@@ -132,8 +139,8 @@ fun AppNavigation(
             TherapistProAndConsScreen(navController)
         }
 
-        composable("profile"){
-            TherapistProfileScreen(navController, homeViewModel)
+        composable("profile") {
+            TherapistProfileScreen(navController, therapistHomeViewModel, authViewModel)
         }
 
         composable("therapist_privacy_policy") {
@@ -173,58 +180,57 @@ fun AppNavigation(
             MentalTip(navController)
         }
 
-        // --- ONBOARDING THERAPIST FLOW ---
         composable("therapist_personal_info") {
-            TherapistPersonalInfo(navController)
+            TherapistPersonalInfo(navController, onboardingViewModel)
         }
 
         composable("therapist_gender") {
-            TherapistGenderScreen(navController)
+            TherapistGenderScreen(navController, onboardingViewModel)
         }
 
         composable("therapist_professional_info") {
-            TherapistProfessionalInfo(navController)
+            TherapistProfessionalInfo(navController, onboardingViewModel)
         }
 
         composable("therapist_specialization") {
-            TherapistSpecializationScreen(navController)
+            TherapistSpecializationScreen(navController, onboardingViewModel)
         }
 
         composable("therapist_description") {
-            TherapistDescriptionInfo(navController)
+            TherapistDescriptionInfo(navController, onboardingViewModel)
         }
 
         composable("therapist_qualification") {
-            TherapistQualificationInfo(navController)
+            TherapistQualificationInfo(navController, onboardingViewModel)
         }
 
         composable("therapist_experience") {
-            TherapistExperienceInfo(navController)
+            TherapistExperienceInfo(navController, onboardingViewModel)
         }
 
         composable("therapist_license") {
-            TherapistLicenseInfo(navController)
+            TherapistLicenseInfo(navController, onboardingViewModel)
         }
 
         composable("therapist_approaches") {
-            TherapistTherapyApproachScreen(navController)
+            TherapistTherapyApproachScreen(navController, onboardingViewModel)
         }
 
         // --- NAVIGASI KHUSUS THERAPIST ---
         composable("home_therapist") {
-            TherapistHomeScreen(navController, homeViewModel)
+            TherapistHomeScreen(navController, therapistHomeViewModel)
         }
 
         composable("client_therapist") {
-            ClientTherapistScreen(navController, homeViewModel)
+            ClientTherapistScreen(navController, therapistHomeViewModel)
         }
 
         composable(
-            route = "client_detail/{clientName}",
-            arguments = listOf(navArgument("clientName") { type = NavType.StringType })
+            route = "client_detail/{clientId}",
+            arguments = listOf(navArgument("clientId") { type = NavType.StringType })
         ) { backStackEntry ->
-            val name = backStackEntry.arguments?.getString("clientName") ?: "Sarah Gibson"
-            ClientDetailScreen(navController, homeViewModel, name)
+            val clientId = backStackEntry.arguments?.getString("clientId") ?: ""
+            ClientDetailScreen(navController, therapistHomeViewModel, clientId)
         }
 
         composable("explore_therapist") {
@@ -237,8 +243,7 @@ fun AppNavigation(
         }
 
         composable("schedule_therapist") {
-            TherapistScheduleScreen(navController, homeViewModel)
+            TherapistScheduleScreen(navController, therapistHomeViewModel)
         }
-
     }
 }

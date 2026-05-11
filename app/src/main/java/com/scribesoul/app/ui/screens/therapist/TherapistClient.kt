@@ -31,14 +31,27 @@ import androidx.navigation.compose.rememberNavController
 import com.scribesoul.R
 import com.scribesoul.app.ui.navigation.BottomNavItem
 import com.scribesoul.app.viewModels.HomeViewModel
+import com.scribesoul.app.viewModels.TherapistHomeViewModel
+import androidx.compose.ui.text.style.TextAlign
+import com.scribesoul.app.utils.DateTimeUtils
 
 enum class ClientStage {
     MILD, MEDIUM, URGENT
 }
 
 @Composable
-fun ClientTherapistScreen(navController: NavController, viewModel: HomeViewModel) {
+fun ClientTherapistScreen(
+    navController: NavController,
+    viewModel: TherapistHomeViewModel // Gunakan ViewModel Therapist
+) {
+    LaunchedEffect(Unit) {
+        viewModel.loadClients()
+    }
+
     var currentStage by remember { mutableStateOf(ClientStage.MILD) }
+
+    val filteredClients = viewModel.getFilteredClients(currentStage)
+
 
     val stageColors = mapOf(
         ClientStage.MILD to Color(0xFFBCD5FF),
@@ -107,25 +120,30 @@ fun ClientTherapistScreen(navController: NavController, viewModel: HomeViewModel
                     Spacer(modifier = Modifier.height(32.dp))
                 }
             }
-
-            item {
-                Column(
-                    modifier = Modifier.padding(horizontal = 24.dp),
-                    verticalArrangement = Arrangement.spacedBy(20.dp)
-                ) {
-                    repeat(3) {
-                        TherapistClientCard(
-                            name = "Jake Connor", // Gunakan string langsung karena tidak ada objek 'client'
-                            category = "Anxiety",
-                            lastSession = "3 days ago",
-                            cardColor = stageColors[currentStage]!!,
-                            indicatorColor = indicatorColors[currentStage]!!,
-                            onClick = {
-                                // Langsung arahkan ke detail dengan nama hardcoded untuk sementara
-                                navController.navigate("client_detail/Jake Connor")
-                            }
-                        )
-                    }
+            if (filteredClients.isEmpty()) {
+                item {
+                    Text(
+                        text = "No clients in $currentStage stage",
+                        modifier = Modifier.fillMaxWidth().padding(top = 40.dp),
+                        textAlign = TextAlign.Center,
+                        color = Color.Gray
+                    )
+                }
+            } else {
+                items(filteredClients.size) { index ->
+                    val client = filteredClients[index]
+                    TherapistClientCard(
+                        name = client.name,
+                        category = client.mainCondition,
+                        lastSession = if (client.lastSessionDate == 0L) "No session yet" else DateTimeUtils.getFormattedDate(client.lastSessionDate),
+                        cardColor = stageColors[currentStage]!!,
+                        indicatorColor = indicatorColors[currentStage]!!,
+                        onClick = {
+                            // Navigasi ke detail menggunakan ID client
+                            navController.navigate("client_detail/${client.clientId}")
+                        }
+                    )
+                    Spacer(modifier = Modifier.height(20.dp))
                 }
             }
         }

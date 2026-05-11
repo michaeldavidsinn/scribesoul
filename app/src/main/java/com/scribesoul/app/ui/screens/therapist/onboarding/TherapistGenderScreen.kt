@@ -17,14 +17,15 @@ import androidx.compose.ui.platform.LocalContext
 import com.scribesoul.R
 import com.scribesoul.app.ui.components.OnboardingSelectableItem
 import com.scribesoul.app.ui.components.OnboardingTemplate
+import com.scribesoul.app.viewModels.TherapistOnboardingViewModel
 
 @Composable
-fun TherapistGenderScreen(navController: NavController) {
+fun TherapistGenderScreen(
+    navController: NavController,
+    onboardingViewModel: TherapistOnboardingViewModel
+) {
     // State untuk scroll agar konten tidak bertabrakan dengan tombol navigasi
     val scrollState = rememberScrollState()
-
-    // State untuk menyimpan pilihan gender (Single Select)
-    var selectedGender by remember { mutableStateOf<String?>(null) }
 
     OnboardingTemplate(
         title = "What's your gender?",
@@ -32,9 +33,8 @@ fun TherapistGenderScreen(navController: NavController) {
         backgroundColor = Color(0xFFEBDEFF), // Warna ungu sesuai desain
         onBackClick = { navController.popBackStack() },
         onNextClick = {
-            // Navigasi ke halaman berikutnya jika gender sudah dipilih
-            if (selectedGender != null) {
-                 navController.navigate("therapist_professional_info")
+            if (onboardingViewModel.selectedGender != null) {
+                navController.navigate("therapist_professional_info")
             }
         }
     ) {
@@ -53,21 +53,19 @@ fun TherapistGenderScreen(navController: NavController) {
                     .padding(horizontal = 10.dp),
                 horizontalArrangement = Arrangement.Center
             ) {
-                // Pilihan Wanita
                 OnboardingSelectableItem(
                     text = "Woman",
-                    isSelected = selectedGender == "Woman",
-                    onClick = { selectedGender = "Woman" }, // Logika single select
+                    isSelected = onboardingViewModel.selectedGender == "Woman", // Ambil dari ViewModel
+                    onClick = { onboardingViewModel.selectedGender = "Woman" }, // Update ke ViewModel
                     modifier = Modifier
                         .weight(1f)
                         .aspectRatio(1f)
                 )
 
-                // Pilihan Pria
                 OnboardingSelectableItem(
                     text = "Man",
-                    isSelected = selectedGender == "Man",
-                    onClick = { selectedGender = "Man" }, // Logika single select
+                    isSelected = onboardingViewModel.selectedGender == "Man", // Ambil dari ViewModel
+                    onClick = { onboardingViewModel.selectedGender = "Man" }, // Update ke ViewModel
                     modifier = Modifier
                         .weight(1f)
                         .aspectRatio(1f)
@@ -87,10 +85,4 @@ fun TherapistGenderScreen(navController: NavController) {
             Spacer(modifier = Modifier.height(150.dp))
         }
     }
-}
-
-@Preview(showBackground = true)
-@Composable
-fun PreviewTherapistGender() {
-    TherapistGenderScreen(navController = NavController(LocalContext.current))
 }
