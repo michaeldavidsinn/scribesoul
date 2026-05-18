@@ -1,4 +1,4 @@
-package com.scribesoul.app.ui.screens
+package com.scribesoul.app.ui.screens.user
 
 import android.os.Build
 import androidx.compose.foundation.Image

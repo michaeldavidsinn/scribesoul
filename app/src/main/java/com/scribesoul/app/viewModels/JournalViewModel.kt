@@ -17,7 +17,7 @@ import androidx.lifecycle.viewmodel.initializer
 import androidx.lifecycle.viewmodel.viewModelFactory
 import androidx.navigation.NavController
 import com.scribesoul.app.repository.JournalRepository
-import com.scribesoul.app.ui.screens.ColorPickerTarget
+import com.scribesoul.app.ui.screens.user.ColorPickerTarget
 import kotlinx.coroutines.launch
 import toDTO
 import toUIModel

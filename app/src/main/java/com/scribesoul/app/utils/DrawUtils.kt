@@ -39,7 +39,7 @@ import coil.compose.rememberAsyncImagePainter
 import coil.request.ImageRequest
 import com.scribesoul.app.commands.*
 import com.scribesoul.app.models.*
-import com.scribesoul.app.ui.screens.GuideLine
+import com.scribesoul.app.ui.screens.user.GuideLine
 import com.scribesoul.app.viewModels.DrawingViewModel
 import kotlin.math.*
 import com.scribesoul.app.models.LinearGradient as LinearGradientFill

@@ -1,4 +1,4 @@
-package com.scribesoul.app.ui.screens
+package com.scribesoul.app.ui.screens.user
 
 
 
@@ -37,7 +37,6 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Slider
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.key
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -538,7 +537,9 @@ fun JournalScreen(navController: NavController, journalViewModel: JournalViewMod
                         drawingViewModel.selectedPaths.clear()
                     },
                     allLists = listOf(page!!.texts, page.shapes, page.imageLayers, drawingViewModel.groups),
-                    onShowColorPicker = { drawingViewModel.colorPickerTarget = ColorPickerTarget.EDIT_SELECTION },
+                    onShowColorPicker = { drawingViewModel.colorPickerTarget =
+                        ColorPickerTarget.EDIT_SELECTION
+                    },
                     onShowGradientPicker = { drawingViewModel.showGradientPicker = true }
                 )
             }

@@ -19,8 +19,8 @@ import com.scribesoul.app.models.FillStyle
 import com.scribesoul.app.models.ItemGroup
 import com.scribesoul.app.models.Movable
 import com.scribesoul.app.models.ToolMode
-import com.scribesoul.app.ui.screens.ColorPickerTarget
-import com.scribesoul.app.ui.screens.GuideLine
+import com.scribesoul.app.ui.screens.user.ColorPickerTarget
+import com.scribesoul.app.ui.screens.user.GuideLine
 
 class DrawingViewModel: ViewModel() {
     val selectedPaths = mutableStateListOf<DrawablePath>()

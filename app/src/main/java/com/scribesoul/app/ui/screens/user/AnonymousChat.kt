@@ -1,4 +1,4 @@
-package com.scribesoul.app.ui.screens
+package com.scribesoul.app.ui.screens.user
 
 import com.scribesoul.app.ui.components.InputBar
 import androidx.compose.ui.tooling.preview.Preview
@@ -41,8 +41,6 @@ import androidx.compose.material.icons.filled.Search
 import androidx.navigation.compose.rememberNavController
 import com.scribesoul.app.ui.navigation.BottomNavItem
 import androidx.compose.material.icons.filled.Close
-import androidx.compose.runtime.mutableStateListOf
-import com.scribesoul.app.model.PostData
 import androidx.compose.foundation.lazy.items
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState

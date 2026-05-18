@@ -9,7 +9,6 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
-import com.scribesoul.app.ui.screens.*
 import com.scribesoul.app.viewModels.DrawingViewModel
 import com.scribesoul.app.viewModels.HomeViewModel
 import com.scribesoul.app.viewModels.JournalListViewModel
@@ -37,10 +36,46 @@ import com.scribesoul.app.ui.screens.therapist.onboarding.TherapistProfessionalI
 import com.scribesoul.app.ui.screens.therapist.onboarding.TherapistQualificationInfo
 import com.scribesoul.app.ui.screens.therapist.onboarding.TherapistSpecializationScreen
 import com.scribesoul.app.ui.screens.therapist.onboarding.TherapistTherapyApproachScreen
+import com.scribesoul.app.ui.screens.user.AddScribbleScreen
+import com.scribesoul.app.ui.screens.user.AnonymousChatScreen
+import com.scribesoul.app.ui.screens.user.CommunityGroupScreen
+import com.scribesoul.app.ui.screens.user.DrawScribbleScreen
+import com.scribesoul.app.ui.screens.user.HomeScreen
+import com.scribesoul.app.ui.screens.user.InitialScreen
+import com.scribesoul.app.ui.screens.user.JoinChatScreen
+import com.scribesoul.app.ui.screens.user.JournalListScreen
+import com.scribesoul.app.ui.screens.user.JournalScreen
+import com.scribesoul.app.ui.screens.user.Login
+import com.scribesoul.app.ui.screens.user.MentalTip
+import com.scribesoul.app.ui.screens.user.Register
+import com.scribesoul.app.ui.screens.user.SOSScreen
+import com.scribesoul.app.ui.screens.user.TherapistCustomerServiceScreen
+import com.scribesoul.app.ui.screens.user.TherapistDetailScreen
+import com.scribesoul.app.ui.screens.user.TherapistFAQScreen
+import com.scribesoul.app.ui.screens.user.TherapistRecommendationScreen
+import com.scribesoul.app.ui.screens.user.onboarding.UserAgeScreen
+import com.scribesoul.app.ui.screens.user.onboarding.UserChallengesScreen
+import com.scribesoul.app.ui.screens.user.onboarding.UserFeelingScreen
+import com.scribesoul.app.ui.screens.user.onboarding.UserGenderScreen
+import com.scribesoul.app.ui.screens.user.onboarding.UserImportanceScreen
+import com.scribesoul.app.ui.screens.user.onboarding.UserLetUsKnowScreen
+import com.scribesoul.app.ui.screens.user.onboarding.UserMainGoalScreen
+import com.scribesoul.app.ui.screens.user.onboarding.UserMotivationScreen
+import com.scribesoul.app.ui.screens.user.onboarding.UserOftenEmotionalSupportScreen
+import com.scribesoul.app.ui.screens.user.onboarding.UserOftenFeelingScreen
+import com.scribesoul.app.ui.screens.user.onboarding.UserOftenMoodSwingsScreen
+import com.scribesoul.app.ui.screens.user.onboarding.UserProblemsScreen
+import com.scribesoul.app.ui.screens.user.onboarding.UserSeekingHelpDurationScreen
+import com.scribesoul.app.ui.screens.user.onboarding.UserSoughtMentalHealthScreen
+import com.scribesoul.app.ui.screens.user.onboarding.UserStartFeelingScreen
+import com.scribesoul.app.ui.screens.user.onboarding.UserSupportKindScreen
+import com.scribesoul.app.ui.screens.user.onboarding.UserThankYouScreen
+import com.scribesoul.app.ui.screens.user.onboarding.UserTypeOfSupportScreen
 import com.scribesoul.app.viewModels.AuthViewModel
 import com.scribesoul.app.viewModels.PostViewModel
 import com.scribesoul.app.viewModels.TherapistHomeViewModel
 import com.scribesoul.app.viewModels.TherapistOnboardingViewModel
+import com.scribesoul.app.viewModels.UserOnboardingViewModel
 
 
 @RequiresApi(Build.VERSION_CODES.VANILLA_ICE_CREAM)
@@ -54,7 +89,8 @@ fun AppNavigation(
     drawingViewModel: DrawingViewModel = viewModel(factory = DrawingViewModel.Factory ),
     communityViewModel: CommunityViewModel = viewModel(factory = CommunityViewModel.Factory),
     postViewModel: PostViewModel = viewModel(factory = PostViewModel.Factory),
-    authViewModel: AuthViewModel = viewModel(factory = AuthViewModel.Factory)
+    authViewModel: AuthViewModel = viewModel(factory = AuthViewModel.Factory),
+    userOnboardingViewModel: UserOnboardingViewModel = viewModel(factory = UserOnboardingViewModel.Factory)
 
 ) {
     val startScreen = if (authViewModel.isLoggedIn) "home" else "initial"
@@ -214,6 +250,80 @@ fun AppNavigation(
 
         composable("therapist_approaches") {
             TherapistTherapyApproachScreen(navController, onboardingViewModel)
+        }
+
+
+        // Onboarding user
+        composable("user_LetUsKnow"){
+            UserLetUsKnowScreen(navController)
+        }
+
+        composable("user_age") {
+            UserAgeScreen(navController, userOnboardingViewModel)
+        }
+
+        composable("user_gender") {
+            UserGenderScreen(navController, userOnboardingViewModel)
+        }
+
+        composable("user_problems") {
+            UserProblemsScreen(navController, userOnboardingViewModel)
+        }
+
+        composable("user_goals") {
+            UserMainGoalScreen(navController, userOnboardingViewModel)
+        }
+
+        composable("user_feeling") {
+            UserFeelingScreen(navController, userOnboardingViewModel)
+        }
+
+        composable("user_start_feeling") {
+            UserStartFeelingScreen(navController, userOnboardingViewModel)
+        }
+
+        composable("user_often_feeling") {
+            UserOftenFeelingScreen(navController, userOnboardingViewModel)
+        }
+
+        composable("user_often_mood_swing") {
+            UserOftenMoodSwingsScreen(navController, userOnboardingViewModel)
+        }
+
+        composable("user_often_emotional_support") {
+            UserOftenEmotionalSupportScreen(navController, userOnboardingViewModel)
+        }
+
+        composable("user_type_of_support") {
+            UserTypeOfSupportScreen(navController, userOnboardingViewModel)
+        }
+
+        composable("user_challenges") {
+            UserChallengesScreen(navController, userOnboardingViewModel)
+        }
+
+        composable("user_motivation") {
+            UserMotivationScreen(navController, userOnboardingViewModel)
+        }
+
+        composable("user_sought_mental_health"){
+            UserSoughtMentalHealthScreen(navController, userOnboardingViewModel)
+        }
+
+        composable("user_support_kind") {
+            UserSupportKindScreen(navController, userOnboardingViewModel)
+        }
+
+        composable("user_seeking_help_duration"){
+            UserSeekingHelpDurationScreen(navController, userOnboardingViewModel)
+        }
+
+        composable("user_importance"){
+            UserImportanceScreen(navController, userOnboardingViewModel)
+        }
+
+        composable("user_thank_you") {
+            UserThankYouScreen(navController)
         }
 
         // --- NAVIGASI KHUSUS THERAPIST ---

@@ -1,11 +1,10 @@
-package com.scribesoul.app.ui.screens
+package com.scribesoul.app.ui.screens.user
 
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
@@ -28,7 +27,6 @@ import com.scribesoul.app.ui.navigation.BottomNavItem
 import android.content.Intent
 import android.net.Uri
 import androidx.compose.foundation.lazy.itemsIndexed
-import coil.compose.AsyncImage
 import androidx.compose.ui.layout.ContentScale
 
 @Composable

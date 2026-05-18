@@ -1,4 +1,4 @@
-package com.scribesoul.app.ui.screens
+package com.scribesoul.app.ui.screens.user
 
 import androidx.activity.compose.BackHandler
 import com.scribesoul.app.ui.components.InputBar

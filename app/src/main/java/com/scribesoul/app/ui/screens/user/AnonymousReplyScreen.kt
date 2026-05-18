@@ -1,4 +1,4 @@
-package com.example.scribesoul.ui.screens
+package com.scribesoul.app.ui.screens.user
 
 import androidx.compose.foundation.*
 import androidx.compose.foundation.layout.*
@@ -32,8 +32,6 @@ import androidx.navigation.compose.rememberNavController
 import com.scribesoul.R
 import com.scribesoul.app.ui.components.InputBar
 import com.scribesoul.app.model.PostData
-import com.scribesoul.app.ui.screens.BottomBarAnonymous
-import com.scribesoul.app.ui.screens.BottomBarTherapistAnonymous
 import com.scribesoul.app.viewModels.PostViewModel // IMPORT POSTVIEWMODEL
 
 @Composable

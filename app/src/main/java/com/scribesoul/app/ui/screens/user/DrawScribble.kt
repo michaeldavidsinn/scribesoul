@@ -1,4 +1,4 @@
-package com.scribesoul.app.ui.screens
+package com.scribesoul.app.ui.screens.user
 
 import android.net.Uri
 import android.os.Build
@@ -807,11 +807,16 @@ fun DrawScribbleScreen(navController: NavController) {
                     Box {
                         Image(painter = painterResource(id = R.drawable.shapeasset), contentDescription = "Shape", modifier = Modifier.size(22.dp).clickable { showShapeMenu.value = true })
                         DropdownMenu(expanded = showShapeMenu.value, onDismissRequest = { showShapeMenu.value = false }) {
-                            DropdownMenuItem(onClick = { pendingShapeType = "Circle"; colorPickerTarget = ColorPickerTarget.ADD_SHAPE; showShapeMenu.value = false }, text = { Text("Circle") })
-                            DropdownMenuItem(onClick = { pendingShapeType = "Rectangle"; colorPickerTarget = ColorPickerTarget.ADD_SHAPE; showShapeMenu.value = false }, text = { Text("Rectangle") })
-                            DropdownMenuItem(onClick = { pendingShapeType = "Star"; colorPickerTarget = ColorPickerTarget.ADD_SHAPE; showShapeMenu.value = false }, text = { Text("Star") })
-                            DropdownMenuItem(onClick = { pendingShapeType = "Triangle"; colorPickerTarget = ColorPickerTarget.ADD_SHAPE; showShapeMenu.value = false }, text = { Text("Triangle") })
-                            DropdownMenuItem(onClick = { pendingShapeType = "Hexagon"; colorPickerTarget = ColorPickerTarget.ADD_SHAPE; showShapeMenu.value = false }, text = { Text("Hexagon") })
+                            DropdownMenuItem(onClick = { pendingShapeType = "Circle"; colorPickerTarget =
+                                ColorPickerTarget.ADD_SHAPE; showShapeMenu.value = false }, text = { Text("Circle") })
+                            DropdownMenuItem(onClick = { pendingShapeType = "Rectangle"; colorPickerTarget =
+                                ColorPickerTarget.ADD_SHAPE; showShapeMenu.value = false }, text = { Text("Rectangle") })
+                            DropdownMenuItem(onClick = { pendingShapeType = "Star"; colorPickerTarget =
+                                ColorPickerTarget.ADD_SHAPE; showShapeMenu.value = false }, text = { Text("Star") })
+                            DropdownMenuItem(onClick = { pendingShapeType = "Triangle"; colorPickerTarget =
+                                ColorPickerTarget.ADD_SHAPE; showShapeMenu.value = false }, text = { Text("Triangle") })
+                            DropdownMenuItem(onClick = { pendingShapeType = "Hexagon"; colorPickerTarget =
+                                ColorPickerTarget.ADD_SHAPE; showShapeMenu.value = false }, text = { Text("Hexagon") })
                         }
                     }
                     Image(painter = painterResource(id = R.drawable.pencil), contentDescription = "Pencil", modifier = Modifier.size(22.dp).clickable {

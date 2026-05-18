@@ -1,4 +1,4 @@
-package com.scribesoul.app.ui.screens
+package com.scribesoul.app.ui.screens.user
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
