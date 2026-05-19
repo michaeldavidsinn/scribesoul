@@ -46,7 +46,7 @@ fun Login(navController: NavController,
 ){
     LaunchedEffect(viewModel.isLoggedIn) {
         if (viewModel.isLoggedIn) {
-            navController.navigate("home") {
+            navController.navigate("user_LetUsKnow") {
                 popUpTo("initial") { inclusive = true } // Clears the login screens from history
             }
         }

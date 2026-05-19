@@ -9,6 +9,8 @@ import androidx.lifecycle.viewModelScope
 import androidx.lifecycle.viewmodel.initializer
 import androidx.lifecycle.viewmodel.viewModelFactory
 import com.scribesoul.app.repository.AuthRepository
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 
 class AuthViewModel(private val authRepository: AuthRepository) : ViewModel() {
@@ -93,6 +95,14 @@ class AuthViewModel(private val authRepository: AuthRepository) : ViewModel() {
             }
         }
     }
+
+    enum class OnboardingStatus {
+        LOADING, COMPLETED, INCOMPLETE
+    }
+
+    // Inside your AuthViewModel (or similar global ViewModel):
+    private val _onboardingStatus = MutableStateFlow(OnboardingStatus.LOADING)
+    val onboardingStatus = _onboardingStatus.asStateFlow()
 
     fun logout() {
         authRepository.logout()

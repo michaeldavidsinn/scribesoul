@@ -101,7 +101,7 @@ class UserOnboardingViewModel(
         val Factory: ViewModelProvider.Factory = viewModelFactory {
             initializer {
                 val application = (this[ViewModelProvider.AndroidViewModelFactory.APPLICATION_KEY] as ScribeSoulApplication)
-                TherapistOnboardingViewModel(application.container.therapistRepository)
+                UserOnboardingViewModel(application.container.userRepository)
             }
         }
     }
