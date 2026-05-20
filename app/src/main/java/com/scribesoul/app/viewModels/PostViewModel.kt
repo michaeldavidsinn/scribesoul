@@ -92,19 +92,14 @@ class PostViewModel(
     companion object {
         val Factory: ViewModelProvider.Factory = viewModelFactory {
             initializer {
-                // Dummy Repository untuk keperluan Preview
-                val dummyRepository = object : PostRepository {
-                    override fun getPosts() = kotlinx.coroutines.flow.flowOf(emptyList<PostData>())
+                // Ambil Application Context
+                val application = (this[ViewModelProvider.AndroidViewModelFactory.APPLICATION_KEY] as com.scribesoul.app.ScribeSoulApplication)
 
-                    // --- TAMBAHKAN BARIS INI ---
-                    override fun getCommentsByPostId(postId: String) = kotlinx.coroutines.flow.flowOf(emptyList<PostData>())
-                    // ---------------------------
-
-                    override suspend fun createPost(post: PostData) {}
-                    override suspend fun likePost(postId: String, userId: String) {}
-                    override suspend fun addComment(postId: String, comment: String) {}
-                }
-                PostViewModel(dummyRepository)
+                // Masukkan REPOSITORY ASLI yang nyambung ke Firebase, BUKAN dummy lagi!
+                // Pastikan nama variabelnya sesuai dengan yang ada di AppContainer kamu ya
+                PostViewModel(
+                    repository = application.container.postRepository
+                )
             }
         }
     }

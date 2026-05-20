@@ -77,6 +77,7 @@ class TherapistOnboardingViewModel(
             val therapistDTO = TherapistDTO(
                 name = fullName,
                 title = professionalTitle,
+                birthday = dateOfBirth,
                 strNumber = strNumber,
                 // Konversi String ke Numeric dengan aman
                 pricePerSession = sessionFee.toDoubleOrNull() ?: 0.0,
