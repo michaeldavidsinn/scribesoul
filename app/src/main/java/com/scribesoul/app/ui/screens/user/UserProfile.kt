@@ -123,7 +123,7 @@ fun UserProfileScreen(
             Spacer(modifier = Modifier.height(32.dp))
 
             // Menu List
-            val chipTexts = listOf("Account Info", "Therapy History", "Customer Service", "Subscriptions")
+            val chipTexts = listOf("Account Info")
             val gradientBrush = Brush.horizontalGradient(
                 colors = listOf(Color(0xFFFFF47A), Color(0xFFFFA8CF), Color(0xFFA774FF))
             )
