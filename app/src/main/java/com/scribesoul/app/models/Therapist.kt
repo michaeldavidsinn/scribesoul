@@ -17,7 +17,8 @@ data class Therapist(
     val languages: List<String> = emptyList(),
     val therapyApproaches: List<String> = emptyList(), // e.g., ["CBT", "Art Therapy"]
     val educations: List<Education> = emptyList(),
-    val workPractices: List<String> = emptyList()
+    val workPractices: List<String> = emptyList(),
+    val licenseImageUrl: String = ""
 )
 
 data class Education(

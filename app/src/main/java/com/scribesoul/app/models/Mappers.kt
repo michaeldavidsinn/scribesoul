@@ -274,7 +274,8 @@ fun TherapistDTO.toUIModel(): Therapist {
         languages = this.languages,
         therapyApproaches = this.therapyApproaches,
         educations = this.educations.map { it.toUIModel() },
-        workPractices = this.workPractices
+        workPractices = this.workPractices,
+        licenseImageUrl = this.licenseImageUrl
     )
 }
 
@@ -294,7 +295,8 @@ fun Therapist.toDTO(): TherapistDTO {
         languages = this.languages,
         therapyApproaches = this.therapyApproaches,
         educations = this.educations.map { it.toDTO() },
-        workPractices = this.workPractices
+        workPractices = this.workPractices,
+        licenseImageUrl = this.licenseImageUrl
     )
 }
 
