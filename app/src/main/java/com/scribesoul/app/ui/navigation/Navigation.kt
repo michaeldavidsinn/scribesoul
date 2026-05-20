@@ -53,6 +53,8 @@ import com.scribesoul.app.ui.screens.user.TherapistCustomerServiceScreen
 import com.scribesoul.app.ui.screens.user.TherapistDetailScreen
 import com.scribesoul.app.ui.screens.user.TherapistFAQScreen
 import com.scribesoul.app.ui.screens.user.TherapistRecommendationScreen
+import com.scribesoul.app.ui.screens.user.UserAccountInfoScreen
+import com.scribesoul.app.ui.screens.user.UserProfileScreen
 import com.scribesoul.app.ui.screens.user.onboarding.UserAgeScreen
 import com.scribesoul.app.ui.screens.user.onboarding.UserChallengesScreen
 import com.scribesoul.app.ui.screens.user.onboarding.UserFeelingScreen
@@ -73,9 +75,11 @@ import com.scribesoul.app.ui.screens.user.onboarding.UserThankYouScreen
 import com.scribesoul.app.ui.screens.user.onboarding.UserTypeOfSupportScreen
 import com.scribesoul.app.viewModels.AuthViewModel
 import com.scribesoul.app.viewModels.PostViewModel
+import com.scribesoul.app.viewModels.ScribbleViewModel
 import com.scribesoul.app.viewModels.TherapistHomeViewModel
 import com.scribesoul.app.viewModels.TherapistOnboardingViewModel
 import com.scribesoul.app.viewModels.UserOnboardingViewModel
+import com.scribesoul.app.viewModels.UserProfileViewModel
 
 
 @RequiresApi(Build.VERSION_CODES.VANILLA_ICE_CREAM)
@@ -90,7 +94,9 @@ fun AppNavigation(
     communityViewModel: CommunityViewModel = viewModel(factory = CommunityViewModel.Factory),
     postViewModel: PostViewModel = viewModel(factory = PostViewModel.Factory),
     authViewModel: AuthViewModel = viewModel(factory = AuthViewModel.Factory),
-    userOnboardingViewModel: UserOnboardingViewModel = viewModel(factory = UserOnboardingViewModel.Factory)
+    userOnboardingViewModel: UserOnboardingViewModel = viewModel(factory = UserOnboardingViewModel.Factory),
+    userProfileViewModel: UserProfileViewModel = viewModel(factory = UserProfileViewModel.Factory),
+    scribbleViewModel: ScribbleViewModel = viewModel(factory = ScribbleViewModel.Factory)
 
 ) {
     val startScreen = if (authViewModel.isLoggedIn) "home" else "initial"
@@ -204,7 +210,7 @@ fun AppNavigation(
             AddScribbleScreen(navController)
         }
         composable("scribbleDraw") {
-            DrawScribbleScreen(navController)
+            DrawScribbleScreen(navController, scribbleViewModel = scribbleViewModel )
         }
         composable("journalList") {
             JournalListScreen(navController, journalViewModel = journalViewModel, journalListViewModel = journalListViewModel)
@@ -324,6 +330,14 @@ fun AppNavigation(
 
         composable("user_thank_you") {
             UserThankYouScreen(navController)
+        }
+
+        composable("user_profile"){
+            UserProfileScreen(navController,authViewModel,userProfileViewModel)
+        }
+
+        composable("user_account_info"){
+            UserAccountInfoScreen(navController, userProfileViewModel)
         }
 
         // --- NAVIGASI KHUSUS THERAPIST ---

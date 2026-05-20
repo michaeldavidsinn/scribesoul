@@ -11,6 +11,7 @@ import com.scribesoul.app.repository.FirebaseHabitRepository
 import com.scribesoul.app.repository.JournalRepository
 import com.scribesoul.app.repository.FirebaseJournalRepository
 import com.scribesoul.app.repository.FirebasePostRepository
+import com.scribesoul.app.repository.FirebaseScribbleRepository
 import com.scribesoul.app.repository.GroupChatRepository
 import com.scribesoul.app.repository.PostRepository
 import com.scribesoul.app.repository.TherapistRepository
@@ -29,6 +30,7 @@ interface AppContainer {
  val habitRepository: FirebaseHabitRepository
  val therapistRepository: TherapistRepository
  val userRepository: UserRepository
+ val scribbleRepository: FirebaseScribbleRepository
 }
 
 class DefaultAppContainer(
@@ -95,5 +97,9 @@ class DefaultAppContainer(
 
     override val therapistRepository: TherapistRepository by lazy {
         TherapistRepository()
+    }
+
+    override val scribbleRepository: FirebaseScribbleRepository by lazy{
+        FirebaseScribbleRepository()
     }
 }

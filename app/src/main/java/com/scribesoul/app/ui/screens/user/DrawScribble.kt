@@ -2,6 +2,7 @@ package com.scribesoul.app.ui.screens.user
 
 import android.net.Uri
 import android.os.Build
+import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.layout.IntrinsicSize
 import kotlin.math.PI
@@ -65,12 +66,10 @@ import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.style.TextAlign
-import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
-import androidx.navigation.compose.rememberNavController
 import coil.compose.rememberAsyncImagePainter
 import coil.request.ImageRequest
 import com.scribesoul.R
@@ -80,6 +79,8 @@ import com.scribesoul.app.models.LinearGradient as LinearGradientFill
 import com.scribesoul.app.models.RadialGradient as RadialGradientFill
 import com.scribesoul.app.models.SolidColor as SolidColorFill
 import com.scribesoul.app.utils.*
+import com.scribesoul.app.viewModels.ScribbleViewModel
+import java.util.UUID
 import kotlin.math.abs
 import kotlin.math.absoluteValue
 import kotlin.math.max
@@ -96,7 +97,10 @@ enum class ColorPickerTarget {
 @OptIn(ExperimentalMaterial3Api::class)
 @RequiresApi(Build.VERSION_CODES.VANILLA_ICE_CREAM)
 @Composable
-fun DrawScribbleScreen(navController: NavController) {
+fun DrawScribbleScreen(navController: NavController, scribbleViewModel: ScribbleViewModel) {
+    // 1. RAW DRAWING STATE (Decoupled from JournalPage)
+    val scribbleId = remember { UUID.randomUUID().toString() }
+    var currentScribbleName by remember { mutableStateOf("My Scribble") }
 
     val undoStack = remember { mutableStateListOf<Command>() }
     val redoStack = remember { mutableStateListOf<Command>() }
@@ -124,18 +128,29 @@ fun DrawScribbleScreen(navController: NavController) {
     var editingText: EditableText? by remember { mutableStateOf(null) }
     var editingValue by remember { mutableStateOf("") }
     var editingFontSize by remember { mutableStateOf(18f) }
-    val showTextEditorSheet = remember { mutableStateOf(false) }
-    var editingTextItem by remember { mutableStateOf<EditableText?>(null) }
 
+    var showScribbleMenu by remember { mutableStateOf(false) }
+    var showChangeName by remember { mutableStateOf(false) }
+    var showDeleteWarning by remember { mutableStateOf(false) }
 
-
-
-    // Preview state (important: mutableStateOf so Compose re-renders)
+    // Preview state
     var currentShape by remember { mutableStateOf<ShapeItem?>(null) }
     var dragStart by remember { mutableStateOf<Offset?>(null) }
     var pendingShapeFill by remember { mutableStateOf<FillStyle?>(null) }
     val allMovables = remember(texts, shapes, imageLayers, groups) { texts + shapes + imageLayers + groups }
-    val individualItems = texts + shapes + imageLayers
+
+    // 2. SAVE ON BACK PRESS (Using parameters directly)
+    BackHandler {
+        scribbleViewModel.saveScribble(
+            id = scribbleId,
+            name = currentScribbleName,
+            paths = paths,
+            shapes = shapes,
+            texts = texts,
+            imageLayers = imageLayers
+        )
+        navController.popBackStack()
+    }
 
     fun executeCommand(command: Command) {
         command.execute()
@@ -155,7 +170,7 @@ fun DrawScribbleScreen(navController: NavController) {
 
     val density = LocalDensity.current
 
-    // Color/Gradient pickers (left as-is)
+    // Color/Gradient pickers
     if (colorPickerTarget != null) {
         val initialColor = when (colorPickerTarget) {
             ColorPickerTarget.DRAW_STROKE -> drawColor
@@ -178,11 +193,9 @@ fun DrawScribbleScreen(navController: NavController) {
                         executeCommand(ChangeFillStyleCommand(allTargets, SolidColorFill(selectedColor)))
                     }
                     ColorPickerTarget.ADD_SHAPE -> {
-                        pendingShapeType?.let { shapeType ->
+                        pendingShapeType?.let {
                             pendingShapeFill = SolidColorFill(selectedColor)
-                            // set the tool mode so next drag will create shape at click
                             toolMode = ToolMode.SHAPE
-                            // Do NOT add to shapes here — we only set pending fill and shape type.
                         }
                     }
                     null -> {}
@@ -203,6 +216,30 @@ fun DrawScribbleScreen(navController: NavController) {
         )
     }
 
+    // --- DIALOGS ---
+    if (showChangeName) {
+        JournalNameChangeDialog(
+            onDismissRequest = { showChangeName = false },
+            onNameChange = { newName ->
+                currentScribbleName = newName
+                showChangeName = false
+            },
+            initial = currentScribbleName
+        )
+    }
+
+    if (showDeleteWarning) {
+        DeleteWarningDialog(
+            onDismissRequest = { showDeleteWarning = false },
+            onDelete = {
+                showDeleteWarning = false
+                scribbleViewModel.deleteScribble(scribbleId) {
+                    navController.popBackStack()
+                }
+            }
+        )
+    }
+
     Box(
         modifier = Modifier
             .fillMaxSize()
@@ -211,81 +248,61 @@ fun DrawScribbleScreen(navController: NavController) {
                 if (toolMode != ToolMode.TEXT) {
                     detectDragGestures(
                         onDragStart = { startPoint ->
-                            // common: start a free path for pen/highlighter/eraser
                             currentPath.clear()
                             currentPath.add(startPoint)
 
                             when (toolMode) {
                                 ToolMode.SHAPE -> {
-                                    // Prepare preview shape (do NOT add to shapes yet)
                                     dragStart = startPoint
                                     val fillForShape = pendingShapeFill ?: SolidColorFill(drawColor)
                                     currentShape = ShapeItem(
                                         type = pendingShapeType ?: "Rectangle",
-                                        offset = startPoint, // we treat offset as top-left during preview
+                                        offset = startPoint,
                                         fill = fillForShape,
                                         size = Size(1f, 1f),
                                         cornerRadius = 0f
                                     )
                                 }
-
-                                ToolMode.ERASE -> {
-                                    // nothing extra here on start
-                                }
-
-                                else -> {
-                                    // other tools keep existing behavior: gather path points
-                                }
+                                ToolMode.ERASE -> { }
+                                else -> { }
                             }
                         },
                         onDrag = { change, _ ->
                             change.consume()
                             when (toolMode) {
                                 ToolMode.SHAPE -> {
-                                    // update preview from dragStart -> current position
                                     val start = dragStart ?: return@detectDragGestures
                                     val end = change.position
-                                    val topLeft =
-                                        Offset(minOf(start.x, end.x), minOf(start.y, end.y))
+                                    val topLeft = Offset(minOf(start.x, end.x), minOf(start.y, end.y))
                                     val newSize = Size(
                                         (end.x - start.x).absoluteValue.coerceAtLeast(1f),
                                         (end.y - start.y).absoluteValue.coerceAtLeast(1f)
                                     )
-                                    // use copy to ensure state object changes so Compose recomposes
-                                    currentShape =
-                                        currentShape?.copy(offset = topLeft, size = newSize)
+                                    currentShape = currentShape?.copy(offset = topLeft, size = newSize)
                                 }
 
                                 ToolMode.ERASE -> {
                                     val point = change.position
                                     currentPath.add(point)
 
-                                    // ✅ Real-time erase logic
-                                    // 1. Remove intersecting SHAPES immediately
                                     val shapesToRemove = shapes.filter {
                                         shapeIntersectsPoint(it, point, eraseThickness)
                                     }
                                     if (shapesToRemove.isNotEmpty()) {
                                         shapes.removeAll(shapesToRemove)
                                         undoStack.add(
-                                            DeleteItemsCommand(
-                                                shapesToRemove,
-                                                listOf(texts, shapes, imageLayers, groups)
-                                            )
+                                            DeleteItemsCommand(shapesToRemove, listOf(texts, shapes, imageLayers, groups))
                                         )
                                         redoStack.clear()
                                     }
 
-                                    // 2. Erase intersecting PATHS immediately
                                     val updatedPaths = mutableListOf<DrawablePath>()
                                     paths.forEach { drawablePath ->
                                         if (drawablePath.toolMode == ToolMode.Highlighter) {
-                                            // skip highlighters (optional)
                                             updatedPaths.add(drawablePath)
                                             return@forEach
                                         }
 
-                                        // keep only the parts that aren’t “erased”
                                         val remainingSegments = mutableListOf<Offset>()
                                         var segment = mutableListOf<Offset>()
 
@@ -296,7 +313,7 @@ fun DrawScribbleScreen(navController: NavController) {
                                             } else {
                                                 if (segment.size > 1) {
                                                     remainingSegments.addAll(segment)
-                                                    remainingSegments.add(Offset.Unspecified) // marker for split
+                                                    remainingSegments.add(Offset.Unspecified)
                                                 }
                                                 segment.clear()
                                             }
@@ -306,36 +323,25 @@ fun DrawScribbleScreen(navController: NavController) {
                                             remainingSegments.addAll(segment)
                                         }
 
-                                        // Rebuild multiple mini paths if the path got split
                                         if (remainingSegments.isNotEmpty()) {
                                             var temp = mutableListOf<Offset>()
                                             for (offset in remainingSegments) {
                                                 if (offset == Offset.Unspecified) {
-                                                    if (temp.size > 1) updatedPaths.add(
-                                                        drawablePath.copy(
-                                                            offsets = temp.toList()
-                                                        )
-                                                    )
+                                                    if (temp.size > 1) updatedPaths.add(drawablePath.copy(offsets = temp.toList()))
                                                     temp = mutableListOf()
                                                 } else {
                                                     temp.add(offset)
                                                 }
                                             }
-                                            if (temp.size > 1) updatedPaths.add(
-                                                drawablePath.copy(
-                                                    offsets = temp.toList()
-                                                )
-                                            )
+                                            if (temp.size > 1) updatedPaths.add(drawablePath.copy(offsets = temp.toList()))
                                         }
                                     }
 
-                                    // Replace existing paths with updated versions (real-time)
                                     paths.clear()
                                     paths.addAll(updatedPaths)
                                 }
 
                                 else -> {
-                                    // Freehand drawing: collect points
                                     currentPath.add(change.position)
                                 }
                             }
@@ -343,9 +349,7 @@ fun DrawScribbleScreen(navController: NavController) {
                         onDragEnd = {
                             when (toolMode) {
                                 ToolMode.SHAPE -> {
-                                    // finalize preview into real shape (undoable)
                                     currentShape?.let { shp ->
-                                        // enforce minimum size
                                         val finalSize = Size(
                                             shp.size.width.coerceAtLeast(2f),
                                             shp.size.height.coerceAtLeast(2f)
@@ -353,11 +357,8 @@ fun DrawScribbleScreen(navController: NavController) {
                                         val finalShape = shp.copy(size = finalSize)
                                         executeCommand(AddShapeCommand(finalShape, shapes))
                                     }
-                                    // reset preview state
                                     currentShape = null
                                     dragStart = null
-                                    // Optionally reset pendingShapeType/pendingShapeFill if you want single-use
-                                    // pendingShapeType = null; pendingShapeFill = null
                                 }
 
                                 ToolMode.ERASE -> {
@@ -369,19 +370,14 @@ fun DrawScribbleScreen(navController: NavController) {
                                         val polygon = currentPath.toList()
                                         selectedItems.clear()
                                         selectedPaths.clear()
-                                        val allMovables = texts + shapes + imageLayers + groups
-                                        allMovables.forEach { item ->
+                                        val allMovablesItems = texts + shapes + imageLayers + groups
+                                        allMovablesItems.forEach { item ->
                                             if (isMovableInPolygon(item, polygon, density)) {
                                                 selectedItems.add(item)
                                             }
                                         }
                                         paths.forEach { path ->
-                                            if (path.offsets.any { point ->
-                                                    isPointInPolygon(
-                                                        point,
-                                                        polygon
-                                                    )
-                                                }) {
+                                            if (path.offsets.any { point -> isPointInPolygon(point, polygon) }) {
                                                 selectedPaths.add(path)
                                             }
                                         }
@@ -390,16 +386,13 @@ fun DrawScribbleScreen(navController: NavController) {
                                 }
 
                                 else -> {
-                                    // Freehand finalize
                                     if (currentPath.isNotEmpty()) {
                                         val newPath = DrawablePath(
                                             offsets = currentPath.toList(),
                                             toolMode = toolMode,
                                             thickness = drawThickness,
                                             fill = SolidColorFill(
-                                                if (toolMode == ToolMode.Highlighter) Color.Yellow.copy(
-                                                    alpha = 0.5f
-                                                ) else drawColor
+                                                if (toolMode == ToolMode.Highlighter) Color.Yellow.copy(alpha = 0.5f) else drawColor
                                             )
                                         )
                                         executeCommand(AddDrawableCommand(newPath, paths))
@@ -418,11 +411,9 @@ fun DrawScribbleScreen(navController: NavController) {
                             text = "Type here",
                             offset = offset,
                             fontSize = 28,
-                            isEditing = true // Create in edit mode
+                            isEditing = true
                         )
                         executeCommand(AddTextCommand(newText, texts))
-
-                        // AUTO-SELECT the new text so the toolbar/handles appear immediately
                         selectedItems.clear()
                         selectedPaths.clear()
                         selectedItems.add(newText)
@@ -432,60 +423,10 @@ fun DrawScribbleScreen(navController: NavController) {
     ) {
         // Canvas area
         Canvas(modifier = Modifier.fillMaxSize()) {
-            // draw freehand paths
             paths.forEach { path ->
                 drawPathFromFill(path.offsets, path.fill, path.toolMode, path.thickness)
             }
 
-
-
-
-            // draw stored shapes (top-left offset)
-//            shapes.forEach { shape ->
-//                val brush = when (val fill = shape.fill) {
-//                    is SolidColorFill -> Brush.verticalGradient(listOf(fill.color, fill.color)) // solid via gradient brush
-//                    is LinearGradientFill -> Brush.linearGradient(colors = fill.colors)
-//                    is RadialGradientFill -> Brush.radialGradient(colors = fill.colors)
-//                    else -> SolidColor(Color.Black)
-//                }
-//
-//                when (shape.type) {
-//                    "Star" -> drawStar(
-//                        brush = brush,
-//                        center = Offset(shape.offset.x + shape.size.width / 2, shape.offset.y + shape.size.height / 2),
-//                        radius = maxOf(shape.size.width, shape.size.height) / 2f
-//                    )
-//                    "Rectangle" -> drawRect(
-//                        brush = brush,
-//                        topLeft = shape.offset,
-//                        size = shape.size
-//                    )
-//                    "Circle" -> drawOval(
-//                        brush = brush,
-//                        topLeft = shape.offset,
-//                        size = shape.size
-//                    )
-//                    "Triangle" -> drawPolygon(
-//                        sides = 3,
-//                        brush = brush,
-//                        center = Offset(shape.offset.x + shape.size.width / 2, shape.offset.y + shape.size.height / 2),
-//                        radius = maxOf(shape.size.width, shape.size.height) / 2f
-//                    )
-//                    "Hexagon" -> drawPolygon(
-//                        sides = 6,
-//                        brush = brush,
-//                        center = Offset(shape.offset.x + shape.size.width / 2, shape.offset.y + shape.size.height / 2),
-//                        radius = maxOf(shape.size.width, shape.size.height) / 2f
-//                    )
-//                    else -> {
-//                        // fallback rectangle
-//                        drawRect(brush = brush, topLeft = shape.offset, size = shape.size)
-//                    }
-//                }
-//            }
-
-
-            // draw current preview shape (not yet added to shapes)
             currentShape?.let { shape ->
                 val previewBrush = when (val fill = shape.fill) {
                     is SolidColorFill -> SolidColor(fill.color.copy(alpha = 0.45f))
@@ -502,7 +443,6 @@ fun DrawScribbleScreen(navController: NavController) {
                         val centerX = shape.offset.x + shape.size.width / 2
                         val centerY = shape.offset.y + shape.size.height / 2
                         val center = Offset(centerX, centerY)
-                        // FIX: Use withTransform
                         withTransform({
                             scale(scaleX = 1f, scaleY = shape.size.height / shape.size.width, pivot = center)
                         }) {
@@ -513,7 +453,6 @@ fun DrawScribbleScreen(navController: NavController) {
                         val centerX = shape.offset.x + shape.size.width / 2
                         val centerY = shape.offset.y + shape.size.height / 2
                         val center = Offset(centerX, centerY)
-                        // FIX: Use withTransform
                         withTransform({
                             scale(scaleX = 1f, scaleY = shape.size.height / shape.size.width, pivot = center)
                         }) {
@@ -524,7 +463,6 @@ fun DrawScribbleScreen(navController: NavController) {
                         val centerX = shape.offset.x + shape.size.width / 2
                         val centerY = shape.offset.y + shape.size.height / 2
                         val center = Offset(centerX, centerY)
-                        // FIX: Use withTransform
                         withTransform({
                             scale(scaleX = 1f, scaleY = shape.size.height / shape.size.width, pivot = center)
                         }) {
@@ -535,7 +473,6 @@ fun DrawScribbleScreen(navController: NavController) {
                 }
             }
 
-            // draw current freehand path while drawing
             if (toolMode != ToolMode.ERASE && toolMode != ToolMode.Lasso) {
                 drawPathFromFill(currentPath, SolidColorFill(drawColor), toolMode, drawThickness)
             }
@@ -548,7 +485,6 @@ fun DrawScribbleScreen(navController: NavController) {
                     }
                 }
 
-                // Optional: close the path if the user finishes the loop
                 if (currentPath.size > 2) {
                     lassoPath.close()
                 }
@@ -563,10 +499,6 @@ fun DrawScribbleScreen(navController: NavController) {
                 )
             }
 
-
-
-
-            // selection borders, eraser cursor, guides, etc.
             selectedPaths.forEach { drawSelectionBorder(it.offsets) }
             if (toolMode == ToolMode.ERASE && currentPath.isNotEmpty()) {
                 val lastPoint = currentPath.last()
@@ -582,64 +514,14 @@ fun DrawScribbleScreen(navController: NavController) {
             }
         }
 
-        // RenderMovableItem usage (unchanged)
-
-
-//        individualItems.forEach { item ->
-//            key(item) {
-//                RenderMovableItem(
-//                    item = item,
-//                    isSelected = selectedItems.contains(item),
-//                    onSelect = {
-//                        selectedItems.clear()
-//                        selectedPaths.clear()
-//                        selectedItems.add(item)
-//                        texts.forEach { it.isEditing = false }
-//                    },
-//                    onDoubleClick = { if (it is EditableText) it.isEditing = true },
-//                    executeCommand = { executeCommand(it) },
-//                    allItems = allMovables,
-//                    guideLines = guideLines,
-//                    onUpdate = {
-//                            newItem ->
-//                        when (newItem) {
-//                            is EditableText -> {
-//                                (item as EditableText).apply {
-//                                    text = newItem.text
-//                                    offset = newItem.offset
-//                                    rotation = newItem.rotation
-//                                    fill = newItem.fill
-//                                    fontSize = newItem.fontSize
-//                                    size = newItem.size
-//                                }
-//                            }
-//                            is ShapeItem -> {
-//                                val idx = shapes.indexOf(item)
-//                                if (idx != -1) shapes[idx] = newItem
-//                            }
-//                            is ImageLayer -> {
-//                                val idx = imageLayers.indexOf(item)
-//                                if (idx != -1) imageLayers[idx] = newItem
-//                            }
-//                        }
-//                    }
-//                )
-//            }
-//        }
-
-
-
         groups.forEachIndexed { index, group ->
-            key(index, group) { // Use index in key to help Compose
+            key(index, group) {
                 RenderMovableItem(
                     item = group,
                     isSelected = selectedItems.contains(group),
                     onSelect = { selectedItems.clear(); selectedItems.add(group) },
                     onUpdate = { updatedGroup ->
-                        // Update the specific group at this index
                         groups[index] = updatedGroup as ItemGroup
-
-                        // Update selection list so the border doesn't disappear
                         if (selectedItems.contains(group)) {
                             selectedItems.remove(group)
                             selectedItems.add(updatedGroup)
@@ -667,13 +549,11 @@ fun DrawScribbleScreen(navController: NavController) {
                         selectedItems.clear()
                         selectedPaths.clear()
                         selectedItems.add(item)
-
-                        // Turn off text editing if we click a shape
                         texts.forEachIndexed { i, txt ->
                             if (txt.isEditing) texts[i] = txt.copy(isEditing = false)
                         }
                     },
-                    onDoubleClick = { }, // No double click action for shapes
+                    onDoubleClick = { },
                     onUpdate = { updatedItem ->
                         shapes[index] = updatedItem as ShapeItem
                         if (selectedItems.contains(item)) {
@@ -684,9 +564,7 @@ fun DrawScribbleScreen(navController: NavController) {
                     executeCommand = { executeCommand(it) },
                     allItems = allMovables,
                     guideLines = guideLines,
-                    onDelete = {
-                        executeCommand(DeleteItemsCommand(listOf(item), listOf(texts, shapes, imageLayers, groups)))
-                    }
+                    onDelete = { executeCommand(DeleteItemsCommand(listOf(item), listOf(texts, shapes, imageLayers, groups))) }
                 )
             }
         }
@@ -704,7 +582,6 @@ fun DrawScribbleScreen(navController: NavController) {
                     },
                     onUpdate = { updatedItem ->
                         imageLayers[index] = updatedItem as ImageLayer
-
                         if (selectedItems.contains(item)) {
                             selectedItems.remove(item)
                             selectedItems.add(updatedItem)
@@ -719,19 +596,15 @@ fun DrawScribbleScreen(navController: NavController) {
             }
         }
 
-        // --- RENDER TEXTS ---
         texts.forEachIndexed { index, item ->
             key(index) {
                 RenderMovableItem(
                     item = item,
                     isSelected = selectedItems.contains(item),
                     onSelect = {
-                        // 1. Handle Selection
                         selectedItems.clear()
                         selectedPaths.clear()
                         selectedItems.add(item)
-
-                        // Stop editing others when selecting a new one
                         texts.forEachIndexed { i, txt ->
                             if (i != index && txt.isEditing) {
                                 texts[i] = txt.copy(isEditing = false)
@@ -739,26 +612,17 @@ fun DrawScribbleScreen(navController: NavController) {
                         }
                     },
                     onDoubleClick = {
-                        // 2. Handle Double Click (Enter Edit Mode)
-                        val editingText = item.copy(isEditing = true)
-                        texts[index] = editingText
-
-                        // CRITICAL FIX: You must also update selectedItems with the NEW editing copy
-                        // Otherwise, 'isSelected' becomes false because the object changed.
+                        val newEditingText = item.copy(isEditing = true)
+                        texts[index] = newEditingText
                         selectedItems.clear()
                         selectedPaths.clear()
-                        selectedItems.add(editingText)
-
-                        // Ensure only this one is editing
+                        selectedItems.add(newEditingText)
                         texts.forEachIndexed { i, txt ->
                             if (i != index) texts[i] = txt.copy(isEditing = false)
                         }
                     },
                     onUpdate = { updatedItem ->
-                        // 3. Handle Updates (Dragging/Resizing/Typing)
                         texts[index] = updatedItem as EditableText
-
-                        // Keep selection in sync so handles/toolbar don't disappear while dragging
                         if (selectedItems.contains(item)) {
                             selectedItems.remove(item)
                             selectedItems.add(updatedItem)
@@ -767,14 +631,10 @@ fun DrawScribbleScreen(navController: NavController) {
                     executeCommand = { executeCommand(it) },
                     allItems = allMovables,
                     guideLines = guideLines,
-                    onDelete = {
-                        executeCommand(DeleteItemsCommand(listOf(item), listOf(texts, shapes, imageLayers, groups)))
-                    }
+                    onDelete = { executeCommand(DeleteItemsCommand(listOf(item), listOf(texts, shapes, imageLayers, groups))) }
                 )
             }
         }
-
-
 
         Column(
             modifier = Modifier.fillMaxWidth().padding(top = 60.dp, start = 20.dp, end = 20.dp).align(Alignment.TopCenter),
@@ -782,7 +642,6 @@ fun DrawScribbleScreen(navController: NavController) {
         ) {
             Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.CenterVertically) {
                 Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
-                    // -- FIX: Logika Undo/Redo yang benar --
                     Image(painter = painterResource(id = R.drawable.arrow_left), contentDescription = "Undo",
                         modifier = Modifier.size(20.dp).clickable(enabled = undoStack.isNotEmpty()) {
                             val commandToUndo = undoStack.removeLastOrNull()
@@ -807,16 +666,11 @@ fun DrawScribbleScreen(navController: NavController) {
                     Box {
                         Image(painter = painterResource(id = R.drawable.shapeasset), contentDescription = "Shape", modifier = Modifier.size(22.dp).clickable { showShapeMenu.value = true })
                         DropdownMenu(expanded = showShapeMenu.value, onDismissRequest = { showShapeMenu.value = false }) {
-                            DropdownMenuItem(onClick = { pendingShapeType = "Circle"; colorPickerTarget =
-                                ColorPickerTarget.ADD_SHAPE; showShapeMenu.value = false }, text = { Text("Circle") })
-                            DropdownMenuItem(onClick = { pendingShapeType = "Rectangle"; colorPickerTarget =
-                                ColorPickerTarget.ADD_SHAPE; showShapeMenu.value = false }, text = { Text("Rectangle") })
-                            DropdownMenuItem(onClick = { pendingShapeType = "Star"; colorPickerTarget =
-                                ColorPickerTarget.ADD_SHAPE; showShapeMenu.value = false }, text = { Text("Star") })
-                            DropdownMenuItem(onClick = { pendingShapeType = "Triangle"; colorPickerTarget =
-                                ColorPickerTarget.ADD_SHAPE; showShapeMenu.value = false }, text = { Text("Triangle") })
-                            DropdownMenuItem(onClick = { pendingShapeType = "Hexagon"; colorPickerTarget =
-                                ColorPickerTarget.ADD_SHAPE; showShapeMenu.value = false }, text = { Text("Hexagon") })
+                            DropdownMenuItem(onClick = { pendingShapeType = "Circle"; colorPickerTarget = ColorPickerTarget.ADD_SHAPE; showShapeMenu.value = false }, text = { Text("Circle") })
+                            DropdownMenuItem(onClick = { pendingShapeType = "Rectangle"; colorPickerTarget = ColorPickerTarget.ADD_SHAPE; showShapeMenu.value = false }, text = { Text("Rectangle") })
+                            DropdownMenuItem(onClick = { pendingShapeType = "Star"; colorPickerTarget = ColorPickerTarget.ADD_SHAPE; showShapeMenu.value = false }, text = { Text("Star") })
+                            DropdownMenuItem(onClick = { pendingShapeType = "Triangle"; colorPickerTarget = ColorPickerTarget.ADD_SHAPE; showShapeMenu.value = false }, text = { Text("Triangle") })
+                            DropdownMenuItem(onClick = { pendingShapeType = "Hexagon"; colorPickerTarget = ColorPickerTarget.ADD_SHAPE; showShapeMenu.value = false }, text = { Text("Hexagon") })
                         }
                     }
                     Image(painter = painterResource(id = R.drawable.pencil), contentDescription = "Pencil", modifier = Modifier.size(22.dp).clickable {
@@ -843,7 +697,47 @@ fun DrawScribbleScreen(navController: NavController) {
                             })
                         }
                     }
-                    Image(painter = painterResource(id = R.drawable.dot3), contentDescription = "More", modifier = Modifier.size(22.dp))
+                    Box {
+                        Image(
+                            painter = painterResource(id = R.drawable.dot3),
+                            contentDescription = "More",
+                            modifier = Modifier.clickable { showScribbleMenu = true }.size(22.dp)
+                        )
+                        DropdownMenu(
+                            expanded = showScribbleMenu,
+                            onDismissRequest = { showScribbleMenu = false }
+                        ) {
+                            DropdownMenuItem(
+                                text = { Text("Edit Scribble Name") },
+                                onClick = {
+                                    showChangeName = true
+                                    showScribbleMenu = false
+                                }
+                            )
+                            DropdownMenuItem(
+                                text = { Text("Save & Exit") },
+                                onClick = {
+                                    scribbleViewModel.saveScribble(
+                                        id = scribbleId,
+                                        name = currentScribbleName,
+                                        paths = paths,
+                                        shapes = shapes,
+                                        texts = texts,
+                                        imageLayers = imageLayers
+                                    )
+                                    showScribbleMenu = false
+                                    navController.popBackStack()
+                                }
+                            )
+                            DropdownMenuItem(
+                                text = { Text("Delete") },
+                                onClick = {
+                                    showDeleteWarning = true
+                                    showScribbleMenu = false
+                                }
+                            )
+                        }
+                    }
                 }
             }
         }
@@ -902,14 +796,12 @@ fun DrawScribbleScreen(navController: NavController) {
                 modifier = Modifier.align(Alignment.BottomCenter).padding(bottom = 30.dp),
                 verticalArrangement = Arrangement.spacedBy(1.dp)
             ) {
-                // Pastikan Anda memiliki definisi untuk Composable ini di proyek Anda.
                 BottomBarScribble(navController = navController)
             }
         }
-
     }
-    if (showTextEditor.value && editingText != null) {
 
+    if (showTextEditor.value && editingText != null) {
         ModalBottomSheet(
             onDismissRequest = {
                 editingText?.isEditing = false
@@ -917,30 +809,21 @@ fun DrawScribbleScreen(navController: NavController) {
             },
             sheetState = rememberModalBottomSheetState()
         ) {
-
             Column(
                 modifier = Modifier
                     .fillMaxWidth()
                     .padding(20.dp),
                 verticalArrangement = Arrangement.spacedBy(16.dp)
             ) {
-
-                Text(
-                    text = "Edit Text",
-                    fontSize = 20.sp,
-                    fontWeight = FontWeight.Bold
-                )
-
-                // TEXT INPUT
+                Text("Edit Text", fontSize = 20.sp, fontWeight = FontWeight.Bold)
                 OutlinedTextField(
                     value = editingValue,
                     onValueChange = { newValue ->
                         editingValue = newValue
-                        editingText?.text = newValue },
+                        editingText?.text = newValue
+                    },
                     modifier = Modifier.fillMaxWidth()
                 )
-
-                // FONT SIZE SLIDER
                 Column {
                     Text("Font Size: ${editingFontSize.toInt()}")
                     Slider(
@@ -949,8 +832,6 @@ fun DrawScribbleScreen(navController: NavController) {
                         valueRange = 10f..120f
                     )
                 }
-
-                // DONE BUTTON
                 Button(
                     onClick = {
                         editingText?.apply {
@@ -967,9 +848,6 @@ fun DrawScribbleScreen(navController: NavController) {
             }
         }
     }
-
-
-
 }
 
 private fun calculateSnapping(draggedItem: Movable, allItems: List<Movable>, snapThreshold: Float = 10f): Pair<Offset, List<GuideLine>> {
@@ -1021,9 +899,6 @@ private fun calculateSnapping(draggedItem: Movable, allItems: List<Movable>, sna
     return Pair(snapCorrection, newGuideLines)
 }
 
-
-
-
 @Composable
 fun RenderMovableItem(
     item: Movable,
@@ -1072,14 +947,12 @@ fun RenderMovableItem(
                 detectTransformGestures(panZoomLock = false) { _, pan, zoom, rotation ->
                     val capturedItem = currentItem
 
-                    // A. Rotation-Aware Dragging
                     val angleRad = capturedItem.rotation * (PI / 180)
                     val rotX = pan.x * cos(-angleRad) - pan.y * sin(-angleRad)
                     val rotY = pan.x * sin(-angleRad) + pan.y * cos(-angleRad)
                     val rotatedPan = Offset(rotX.toFloat(), rotY.toFloat())
                     val rawNewOffset = capturedItem.offset + rotatedPan
 
-                    // B. Zoom/Scale Logic
                     var newSize = Size.Zero
                     var newFontSize = 0f
                     if (capturedItem is ShapeItem) {
@@ -1090,7 +963,6 @@ fun RenderMovableItem(
                         newFontSize = capturedItem.fontSize * zoom
                     }
 
-                    // C. Snap Logic
                     val (snapCorrection, newGuides) = if (currentAllItems != null) {
                         calculateSnapping(capturedItem.copyForDrag(rawNewOffset), currentAllItems!!)
                     } else Pair(Offset.Zero, emptyList())
@@ -1098,7 +970,6 @@ fun RenderMovableItem(
                     currentGuideLines?.clear()
                     currentGuideLines?.addAll(newGuides)
 
-                    // D. Apply Updates
                     val finalOffset = rawNewOffset + snapCorrection
                     val finalRotation = capturedItem.rotation + rotation
 
@@ -1155,7 +1026,6 @@ fun RenderMovableItem(
                     }
 
                     is ShapeItem -> {
-                        // FIX: Convert Pixels to DP for Box size
                         val widthDp = with(density) { item.size.width.toDp() }
                         val heightDp = with(density) { item.size.height.toDp() }
 
@@ -1167,7 +1037,6 @@ fun RenderMovableItem(
                                     is RadialGradientFill -> Brush.radialGradient(fill.colors, center = center, radius = size.width / 2f)
                                 }
 
-                                // FIX: Use 'withTransform' to avoid name collision with your utility 'scale'
                                 when (item.type) {
                                     "Circle" -> drawOval(brush = brush, size = size)
                                     "Rectangle" -> drawRoundRect(brush = brush, size = size, cornerRadius = CornerRadius(item.cornerRadius, item.cornerRadius))
@@ -1232,8 +1101,6 @@ private fun Movable.copyForDrag(newOffset: Offset): Movable {
     }
 }
 
-
-
 @Composable
 fun GroupHandles(group: ItemGroup, isSelected: Boolean, executeCommand: (Command) -> Unit) {
     var startOffset by remember { mutableStateOf(Offset.Zero) }
@@ -1287,10 +1154,8 @@ fun GroupHandles(group: ItemGroup, isSelected: Boolean, executeCommand: (Command
 
 @Composable
 fun BoxScope.InteractionHandles(item: Movable, executeCommand: (Command) -> Unit, onUpdate: (Movable) -> Unit) {
-    // 1. Capture the latest item state so we can access it inside gestures without restarting them
     val currentItem by rememberUpdatedState(item)
 
-    // --- RESIZE HANDLE (Bottom Right - Blue) ---
     if (item is ShapeItem || item is ImageLayer || item is EditableText) {
         Box(
             modifier = Modifier
@@ -1299,54 +1164,38 @@ fun BoxScope.InteractionHandles(item: Movable, executeCommand: (Command) -> Unit
                 .size(24.dp)
                 .background(Color.Blue, CircleShape)
                 .border(1.dp, Color.White, CircleShape)
-                .pointerInput(Unit) { // <--- FIXED: Unit key prevents restart
+                .pointerInput(Unit) {
                     detectDragGestures(
-                        onDragStart = {
-                            // No logic needed here, just start tracking
-                        },
+                        onDragStart = { },
                         onDrag = { _, dragAmount ->
-                            // Access the FRESH item state
                             val captured = currentItem
                             when (captured) {
                                 is EditableText -> {
-                                    // 1. Text Resize (Font Scaling)
-                                    // Divisor 100f controls sensitivity (higher = slower)
                                     val scaleFactor = 1 + (dragAmount.x / 100f)
                                     val newSize = (captured.fontSize * scaleFactor).coerceIn(10f, 400f)
-                                    // Only update if value actually changed
                                     if (newSize.toInt() != captured.fontSize) {
                                         onUpdate(captured.copy(fontSize = newSize.toInt()))
                                     }
                                 }
                                 is ShapeItem -> {
-                                    // 2. Shape Resize
                                     val newWidth = (captured.size.width + dragAmount.x).coerceAtLeast(20f)
                                     val newHeight = (captured.size.height + dragAmount.y).coerceAtLeast(20f)
                                     onUpdate(captured.copy(size = Size(newWidth, newHeight)))
                                 }
                                 is ImageLayer -> {
-                                    // 3. Image Resize
                                     val newWidth = (captured.size.width + dragAmount.x).coerceAtLeast(20f)
                                     val newHeight = (captured.size.height + dragAmount.y).coerceAtLeast(20f)
                                     onUpdate(captured.copy(size = Size(newWidth, newHeight)))
                                 }
-                                else -> { /* Do nothing for other types */ }
+                                else -> { }
                             }
                         },
-                        onDragEnd = {
-                            // Create command for Undo using the FINAL state vs START state
-                            // Note: You might want to capture 'startSize' in onDragStart for a perfect undo command,
-                            // but for smoothness, this structure is key.
-                            val captured = currentItem
-                            val finalSize = if (captured is ShapeItem) captured.size else (captured as ImageLayer).size
-                            // Ideally, pass the size difference to a ResizeCommand here
-                        }
+                        onDragEnd = { }
                     )
                 }
         )
     }
 
-    // --- CORNER RADIUS HANDLE (Top Left - Green - Rectangle only) ---
     if (item is ShapeItem && item.type == "Rectangle") {
         Box(
             modifier = Modifier
@@ -1355,25 +1204,20 @@ fun BoxScope.InteractionHandles(item: Movable, executeCommand: (Command) -> Unit
                 .size(24.dp)
                 .background(Color.Green, CircleShape)
                 .border(1.dp, Color.White, CircleShape)
-                .pointerInput(Unit) { // <--- FIXED
+                .pointerInput(Unit) {
                     detectDragGestures(
                         onDrag = { _, dragAmount ->
                             val captured = currentItem as ShapeItem
-                            // Adjust sensitivity (dragAmount.x) as needed
                             val newRadius = (captured.cornerRadius + dragAmount.x)
                                 .coerceIn(0f, min(captured.size.width, captured.size.height) / 2)
-
                             onUpdate(captured.copy(cornerRadius = newRadius))
                         },
-                        onDragEnd = {
-                            // Execute command here if needed
-                        }
+                        onDragEnd = { }
                     )
                 }
         )
     }
 
-    // --- ROTATE HANDLE (Top Right - Magenta) ---
     Box(
         modifier = Modifier
             .align(Alignment.TopEnd)
@@ -1381,11 +1225,10 @@ fun BoxScope.InteractionHandles(item: Movable, executeCommand: (Command) -> Unit
             .size(24.dp)
             .background(Color.Magenta, CircleShape)
             .border(1.dp, Color.White, CircleShape)
-            .pointerInput(Unit) { // <--- FIXED
+            .pointerInput(Unit) {
                 detectDragGestures(
                     onDrag = { _, dragAmount ->
                         val captured = currentItem
-                        // Simple rotation mapping: dragging Right increases angle
                         val newRotation = captured.rotation + dragAmount.x
 
                         val newItem = when (captured) {
@@ -1397,9 +1240,7 @@ fun BoxScope.InteractionHandles(item: Movable, executeCommand: (Command) -> Unit
                         }
                         onUpdate(newItem)
                     },
-                    onDragEnd = {
-                        // Execute command here if needed
-                    }
+                    onDragEnd = { }
                 )
             }
     )
@@ -1444,21 +1285,17 @@ fun BoxScope.PropertiesToolbar(
                         Text("Solid")
                     }
                     Button(onClick = onShowGradientPicker) {
-                        // -- FIX: Ganti dengan ikon bawaan untuk menghindari error resource --
                         Icon(Icons.Default.AutoAwesome, contentDescription = "Change Gradient")
                         Spacer(Modifier.width(8.dp))
                         Text("Gradient")
                     }
                 }
             }
-
-
         }
     }
 }
 
 private fun shapeIntersectsPoint(shape: ShapeItem, point: Offset, threshold: Float): Boolean {
-    // simple bbox-based check; inflate bbox by threshold
     val left = shape.offset.x - threshold
     val top = shape.offset.y - threshold
     val right = shape.offset.x + shape.size.width + threshold
@@ -1467,7 +1304,6 @@ private fun shapeIntersectsPoint(shape: ShapeItem, point: Offset, threshold: Flo
 }
 
 private fun shapeIntersectsPath(shape: ShapeItem, path: List<Offset>, threshold: Float): Boolean {
-    // return true if any path point intersects the inflated bbox
     val left = shape.offset.x - threshold
     val top = shape.offset.y - threshold
     val right = shape.offset.x + shape.size.width + threshold
@@ -1569,15 +1405,4 @@ private fun ColorInputRow(label: String, sliderColor: Color, value: Float, onVal
             shape = RoundedCornerShape(8.dp)
         )
     }
-}
-
-
-
-
-@RequiresApi(Build.VERSION_CODES.VANILLA_ICE_CREAM)
-@Preview
-@Composable
-fun DrawScribblePreview() {
-    val dummyController = rememberNavController()
-    DrawScribbleScreen(navController = dummyController)
 }
