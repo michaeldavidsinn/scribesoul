@@ -10,6 +10,7 @@ import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.viewModelScope
 import androidx.lifecycle.viewmodel.initializer
 import androidx.lifecycle.viewmodel.viewModelFactory
+import com.google.firebase.auth.FirebaseAuth
 import com.scribesoul.app.ScribeSoulApplication
 import com.scribesoul.app.models.EducationDTO
 import com.scribesoul.app.models.TherapistDTO
@@ -44,7 +45,7 @@ class UserOnboardingViewModel(
 //    val supportKind: String = "",
 //    val seekingHelpDuration: String = "",
 //    val connectionImportance: String = ""
-
+    private val auth = FirebaseAuth.getInstance()
 
     // Page 1: Personal Info
     var age by mutableStateOf("")
@@ -66,8 +67,14 @@ class UserOnboardingViewModel(
 
     fun completeOnboarding(onSuccess: () -> Unit) {
         viewModelScope.launch {
-            // 3. Rakit TherapistDTO
+            val firebaseUser = auth.currentUser
+
+            // 2. Safely get the username. Fallback to email prefix if displayName is missing.
+            val currentUserName = firebaseUser?.displayName?.takeIf { it.isNotBlank() }
+                ?: firebaseUser?.email?.substringBefore("@")?.replaceFirstChar { it.uppercase() }
+                ?: "User"
             val userDTO = UserDTO(
+                name = currentUserName,
                 age = age,
                 gender = gender,
                 problems = selectedProblems.toList(),

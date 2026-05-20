@@ -25,7 +25,7 @@ fun UserOftenFeelingScreen(
     // Daftar spesialisasi sesuai desain Figma
     val oftenFeelings = listOf(
         "Once or twice a week",
-        "A few times a week (3-4 days",
+        "A few times a week (3-4 days)",
         "Almost everyday",
         "All the time",
         "Rarely, but it still bothers me",
@@ -42,7 +42,7 @@ fun UserOftenFeelingScreen(
         onBackClick = { navController.popBackStack() },
         onNextClick = {
             if(onboardingViewModel.oftenFeeling != ""){
-                navController.navigate("user_mood_swings")
+                navController.navigate("user_often_mood_swing")
             }
 
         }

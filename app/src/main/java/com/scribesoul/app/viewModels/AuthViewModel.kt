@@ -22,64 +22,112 @@ class AuthViewModel(private val authRepository: AuthRepository) : ViewModel() {
 
     var isLoading by mutableStateOf(false)
         private set
-    var errorMessage by mutableStateOf<String?>(null)
+
+    // Field-specific error states
+    var emailError by mutableStateOf<String?>(null)
+        private set
+    var passwordError by mutableStateOf<String?>(null)
+        private set
+    var confirmPasswordError by mutableStateOf<String?>(null)
+        private set
+    var usernameError by mutableStateOf<String?>(null)
         private set
 
-    // Automatically checks if a user is already logged in when the app opens
+    // Global error for backend messages (like "Invalid credentials")
+    var generalError by mutableStateOf<String?>(null)
+        private set
+
     var isLoggedIn by mutableStateOf(authRepository.currentUser != null)
         private set
 
-    fun reset(){
-        email =""
-        password =""
+    fun reset() {
+        email = ""
+        password = ""
         confirmPassword = ""
         username = ""
+        resetErrors()
+    }
+
+    private fun resetErrors() {
+        emailError = null
+        passwordError = null
+        confirmPasswordError = null
+        usernameError = null
+        generalError = null
     }
 
     fun login() {
-        if (email.isBlank() || password.isBlank()) return
+        resetErrors()
+        var hasError = false
 
-        if (email.isBlank() || password.isBlank()) {
-            errorMessage = "Please fill out all fields."
-            return
+        if (email.isBlank()) {
+            emailError = "Email cannot be empty"
+            hasError = true
+        }
+        if (password.isBlank()) {
+            passwordError = "Password cannot be empty"
+            hasError = true
         }
 
+        if (hasError) return
 
         viewModelScope.launch {
             isLoading = true
-            errorMessage = null
-
             val result = authRepository.login(email, password)
             if (result.isSuccess) {
                 isLoggedIn = true
+                reset()
             } else {
-                errorMessage = result.exceptionOrNull()?.message
+                generalError = result.exceptionOrNull()?.message
             }
             isLoading = false
         }
     }
 
     fun signUp() {
-        if (email.isBlank() || password.isBlank() || confirmPassword.isBlank()) {
-            errorMessage = "Please fill out all fields."
-            return
+        resetErrors()
+        var hasError = false
+
+        if (username.isBlank()) {
+            usernameError = "Username cannot be empty"
+            hasError = true
         }
 
-        // Check if passwords match
-        if (password != confirmPassword) {
-            errorMessage = "Passwords do not match!"
-            return
+        val emailPattern = "^[A-Za-z0-9+_.-]+@[A-Za-z0-9.-]+\\.[A-Za-z]{2,}\$".toRegex()
+        if (email.isBlank()) {
+            emailError = "Email cannot be empty"
+            hasError = true
+        } else if (!email.matches(emailPattern)) {
+            emailError = "Please enter a valid email"
+            hasError = true
         }
+
+        if (password.isBlank()) {
+            passwordError = "Password cannot be empty"
+            hasError = true
+        } else if (password.length < 6) {
+            passwordError = "Must be at least 6 characters"
+            hasError = true
+        }
+
+        if (confirmPassword.isBlank()) {
+            confirmPasswordError = "Please confirm password"
+            hasError = true
+        } else if (password != confirmPassword) {
+            confirmPasswordError = "Passwords do not match"
+            hasError = true
+        }
+
+        if (hasError) return
 
         viewModelScope.launch {
             isLoading = true
-            errorMessage = null
-
             val result = authRepository.signUp(email, password, username)
             if (result.isSuccess) {
                 isLoggedIn = true
+                reset()
             } else {
-                errorMessage = result.exceptionOrNull()?.message
+                generalError = result.exceptionOrNull()?.message
             }
             isLoading = false
         }

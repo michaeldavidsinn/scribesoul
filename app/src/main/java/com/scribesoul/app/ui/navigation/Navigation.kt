@@ -4,7 +4,14 @@ import android.os.Build
 import androidx.annotation.RequiresApi
 import androidx.compose.animation.EnterTransition
 import androidx.compose.animation.ExitTransition
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.ui.Alignment
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
@@ -99,7 +106,8 @@ fun AppNavigation(
     scribbleViewModel: ScribbleViewModel = viewModel(factory = ScribbleViewModel.Factory)
 
 ) {
-    val startScreen = if (authViewModel.isLoggedIn) "home" else "initial"
+//    val startScreen = if (authViewModel.isLoggedIn) "home" else "initial"
+    val startScreen = "splash_check"
     val onboardingViewModel: TherapistOnboardingViewModel = viewModel(
         factory = TherapistOnboardingViewModel.Factory
     )
@@ -117,6 +125,35 @@ fun AppNavigation(
         popExitTransition = {
             ExitTransition.None
         }) {
+        composable("splash_check") {
+            LaunchedEffect(authViewModel.isLoggedIn) {
+                if (authViewModel.isLoggedIn) {
+                    // User is logged in, check if they finished onboarding
+                    userProfileViewModel.checkIfUserFinishedOnboarding { hasFinished ->
+                        if (hasFinished) {
+                            navController.navigate("home") {
+                                popUpTo("splash_check") { inclusive = true }
+                            }
+                        } else {
+                            navController.navigate("user_LetUsKnow") {
+                                popUpTo("splash_check") { inclusive = true }
+                            }
+                        }
+                    }
+                } else {
+                    // Not logged in, go to welcome screen
+                    navController.navigate("initial") {
+                        popUpTo("splash_check") { inclusive = true }
+                    }
+                }
+            }
+
+            // Show a simple loading spinner while Firebase checks the status
+            Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+                CircularProgressIndicator(color = Color(0xFF74A8FF))
+            }
+        }
+
         composable("home") {
             HomeScreen(navController, viewModel =  homeViewModel)
         }
@@ -134,11 +171,11 @@ fun AppNavigation(
         }
 
         composable("login") {
-            Login(navController, viewModel = authViewModel)
+            Login(navController, viewModel = authViewModel, userProfileViewModel)
         }
 
         composable("register") {
-            Register(navController, viewModel = authViewModel)
+            Register(navController, viewModel = authViewModel, userProfileViewModel)
         }
 
         composable(

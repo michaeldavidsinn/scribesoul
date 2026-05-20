@@ -76,15 +76,13 @@ fun UserAgeScreen(
 
             // Gambar maskot kucing di bawah pilihan
             Image(
-                painter = painterResource(id = R.drawable.cat_transgender),
+                painter = painterResource(id = R.drawable.cat_onboarding2),
                 contentDescription = "Gender Mascot",
                 contentScale = ContentScale.Crop,
                 modifier = Modifier
-                    .size(473.dp)
-                    .offset(y = (-60).dp)
+                    .fillMaxWidth()
+                    .offset(x = 40.dp)
             )
-            // Spacer tambahan di bawah agar gambar bisa di-scroll melewati tombol navigasi
-            Spacer(modifier = Modifier.height(150.dp))
         }
     }
 }

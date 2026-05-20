@@ -30,7 +30,7 @@ fun UserSupportKindScreen(
     )
 
     OnboardingTemplate(
-        title = "Have you ever sought help for your mental health before?",
+        title = "What kind of support were you looking for?",
         subtitle = "It’ll help us to understand you more\n" +
                 "and help you to achieve your goals!",
         backgroundColor = Color(0xFFE0ECFF),

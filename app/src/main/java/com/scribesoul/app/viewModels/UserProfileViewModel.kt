@@ -1,5 +1,6 @@
 package com.scribesoul.app.viewModels
 
+import android.util.Log
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
@@ -27,13 +28,38 @@ class UserProfileViewModel(
 
     fun loadUserProfile() {
         viewModelScope.launch {
-            // Fetch email from Firebase Auth
             userEmail = auth.currentUser?.email ?: "No email linked"
 
-            // Fetch User Details (Name, Age, etc.) from Firestore
             val result = repository.getUserProfile()
             if (result.isSuccess) {
                 userProfile = result.getOrNull()
+            } else {
+                // 1. Log the exact error to Logcat so you can read it!
+                val error = result.exceptionOrNull()
+                Log.e("UserProfileError", "Failed to load profile: ${error?.message}", error)
+
+                // 2. Stop the infinite loading state in the UI by creating a fallback
+                userProfile = UserDTO(
+                    name = "Error loading name",
+                    age = "Error loading age"
+                )
+            }
+        }
+    }
+
+    fun checkIfUserFinishedOnboarding(onResult: (Boolean) -> Unit) {
+        viewModelScope.launch {
+            val result = repository.getUserProfile()
+            val errorMsg = result.exceptionOrNull()?.message
+
+            if (result.isSuccess) {
+                onResult(true) // Document exists! They finished onboarding.
+            } else if (errorMsg?.contains("does not exist") == true) {
+                onResult(false) // Document missing! Send them to onboarding.
+            } else {
+                // If it fails for another reason (like no internet), default to true
+                // so they don't get forced to re-do onboarding offline.
+                onResult(true)
             }
         }
     }

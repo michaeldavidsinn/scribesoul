@@ -42,14 +42,6 @@ class HomeViewModel(
     var read by mutableIntStateOf(0)
 
     init {
-        val firebaseUser = FirebaseAuth.getInstance().currentUser
-        if (firebaseUser != null) {
-            // Use the display name if they have one, otherwise use the first part of their email
-            userName = firebaseUser.displayName?.takeIf { it.isNotBlank() }
-                ?: firebaseUser.email?.substringBefore("@")?.replaceFirstChar { it.uppercase() }
-                        ?: "User"
-        }
-        // Create a 7-day week rangez
         val today = currentDay
         val daysToSubtract = today.dayOfWeek.value % 7L
         val startOfWeek = today.minusDays(daysToSubtract)
@@ -58,6 +50,17 @@ class HomeViewModel(
         }
 
         loadHabits()
+    }
+
+    fun loadUserName() {
+        val firebaseUser = FirebaseAuth.getInstance().currentUser
+        if (firebaseUser != null) {
+            userName = firebaseUser.displayName?.takeIf { it.isNotBlank() }
+                ?: firebaseUser.email?.substringBefore("@")?.replaceFirstChar { it.uppercase() }
+                        ?: "User"
+        } else {
+            userName = "User" // Fallback if still null
+        }
     }
 
     private fun loadHabits() {

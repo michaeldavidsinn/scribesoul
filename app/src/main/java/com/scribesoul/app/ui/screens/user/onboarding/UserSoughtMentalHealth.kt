@@ -34,7 +34,7 @@ fun UserSoughtMentalHealthScreen(
         backgroundColor = Color(0xFFE0ECFF),
         onBackClick = { navController.popBackStack() },
         onNextClick = {
-            if(onboardingViewModel.supportKind != ""){
+            if(onboardingViewModel.soughtMentalHealth != ""){
                 navController.navigate("user_support_kind")
             }
 

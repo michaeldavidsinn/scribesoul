@@ -58,12 +58,12 @@ fun UserMotivationScreen(
                         pair.forEach { text ->
                             OnboardingSelectableItem(
                                 text = text,
-                                isSelected = onboardingViewModel.challenges.contains(text),
+                                isSelected = onboardingViewModel.motivations.contains(text),
                                 onClick = {
-                                    if (onboardingViewModel.challenges.contains(text)) {
-                                        onboardingViewModel.challenges.remove(text)
+                                    if (onboardingViewModel.motivations.contains(text)) {
+                                        onboardingViewModel.motivations.remove(text)
                                     } else {
-                                        onboardingViewModel.challenges.add(text)
+                                        onboardingViewModel.motivations.add(text)
                                     }
                                 },
                                 modifier = Modifier

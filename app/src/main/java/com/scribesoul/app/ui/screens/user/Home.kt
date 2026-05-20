@@ -100,6 +100,9 @@ fun HomeScreen(navController: NavController, viewModel: HomeViewModel) {
     )
     StepCounterEffect(viewModel = viewModel)
 
+    LaunchedEffect(key1 = true) {
+        viewModel.loadUserName()
+    }
 
     var showTextInput by remember { mutableStateOf(false) }
     var showAddHabit by remember { mutableStateOf(false) }
@@ -253,7 +256,7 @@ fun HomeScreen(navController: NavController, viewModel: HomeViewModel) {
                             .clip(CircleShape)
                             .background(brush = bgGradient, shape = CircleShape)
                             .padding(3.dp)
-                            .clickable { navController.navigate("profile") }
+                            .clickable { navController.navigate("user_profile") }
                     ) {
                         Box(
                             modifier = Modifier

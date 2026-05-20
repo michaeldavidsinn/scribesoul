@@ -66,9 +66,9 @@ fun UserImportanceScreen(
                     ) {
                         OnboardingSelectableItem(
                             text = text,
-                            isSelected = onboardingViewModel.seekingHelpDuration.contains(text),
+                            isSelected = onboardingViewModel.connectionImportance.contains(text),
                             onClick = {
-                                onboardingViewModel.seekingHelpDuration = text
+                                onboardingViewModel.connectionImportance = text
                             },
                             modifier = Modifier
                                 .fillMaxWidth()

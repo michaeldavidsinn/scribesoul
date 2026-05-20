@@ -59,9 +59,9 @@ fun UserOftenMoodSwingsScreen(
                     ) {
                         OnboardingSelectableItem(
                             text = text,
-                            isSelected = onboardingViewModel.oftenFeeling.contains(text),
+                            isSelected = onboardingViewModel.oftenMoodSwings.contains(text),
                             onClick = {
-                                onboardingViewModel.oftenFeeling = text
+                                onboardingViewModel.oftenMoodSwings = text
                             },
                             modifier = Modifier
                                 .fillMaxWidth()

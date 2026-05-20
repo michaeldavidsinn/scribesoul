@@ -14,12 +14,22 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Visibility
+import androidx.compose.material.icons.filled.VisibilityOff
+import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextField
 import androidx.compose.material3.TextFieldDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -31,6 +41,7 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.PasswordVisualTransformation
+import androidx.compose.ui.text.input.VisualTransformation
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
@@ -39,15 +50,31 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
 import com.scribesoul.R
 import com.scribesoul.app.viewModels.AuthViewModel
+import com.scribesoul.app.viewModels.UserProfileViewModel
 
 @Composable
 fun Register(navController: NavController,
-          viewModel: AuthViewModel
+                viewModel: AuthViewModel,
+             userProfileViewModel: UserProfileViewModel
 ){
+    var passwordVisible by remember { mutableStateOf(false) }
+    var confirmPasswordVisible by remember { mutableStateOf(false) }
+
     LaunchedEffect(viewModel.isLoggedIn) {
         if (viewModel.isLoggedIn) {
-            navController.navigate("home") {
-                popUpTo("initial") { inclusive = true } // Clears the login screens from history
+            // 2. Check if the profile exists in Firestore
+            userProfileViewModel.checkIfUserFinishedOnboarding { hasProfile ->
+                if (hasProfile) {
+                    // Profile found -> Go to Home
+                    navController.navigate("home") {
+                        popUpTo("initial") { inclusive = true }
+                    }
+                } else {
+                    // No profile -> Go to Onboarding
+                    navController.navigate("user_LetUsKnow") {
+                        popUpTo("initial") { inclusive = true }
+                    }
+                }
             }
         }
     }
@@ -69,7 +96,7 @@ fun Register(navController: NavController,
         Column(
             horizontalAlignment = Alignment.CenterHorizontally,
             verticalArrangement = Arrangement.spacedBy(5.dp),
-            modifier = Modifier.padding(bottom = 40.dp)
+            modifier = Modifier.padding(bottom = 40.dp).fillMaxWidth(),
         ) {
             Text(
                 text = "LET'S START WITH US!",
@@ -90,184 +117,151 @@ fun Register(navController: NavController,
 
 
         }
-        Column {
-            TextField(
-                value = viewModel.username,
-                onValueChange = {
-                     viewModel.username = it
-                },
-                modifier = Modifier
-                    .padding(bottom = 15.dp)
-                    .fillMaxWidth(0.85f) // Adjust width to match your layout
-                    .shadow(elevation = 10.dp, shape = RoundedCornerShape(50))
-                    .clip(RoundedCornerShape(50)),
-                placeholder = {
-                    Text(text = "Username", color = Color.Gray)
-                },
-                leadingIcon = {
-                    Image(
-                        painter = painterResource(R.drawable.ic_user),
-                        contentDescription = null,
-                        modifier = Modifier
-                            .size(30.dp)
-                    )
-                },
-                singleLine = true,
-                colors = TextFieldDefaults.colors(
-                    focusedContainerColor = Color.White,
-                    unfocusedContainerColor = Color.White,
-                    focusedIndicatorColor = Color.Transparent, // Removes the bottom line
-                    unfocusedIndicatorColor = Color.Transparent,
-                    cursorColor = Color.Black
-                )
-            )
-            TextField(
-                value = viewModel.email,
-                onValueChange = {
-                     viewModel.email = it
-                },
-                modifier = Modifier
-                    .padding(bottom = 15.dp)
-                    .fillMaxWidth(0.85f) // Adjust width to match your layout
-                    .shadow(elevation = 10.dp, shape = RoundedCornerShape(50))
-                    .clip(RoundedCornerShape(50)),
-                placeholder = {
-                    Text(text = "Email", color = Color.Gray)
-                },
-                leadingIcon = {
-                    Image(
-                        painter = painterResource(R.drawable.ic_email),
-                        contentDescription = null,
-                        modifier = Modifier
-                            .size(30.dp)
-                    )
-                },
-                singleLine = true,
-                colors = TextFieldDefaults.colors(
-                    focusedContainerColor = Color.White,
-                    unfocusedContainerColor = Color.White,
-                    focusedIndicatorColor = Color.Transparent, // Removes the bottom line
-                    unfocusedIndicatorColor = Color.Transparent,
-                    cursorColor = Color.Black
-                )
-            )
+        Column(horizontalAlignment = Alignment.CenterHorizontally) {
 
-// 2. Password Text Field
-            TextField(
-                value = viewModel.password,
-                onValueChange = {
-                     viewModel.password = it
-                },
-                modifier = Modifier
-                    .padding(bottom = 15.dp) // Extra padding before the login button
-                    .fillMaxWidth(0.85f)
-                    .shadow(elevation = 10.dp, shape = RoundedCornerShape(50))
-                    .clip(RoundedCornerShape(50)),
-                placeholder = {
-                    Text(text = "Password", color = Color.Gray)
-                },
-                leadingIcon = {
-                    Image(
-                        painter = painterResource(R.drawable.ic_password_custom),
-                        contentDescription = null,
-                        modifier = Modifier
-                            .size(30.dp)
+            // Username Field
+            Column(modifier = Modifier.padding(bottom = 15.dp)) {
+                TextField(
+                    value = viewModel.username,
+                    onValueChange = { viewModel.username = it },
+                    modifier = Modifier.fillMaxWidth(0.85f).shadow(elevation = 10.dp, shape = RoundedCornerShape(50)).clip(RoundedCornerShape(50)),
+                    placeholder = { Text("Username", color = Color.Gray) },
+                    leadingIcon = { Image(painter = painterResource(R.drawable.ic_user), contentDescription = null, modifier = Modifier.size(30.dp)) },
+                    singleLine = true,
+                    colors = TextFieldDefaults.colors(
+                        focusedContainerColor = Color.White, unfocusedContainerColor = Color.White,
+                        focusedTextColor = Color.Black, unfocusedTextColor = Color.Black,
+                        focusedIndicatorColor = Color.Transparent, unfocusedIndicatorColor = Color.Transparent, cursorColor = Color.Black
                     )
-                },
-                singleLine = true,
-                visualTransformation = PasswordVisualTransformation(), // Turns text into dots
-                colors = TextFieldDefaults.colors(
-                    focusedContainerColor = Color.White,
-                    unfocusedContainerColor = Color.White,
-                    focusedIndicatorColor = Color.Transparent,
-                    unfocusedIndicatorColor = Color.Transparent,
-                    cursorColor = Color.Black
                 )
-            )
+                if (viewModel.usernameError != null) {
+                    Text(viewModel.usernameError!!, color = Color.Red, fontSize = 12.sp, modifier = Modifier.padding(start = 16.dp, top = 4.dp))
+                }
+            }
 
-            TextField(
-                value = viewModel.confirmPassword,
-                onValueChange = {
-                    viewModel.confirmPassword = it
-                },
-                modifier = Modifier
-                    .padding(bottom = 30.dp) // Extra padding before the login button
-                    .fillMaxWidth(0.85f)
-                    .shadow(elevation = 10.dp, shape = RoundedCornerShape(50))
-                    .clip(RoundedCornerShape(50)),
-                placeholder = {
-                    Text(text = "Confirm Password", color = Color.Gray)
-                },
-                leadingIcon = {
-                    Image(
-                        painter = painterResource(R.drawable.ic_password_custom),
-                        contentDescription = null,
-                        modifier = Modifier
-                            .size(30.dp)
+            // Email Field
+            Column(modifier = Modifier.padding(bottom = 15.dp)) {
+                TextField(
+                    value = viewModel.email,
+                    onValueChange = { viewModel.email = it },
+                    modifier = Modifier.fillMaxWidth(0.85f).shadow(elevation = 10.dp, shape = RoundedCornerShape(50)).clip(RoundedCornerShape(50)),
+                    placeholder = { Text("Email", color = Color.Gray) },
+                    leadingIcon = { Image(painter = painterResource(R.drawable.ic_email), contentDescription = null, modifier = Modifier.size(30.dp)) },
+                    singleLine = true,
+                    colors = TextFieldDefaults.colors(
+                        focusedContainerColor = Color.White, unfocusedContainerColor = Color.White,
+                        focusedTextColor = Color.Black, unfocusedTextColor = Color.Black,
+                        focusedIndicatorColor = Color.Transparent, unfocusedIndicatorColor = Color.Transparent, cursorColor = Color.Black
                     )
-                },
-                singleLine = true,
-                visualTransformation = PasswordVisualTransformation(), // Turns text into dots
-                colors = TextFieldDefaults.colors(
-                    focusedContainerColor = Color.White,
-                    unfocusedContainerColor = Color.White,
-                    focusedIndicatorColor = Color.Transparent,
-                    unfocusedIndicatorColor = Color.Transparent,
-                    cursorColor = Color.Black
                 )
-            )
+                if (viewModel.emailError != null) {
+                    Text(viewModel.emailError!!, color = Color.Red, fontSize = 12.sp, modifier = Modifier.padding(start = 16.dp, top = 4.dp))
+                }
+            }
+
+            // Password Field
+            Column(modifier = Modifier.padding(bottom = 15.dp)) {
+                TextField(
+                    value = viewModel.password,
+                    onValueChange = { viewModel.password = it },
+                    modifier = Modifier.fillMaxWidth(0.85f).shadow(elevation = 10.dp, shape = RoundedCornerShape(50)).clip(RoundedCornerShape(50)),
+                    placeholder = { Text("Password", color = Color.Gray) },
+                    leadingIcon = { Image(painter = painterResource(R.drawable.ic_password_custom), contentDescription = null, modifier = Modifier.size(30.dp)) },
+                    trailingIcon = {
+                        val image = if (passwordVisible) Icons.Filled.Visibility else Icons.Filled.VisibilityOff
+                        IconButton(onClick = { passwordVisible = !passwordVisible }) {
+                            Icon(imageVector = image, contentDescription = "Toggle visibility", tint = Color.Gray)
+                        }
+                    },
+                    singleLine = true,
+                    visualTransformation = if (passwordVisible) VisualTransformation.None else PasswordVisualTransformation(),
+                    colors = TextFieldDefaults.colors(
+                        focusedContainerColor = Color.White, unfocusedContainerColor = Color.White,
+                        focusedTextColor = Color.Black, unfocusedTextColor = Color.Black,
+                        focusedIndicatorColor = Color.Transparent, unfocusedIndicatorColor = Color.Transparent, cursorColor = Color.Black
+                    )
+                )
+                if (viewModel.passwordError != null) {
+                    Text(viewModel.passwordError!!, color = Color.Red, fontSize = 12.sp, modifier = Modifier.padding(start = 16.dp, top = 4.dp))
+                }
+            }
+
+            // Confirm Password Field
+            Column(modifier = Modifier.padding(bottom = 30.dp)) {
+                TextField(
+                    value = viewModel.confirmPassword,
+                    onValueChange = { viewModel.confirmPassword = it },
+                    modifier = Modifier.fillMaxWidth(0.85f).shadow(elevation = 10.dp, shape = RoundedCornerShape(50)).clip(RoundedCornerShape(50)),
+                    placeholder = { Text("Confirm Password", color = Color.Gray) },
+                    leadingIcon = { Image(painter = painterResource(R.drawable.ic_password_custom), contentDescription = null, modifier = Modifier.size(30.dp)) },
+                    trailingIcon = {
+                        val image = if (confirmPasswordVisible) Icons.Filled.Visibility else Icons.Filled.VisibilityOff
+                        IconButton(onClick = { confirmPasswordVisible = !confirmPasswordVisible }) {
+                            Icon(imageVector = image, contentDescription = "Toggle visibility", tint = Color.Gray)
+                        }
+                    },
+                    singleLine = true,
+                    visualTransformation = if (confirmPasswordVisible) VisualTransformation.None else PasswordVisualTransformation(),
+                    colors = TextFieldDefaults.colors(
+                        focusedContainerColor = Color.White, unfocusedContainerColor = Color.White,
+                        focusedTextColor = Color.Black, unfocusedTextColor = Color.Black,
+                        focusedIndicatorColor = Color.Transparent, unfocusedIndicatorColor = Color.Transparent, cursorColor = Color.Black
+                    )
+                )
+                if (viewModel.confirmPasswordError != null) {
+                    Text(viewModel.confirmPasswordError!!, color = Color.Red, fontSize = 12.sp, modifier = Modifier.padding(start = 16.dp, top = 4.dp))
+                }
+            }
         }
         Spacer(modifier = Modifier.height(150.dp))
 
         Column(
-            verticalArrangement = Arrangement.Center
+            modifier = Modifier.fillMaxWidth(),
+            verticalArrangement = Arrangement.Center,
+            horizontalAlignment = Alignment.CenterHorizontally
+
         ) {
             Column(
                 modifier = Modifier
                     .padding(bottom = 10.dp)
+                    .fillMaxWidth(),
+                horizontalAlignment = Alignment.CenterHorizontally
             ) {
                 Box(
                     modifier = Modifier
                         .shadow(elevation = 10.dp, shape = RoundedCornerShape(50))
                         .clip(RoundedCornerShape(50))
-
                         .background(
                             brush = Brush.linearGradient(
-                                colors = listOf(
-                                    Color(0xFF82D9D2),
-                                    Color(0xFF7CC3E6),
-                                    Color(0xFF74A8FF)
-                                ),
+                                colors = listOf(Color(0xFF82D9D2), Color(0xFF7CC3E6), Color(0xFF74A8FF)),
                                 start = Offset(0f, Float.POSITIVE_INFINITY),
-                                // End at the bottom-right corner (45 degrees)
                                 end = Offset(Float.POSITIVE_INFINITY, 0f)
                             )
                         )
-                        .clickable {
+                        // 1. Disable the click if it's already loading
+                        .clickable(enabled = !viewModel.isLoading) {
                             viewModel.signUp()
                         }
-                        .padding( vertical = 13.dp)
-                        .width(150.dp)
-
+                        .padding(vertical = 13.dp)
+                        .width(150.dp),
+                    contentAlignment = Alignment.Center // Center the content inside the box
                 ) {
-                    Text(
-                        text = "SIGN UP",
-                        modifier = Modifier.fillMaxWidth().padding(horizontal = 20.dp),
-                        color = Color.White,
-                        style = MaterialTheme.typography.labelMedium.copy(fontWeight = FontWeight.Bold),
-                        textAlign = TextAlign.Center
-                    )
-                }
-                if (!viewModel.errorMessage.isNullOrEmpty()) {
-                    Text(
-                        text = viewModel.errorMessage!!,
-                        color = Color.Red,
-                        fontSize = 14.sp,
-                        textAlign = TextAlign.Center,
-                        modifier = Modifier
-                            .padding(vertical = 4.dp, horizontal = 30.dp)
-                            .fillMaxWidth()
-                    )
+                    // 2. Show the spinner if loading, otherwise show the text
+                    if (viewModel.isLoading) {
+                        CircularProgressIndicator(
+                            color = Color.White,
+                            modifier = Modifier.size(24.dp),
+                            strokeWidth = 2.dp
+                        )
+                    } else {
+                        Text(
+                            text = "SIGN UP",
+                            modifier = Modifier.fillMaxWidth().padding(horizontal = 20.dp),
+                            color = Color.White,
+                            style = MaterialTheme.typography.labelMedium.copy(fontWeight = FontWeight.Bold),
+                            textAlign = TextAlign.Center
+                        )
+                    }
                 }
             }
         }
@@ -314,7 +308,8 @@ fun Register(navController: NavController,
 @Composable
 fun PreviewRegisterPage(){
     Register(navController = NavController(LocalContext.current),
-        viewModel = viewModel(factory = AuthViewModel.Factory)
+        viewModel = viewModel(factory = AuthViewModel.Factory),
+        userProfileViewModel = viewModel(factory = UserProfileViewModel.Factory)
     )
 
 }

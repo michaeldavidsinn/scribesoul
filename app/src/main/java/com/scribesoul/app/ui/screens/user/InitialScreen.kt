@@ -55,7 +55,7 @@ fun InitialScreen(navController: NavController) {
             modifier = Modifier.padding(bottom = 40.dp)
         ) {
             Image(
-                painter = painterResource(R.drawable.cat2),
+                painter = painterResource(R.drawable.cat_onboarding1),
                 contentDescription = null,
                 modifier = Modifier
                     .width(200.dp),

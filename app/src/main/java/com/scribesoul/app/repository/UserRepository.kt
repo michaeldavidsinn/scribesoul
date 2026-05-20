@@ -16,11 +16,12 @@ class UserRepository {
         return try {
             val uid = auth.currentUser?.uid ?: throw Exception("User not logged in")
 
-            // Simpan ke collection "therapists"
+            // Use .set() to WRITE the data to Firestore
             firestore.collection("users")
                 .document(uid)
-                .set(user.copy(id = uid))
+                .set(user.copy(id = uid)) // Overwrites or creates the document
                 .await()
+
             Result.success(Unit)
         } catch (e: Exception) {
             Result.failure(e)
@@ -30,8 +31,16 @@ class UserRepository {
     suspend fun getUserProfile(): Result<UserDTO?> {
         return try {
             val uid = auth.currentUser?.uid ?: return Result.failure(Exception("Not logged in"))
+
+            // Use .get() to READ the data from Firestore
             val document = firestore.collection("users").document(uid).get().await()
-            Result.success(document.toObject(UserDTO::class.java))
+
+            if (document.exists()) {
+                Result.success(document.toObject(UserDTO::class.java))
+            } else {
+                Result.failure(Exception("User profile document does not exist in Firestore!"))
+            }
+
         } catch (e: Exception) {
             Result.failure(e)
         }

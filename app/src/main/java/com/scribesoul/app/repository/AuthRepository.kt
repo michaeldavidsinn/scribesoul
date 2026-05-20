@@ -28,7 +28,7 @@ class FirebaseAuthRepository : AuthRepository {
         }
     }
 
-    override suspend fun signUp(email: String,username: String, pass: String): Result<FirebaseUser> {
+    override suspend fun signUp(email: String,pass: String, username: String): Result<FirebaseUser> {
         return try {
             val result = auth.createUserWithEmailAndPassword(email, pass).await()
             val user = result.user
@@ -36,7 +36,10 @@ class FirebaseAuthRepository : AuthRepository {
                 .setDisplayName(username) // Pass the username string into the function
                 .build()
             user?.updateProfile(profileUpdates)?.await()
-            Result.success(result.user!!)
+
+            user?.reload()?.await()
+
+            Result.success(auth.currentUser!!)
         } catch (e: Exception) {
             Result.failure(e)
         }
