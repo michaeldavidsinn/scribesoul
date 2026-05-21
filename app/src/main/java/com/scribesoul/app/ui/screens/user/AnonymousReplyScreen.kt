@@ -251,7 +251,7 @@ fun ReplyCard(
                             horizontalAlignment = Alignment.CenterHorizontally,
                             modifier = Modifier
                                 .padding(start = 8.dp)
-                                .clickable { onLikeClick() }
+                                .clickable(enabled = !post.isLiked) { onLikeClick() }
                         ) {
                             val iconColor = if (post.isLiked) Color(0xFFE91E63) else Color(0xFF2B395B)
                             val iconRes = if (post.isLiked) R.drawable.ic_heart_filled else R.drawable.like
@@ -279,7 +279,10 @@ fun ReplyCard(
                             Spacer(modifier = Modifier.width(4.dp))
                             Text("${post.commentCount}", style = MaterialTheme.typography.bodySmall, color = Color(0xFF2B395B))
                         }
-                        Row(verticalAlignment = Alignment.CenterVertically, modifier = Modifier.clickable { onLikeClick() }) {
+                        Row(
+                            verticalAlignment = Alignment.CenterVertically,
+                            modifier = Modifier.clickable(enabled = !post.isLiked) { onLikeClick() }
+                        ) {
                             val likeIconColor = if (post.isLiked) Color(0xFFE91E63) else Color(0xFF2B395B)
                             val likeIconRes = if (post.isLiked) R.drawable.ic_heart_filled else R.drawable.like
                             Icon(painter = painterResource(id = likeIconRes), contentDescription = null, modifier = Modifier.size(18.dp), tint = likeIconColor)

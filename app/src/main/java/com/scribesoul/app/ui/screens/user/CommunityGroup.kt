@@ -235,16 +235,14 @@ fun CommunityGroupScreen(navController: NavController, communityViewModel: Commu
             }
 
 
-            LazyColumn {
+            LazyColumn(modifier = Modifier.weight(1f)) {
                 items(chatList) { chat ->
-                    // Cek apakah chat ini milikku atau orang lain
                     val isMine = communityViewModel.isMyChat(chat)
 
                     ChatBubble(
                         message = chat.message,
                         sender = chat.sender,
                         isMine = isMine,
-                        // Ubah padding otomatis: kalau punya kita di kanan, kalau orang lain di kiri
                         modifier = Modifier.padding(
                             start = if (isMine) 48.dp else 12.dp,
                             end = if (isMine) 12.dp else 48.dp

@@ -415,16 +415,29 @@ fun ChatCard(
                 Spacer(modifier = Modifier.height(8.dp))
 
                 // Actions (Like & Comment)
+                // Actions (Like & Comment)
                 Row(horizontalArrangement = Arrangement.spacedBy(24.dp), modifier = Modifier.padding(top = 4.dp)) {
                     // Like
-                    Row(verticalAlignment = Alignment.CenterVertically, modifier = Modifier.clickable { onLikeClick() }) {
+                    Row(
+                        verticalAlignment = Alignment.CenterVertically,
+                        // KUNCI UTAMA: Hanya bisa diklik kalau belum di-like
+                        modifier = Modifier.clickable(enabled = !isLiked) { onLikeClick() }
+                    ) {
                         val likeIconResId = if (isLiked) R.drawable.ic_heart_filled else R.drawable.like
-                        val likeIconColor = if (isLiked) Color(0xFFE91E63) else Color(0xFF2B395B)
-                        Icon(painter = painterResource(id = likeIconResId), contentDescription = "Like", modifier = Modifier.size(20.dp), tint = likeIconColor)
+                        // Warnanya diubah jadi Merah murni kalau sudah di-like
+                        val likeIconColor = if (isLiked) Color.Red else Color(0xFF2B395B)
+
+                        Icon(
+                            painter = painterResource(id = likeIconResId),
+                            contentDescription = "Like",
+                            modifier = Modifier.size(20.dp),
+                            tint = likeIconColor
+                        )
                         Spacer(modifier = Modifier.width(4.dp))
                         Text(text = "$likeCount", style = MaterialTheme.typography.bodySmall, color = likeIconColor)
                     }
-                    // Comment
+
+                    // Comment (Tetap sama)
                     Row(verticalAlignment = Alignment.CenterVertically, modifier = Modifier.clickable { onCommentClick() }) {
                         Icon(painter = painterResource(id = R.drawable.comment), contentDescription = "Comment", modifier = Modifier.size(20.dp), tint = Color(0xFF2B395B))
                         Spacer(modifier = Modifier.width(4.dp))

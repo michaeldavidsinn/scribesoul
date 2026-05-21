@@ -60,12 +60,13 @@ class CommunityViewModel(
     companion object {
         val Factory: ViewModelProvider.Factory = viewModelFactory {
             initializer {
-                // TODO: Ganti dengan FirebaseGroupChatRepository sungguhan
-                val dummyRepo = object : GroupChatRepository {
-                    override fun getGroupChats() = kotlinx.coroutines.flow.flowOf(emptyList<Chat>())
-                    override suspend fun sendMessage(chat: Chat) {}
-                }
-                CommunityViewModel(dummyRepo)
+                // 1. Ambil Application Context
+                val application = (this[ViewModelProvider.AndroidViewModelFactory.APPLICATION_KEY] as com.scribesoul.app.ScribeSoulApplication)
+
+                // 2. Hubungkan dengan FirebaseGroupChatRepository asli!
+                CommunityViewModel(
+                    repository = application.container.groupChatRepository
+                )
             }
         }
     }

@@ -406,5 +406,20 @@ fun AppNavigation(
         composable("schedule_therapist") {
             TherapistScheduleScreen(navController, therapistHomeViewModel)
         }
+
+
+        composable(
+            route = "reply_screen/{postId}",
+            arguments = listOf(navArgument("postId") { type = NavType.StringType })
+        ) { backStackEntry ->
+            val postId = backStackEntry.arguments?.getString("postId") ?: ""
+
+            // Panggil halaman Reply (Pastikan kamu sudah membuat file/fungsi AnonymousReplyScreen)
+            com.scribesoul.app.ui.screens.user.AnonymousReplyScreen(
+                navController = navController,
+                postViewModel = postViewModel,
+                postId = postId
+            )
+        }
     }
 }
