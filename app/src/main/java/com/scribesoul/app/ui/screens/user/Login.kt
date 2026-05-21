@@ -58,21 +58,13 @@ fun Login(navController: NavController,
           userProfileViewModel: UserProfileViewModel
 ){
     var passwordVisible by remember { mutableStateOf(false ) }
+    var isTherapistMode by remember { mutableStateOf(false) }
+
+
     LaunchedEffect(viewModel.isLoggedIn) {
         if (viewModel.isLoggedIn) {
-            // 2. Check if the profile exists in Firestore
-            userProfileViewModel.checkIfUserFinishedOnboarding { hasProfile ->
-                if (hasProfile) {
-                    // Profile found -> Go to Home
-                    navController.navigate("home") {
-                        popUpTo("initial") { inclusive = true }
-                    }
-                } else {
-                    // No profile -> Go to Onboarding
-                    navController.navigate("user_LetUsKnow") {
-                        popUpTo("initial") { inclusive = true }
-                    }
-                }
+            navController.navigate("splash_check") {
+                popUpTo("initial") { inclusive = true }
             }
         }
     }
@@ -197,6 +189,7 @@ fun Login(navController: NavController,
             }
         }
 
+
         Spacer(modifier = Modifier.height(100.dp))
 
         // ... Your existing buttons (Login and Register navigation) ...
@@ -240,6 +233,7 @@ fun Login(navController: NavController,
                     )
                 }
             }
+
 
             // Backend/General Errors show here
             if (viewModel.generalError != null) {

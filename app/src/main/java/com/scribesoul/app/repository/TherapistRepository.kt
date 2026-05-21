@@ -106,4 +106,16 @@ class TherapistRepository {
         // Biasanya notes disimpan di dalam objek session yang sudah selesai
         return getClientSessionHistory(clientId)
     }
+
+    suspend fun getAllTherapists(): Result<List<TherapistDTO>> {
+        return try {
+            val snapshot = firestore.collection("therapists").get().await()
+            val therapists = snapshot.documents.mapNotNull { doc ->
+                doc.toObject(TherapistDTO::class.java)?.copy(id = doc.id)
+            }
+            Result.success(therapists)
+        } catch (e: Exception) {
+            Result.failure(e)
+        }
+    }
 }

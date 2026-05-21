@@ -108,6 +108,18 @@ class TherapistHomeViewModel(
         }.sortedBy { it.dateTimestamp }
     }
 
+    fun checkIfTherapistExists(onResult: (Boolean) -> Unit) {
+        viewModelScope.launch {
+            val result = therapistRepository.getTherapistProfile()
+            // Jika request sukses dan datanya ada (tidak null), berarti dia Therapist
+            if (result.isSuccess && result.getOrNull() != null) {
+                onResult(true)
+            } else {
+                onResult(false)
+            }
+        }
+    }
+
     companion object {
         val Factory: ViewModelProvider.Factory = viewModelFactory {
             initializer {

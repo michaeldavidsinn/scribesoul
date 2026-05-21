@@ -62,6 +62,7 @@ import com.scribesoul.app.ui.screens.user.TherapistFAQScreen
 import com.scribesoul.app.ui.screens.user.TherapistRecommendationScreen
 import com.scribesoul.app.ui.screens.user.UserAccountInfoScreen
 import com.scribesoul.app.ui.screens.user.UserProfileScreen
+import com.scribesoul.app.ui.screens.user.WelcomeRoleScreen
 import com.scribesoul.app.ui.screens.user.onboarding.UserAgeScreen
 import com.scribesoul.app.ui.screens.user.onboarding.UserChallengesScreen
 import com.scribesoul.app.ui.screens.user.onboarding.UserFeelingScreen
@@ -128,15 +129,26 @@ fun AppNavigation(
         composable("splash_check") {
             LaunchedEffect(authViewModel.isLoggedIn) {
                 if (authViewModel.isLoggedIn) {
-                    // User is logged in, check if they finished onboarding
-                    userProfileViewModel.checkIfUserFinishedOnboarding { hasFinished ->
-                        if (hasFinished) {
-                            navController.navigate("home") {
+                    // 1. Cek dulu apakah user ini punya profil Therapist
+                    therapistHomeViewModel.checkIfTherapistExists { isTherapist ->
+                        if (isTherapist) {
+                            navController.navigate("home_therapist") {
                                 popUpTo("splash_check") { inclusive = true }
                             }
                         } else {
-                            navController.navigate("user_LetUsKnow") {
-                                popUpTo("splash_check") { inclusive = true }
+                            // 2. Jika bukan Therapist, cek apakah dia punya profil Client
+                            userProfileViewModel.checkIfUserFinishedOnboarding { isClient ->
+                                if (isClient) {
+                                    navController.navigate("home") {
+                                        popUpTo("splash_check") { inclusive = true }
+                                    }
+                                } else {
+                                    // 3. Belum punya profil di keduanya? Berarti user baru daftar
+                                    // dan belum memilih role, lempar ke WelcomeRoleScreen
+                                    navController.navigate("welcome_role") {
+                                        popUpTo("splash_check") { inclusive = true }
+                                    }
+                                }
                             }
                         }
                     }
@@ -420,6 +432,10 @@ fun AppNavigation(
                 postViewModel = postViewModel,
                 postId = postId
             )
+        }
+
+        composable("welcome_role") {
+            WelcomeRoleScreen(navController)
         }
     }
 }

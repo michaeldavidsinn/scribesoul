@@ -60,21 +60,13 @@ fun Register(navController: NavController,
     var passwordVisible by remember { mutableStateOf(false) }
     var confirmPasswordVisible by remember { mutableStateOf(false) }
 
+    var isTherapistMode by remember { mutableStateOf(false) }
+
     LaunchedEffect(viewModel.isLoggedIn) {
         if (viewModel.isLoggedIn) {
-            // 2. Check if the profile exists in Firestore
-            userProfileViewModel.checkIfUserFinishedOnboarding { hasProfile ->
-                if (hasProfile) {
-                    // Profile found -> Go to Home
-                    navController.navigate("home") {
-                        popUpTo("initial") { inclusive = true }
-                    }
-                } else {
-                    // No profile -> Go to Onboarding
-                    navController.navigate("user_LetUsKnow") {
-                        popUpTo("initial") { inclusive = true }
-                    }
-                }
+            // Setelah berhasil register, langsung arahkan ke halaman pemilihan Role
+            navController.navigate("welcome_role") {
+                popUpTo("initial") { inclusive = true }
             }
         }
     }
@@ -213,6 +205,7 @@ fun Register(navController: NavController,
                 }
             }
         }
+
         Spacer(modifier = Modifier.height(150.dp))
 
         Column(

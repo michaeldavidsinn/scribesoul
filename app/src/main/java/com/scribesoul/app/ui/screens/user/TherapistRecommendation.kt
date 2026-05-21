@@ -1,19 +1,25 @@
 package com.scribesoul.app.ui.screens.user
 
+import android.content.Intent
+import android.net.Uri
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
@@ -21,29 +27,25 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
+import androidx.navigation.compose.rememberNavController
 import com.scribesoul.R
 import com.scribesoul.app.ui.navigation.BottomNavItem
-import android.content.Intent
-import android.net.Uri
-import androidx.compose.foundation.lazy.itemsIndexed
-import androidx.compose.ui.layout.ContentScale
+import com.scribesoul.app.viewModels.TherapistDirectoryViewModel
+import java.text.NumberFormat
+import java.util.Locale
 
 @Composable
-fun TherapistRecommendationScreen(navController: NavController) {
-
+fun TherapistRecommendationScreen(
+    navController: NavController,
+    // Deklarasikan ViewModel di parameter agar bisa diakses
+    viewModel: TherapistDirectoryViewModel = viewModel(factory = TherapistDirectoryViewModel.Factory)
+) {
     val context = LocalContext.current
 
-    val therapistList = listOf(
-        Triple("Dr. Andini Pramudita", "Psikolog Klinis", "Depresi & Kecemasan"),
-        Triple("Dr. Raka Mahendra", "Psikolog Anak", "Gangguan Perilaku & ADHD"),
-        Triple("Dr. Eliza Syahputri", "Psikolog Pernikahan", "Masalah Relasi & Komunikasi"),
-        Triple("Dr. Fajar Santoso", "Psikolog Remaja", "Masalah Identitas Diri"),
-        Triple("Dr. Mita Ardhana", "Psikolog Klinis", "Burnout & Stres Kerja"),
-        Triple("Dr. Samuel Hartono", "Psikolog Sosial", "Kecemasan Sosial"),
-        Triple("Dr. Intan Maheswari", "Psikolog Anak", "Autisme & Perkembangan"),
-        Triple("Dr. Kevin Salim", "Psikolog Umum", "Overthinking & Insomnia"),
-    )
+    // Menarik list Therapist asli dari Firebase
+    val therapistList by viewModel.therapists.collectAsState()
 
     Box(
         modifier = Modifier
@@ -54,8 +56,7 @@ fun TherapistRecommendationScreen(navController: NavController) {
                         Color(0xFFE0ECFF), // biru muda
                         Color(0xFFE1F9DF)  // hijau muda
                     ),
-                    // pusat radial di tengah layar
-                    radius = 1000f            // atur besar radius
+                    radius = 1000f
                 )
             )
     ) {
@@ -84,36 +85,61 @@ fun TherapistRecommendationScreen(navController: NavController) {
                 }
             }
 
-            itemsIndexed(therapistList) { index, (name, specialization, issue) ->
-
-                val imageRes = when (index % 8) {
-                    0 -> R.drawable.ther_1_f
-                    1 -> R.drawable.ther_1_m
-                    2 -> R.drawable.ther_2_f
-                    3 -> R.drawable.ther_2_m
-                    4 -> R.drawable.ther_3_f
-                    5 -> R.drawable.ther_3_m
-                    6 -> R.drawable.ther_4_f
-                    7 -> R.drawable.ther_4_m
-                    else -> R.drawable.ther_4_m
+            // Jika data masih kosong atau loading
+            if (therapistList.isEmpty()) {
+                item {
+                    Text(
+                        text = "No therapists available at the moment.",
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(top = 40.dp),
+                        textAlign = TextAlign.Center,
+                        color = Color.Gray
+                    )
                 }
+            } else {
+                // Mapping objek therapist dari ViewModel
+                itemsIndexed(therapistList) { index, therapist ->
 
-                TherapistCard(
-                    name = name,
-                    specialization = specialization,
-                    issue = issue,
-                    experienceYears = (5..15).random(),
-                    compatibility = (90..100).random(),
-                    price = "Rp 250.000,00",
-                    imageRes = imageRes, // <-- Masukkan gambarnya di sini
-                    onInfoClick = {
-                        navController.navigate("therapist_detail/$name")
-                    },
-                    onChatClick = {
-                        val intent = Intent(Intent.ACTION_VIEW, Uri.parse("https://play.google.com/store/account/subscriptions"))
-                        context.startActivity(intent)
+                    val imageRes = when (index % 8) {
+                        0 -> R.drawable.ther_1_f
+                        1 -> R.drawable.ther_1_m
+                        2 -> R.drawable.ther_2_f
+                        3 -> R.drawable.ther_2_m
+                        4 -> R.drawable.ther_3_f
+                        5 -> R.drawable.ther_3_m
+                        6 -> R.drawable.ther_4_f
+                        7 -> R.drawable.ther_4_m
+                        else -> R.drawable.ther_4_m
                     }
-                )
+
+                    // Format Harga ke format Rupiah
+                    val formattedPrice = NumberFormat.getCurrencyInstance(Locale("id", "ID")).apply {
+                        maximumFractionDigits = 0
+                    }.format(therapist.pricePerSession)
+
+                    // Gabungkan spesialisasi array jadi satu string
+                    val issueText = therapist.specializations.joinToString(", ")
+                        .takeIf { it.isNotEmpty() } ?: "General Counseling"
+
+                    TherapistCard(
+                        name = therapist.name,
+                        specialization = therapist.title,
+                        issue = issueText,
+                        experienceYears = therapist.experienceYears,
+                        compatibility = (90..100).random(),
+                        price = formattedPrice,
+                        imageRes = imageRes,
+                        onInfoClick = {
+                            // Navigasi dengan ID Therapist
+                            navController.navigate("therapist_detail/${therapist.id}")
+                        },
+                        onChatClick = {
+                            val intent = Intent(Intent.ACTION_VIEW, Uri.parse("https://play.google.com/store/account/subscriptions"))
+                            context.startActivity(intent)
+                        }
+                    )
+                }
             }
 
             item {
@@ -162,18 +188,18 @@ fun TherapistCard(
             // Avatar box
             Box(
                 modifier = Modifier
-                    .height(100.dp) // Sedikit lebih pendek dari sebelumnya
-                    .width(80.dp) // Tetap lebar seperti sebelumnya
+                    .height(100.dp)
+                    .width(80.dp)
                     .shadow(6.dp, shape = RoundedCornerShape(12.dp), clip = false)
                     .clip(RoundedCornerShape(12.dp))
                     .background(Color.White),
                 contentAlignment = Alignment.Center
             ) {
                 Image(
-                    painter = painterResource(id = imageRes), // <-- Gunakan imageRes di sini
+                    painter = painterResource(id = imageRes),
                     contentDescription = "Therapist Avatar",
-                    modifier = Modifier.fillMaxSize(), // Ubah ke fillMaxSize agar pas di kotak
-                    contentScale = ContentScale.Crop // Supaya foto orangnya rapi memenuhi kotak
+                    modifier = Modifier.fillMaxSize(),
+                    contentScale = ContentScale.Crop
                 )
             }
 
@@ -196,7 +222,7 @@ fun TherapistCard(
                         color = Color(0xFF2B395B)
                     )
                     Text(
-                        text = "$issue",
+                        text = issue,
                         style = MaterialTheme.typography.bodySmall.copy(fontSize = 11.sp),
                         color = Color(0xFF2B395B)
                     )
@@ -204,11 +230,10 @@ fun TherapistCard(
 
                 Spacer(modifier = Modifier.height(8.dp))
 
-
                 // Baris Experience + Compatibility
                 Row(
                     modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.spacedBy(4.dp) // [OPTIMASI 1] Jarak antar chip dirapatkan (12 -> 4)
+                    horizontalArrangement = Arrangement.spacedBy(4.dp)
                 ) {
                     val gradientBrush = Brush.horizontalGradient(
                         colors = listOf(
@@ -221,7 +246,7 @@ fun TherapistCard(
                     // Experience
                     Box(
                         modifier = Modifier
-                            .weight(1f) // [OPTIMASI 2] Wajib pakai weight agar membagi ruang 50:50
+                            .weight(1f)
                             .background(brush = gradientBrush, shape = RoundedCornerShape(50))
                             .padding(1.dp)
                     ) {
@@ -230,12 +255,12 @@ fun TherapistCard(
                                 .fillMaxWidth()
                                 .clip(RoundedCornerShape(50))
                                 .background(Color.White)
-                                .padding(horizontal = 2.dp, vertical = 4.dp), // [OPTIMASI 3] Padding dalam dikurangi (12 -> 6)
+                                .padding(horizontal = 2.dp, vertical = 4.dp),
                             contentAlignment = Alignment.Center
                         ) {
                             Text(
-                                text = "$experienceYears Years Experience", // Teks tetap utuh
-                                style = MaterialTheme.typography.labelSmall.copy(fontSize = 8.5.sp), // Samakan jadi 8.sp agar muat
+                                text = "$experienceYears Years Experience",
+                                style = MaterialTheme.typography.labelSmall.copy(fontSize = 8.5.sp),
                                 color = Color(0xFF2B395B),
                                 maxLines = 1,
                                 textAlign = TextAlign.Center
@@ -246,7 +271,7 @@ fun TherapistCard(
                     // Compatibility
                     Box(
                         modifier = Modifier
-                            .weight(1f) // Wajib pakai weight
+                            .weight(1f)
                             .background(brush = gradientBrush, shape = RoundedCornerShape(50))
                             .padding(1.dp)
                     ) {
@@ -255,7 +280,7 @@ fun TherapistCard(
                                 .fillMaxWidth()
                                 .clip(RoundedCornerShape(50))
                                 .background(Color.White)
-                                .padding(horizontal = 6.dp, vertical = 4.dp), // Padding dalam dikurangi (12 -> 6)
+                                .padding(horizontal = 6.dp, vertical = 4.dp),
                             contentAlignment = Alignment.Center
                         ) {
                             Text(
@@ -269,10 +294,9 @@ fun TherapistCard(
                     }
                 }
 
-
                 Spacer(modifier = Modifier.height(8.dp))
 
-// Baris Price + Chat
+                // Baris Price + Chat
                 Row(
                     modifier = Modifier.fillMaxWidth(),
                     horizontalArrangement = Arrangement.spacedBy(15.dp),
@@ -280,7 +304,7 @@ fun TherapistCard(
                 ) {
                     Text(
                         text = price,
-                        style = MaterialTheme.typography.labelLarge.copy(fontWeight = FontWeight.SemiBold),
+                        style = MaterialTheme.typography.labelLarge.copy(fontWeight = FontWeight.SemiBold, fontSize = 12.sp),
                         color = Color(0xFF2B395B)
                     )
 
@@ -301,7 +325,7 @@ fun TherapistCard(
                     ) {
                         Text(
                             text = "Chat",
-                            modifier = Modifier.padding(horizontal = 20.dp),
+                            modifier = Modifier.padding(horizontal = 16.dp),
                             color = Color.White,
                             style = MaterialTheme.typography.labelMedium.copy(fontWeight = FontWeight.Medium)
                         )
@@ -364,12 +388,12 @@ fun BottomBarTherapist(navController: NavController, modifier: Modifier = Modifi
     }
 }
 
-
 @Preview(showBackground = true)
 @Composable
 fun TherapistRecommendationPreview() {
-    val navController = NavController(LocalContext.current)
+    val navController = rememberNavController()
     Surface(modifier = Modifier.fillMaxSize()) {
+        // Karena ini Preview, kita hanya menginisialisasi secara sederhana
         TherapistRecommendationScreen(navController)
     }
 }
