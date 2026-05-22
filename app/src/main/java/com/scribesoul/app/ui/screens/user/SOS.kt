@@ -8,6 +8,7 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.material3.Icon
@@ -30,7 +31,6 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
 import com.scribesoul.R
-
 
 @Composable
 fun SOSScreen(navController: NavController) {
@@ -55,11 +55,16 @@ fun SOSScreen(navController: NavController) {
                 )
             )
     ) {
+        // PERBAIKAN: Menambahkan verticalScroll dan padding bawah
         Column(
-            modifier = Modifier.fillMaxSize(),
+            modifier = Modifier
+                .fillMaxSize()
+                .verticalScroll(rememberScrollState())
+                .padding(bottom = 100.dp), // Ruang agar tidak tertutup bottom bar
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
-            Spacer(modifier = Modifier.height(140.dp))
+            // PERBAIKAN: Spacer dikurangi sedikit agar tidak terlalu jauh ke bawah
+            Spacer(modifier = Modifier.height(100.dp))
 
             // Title
             Text(
@@ -84,9 +89,10 @@ fun SOSScreen(navController: NavController) {
             )
 
             // SOS Button
+            // PERBAIKAN: Ukuran dikecilkan dari 310.dp menjadi 240.dp
             Box(
                 modifier = Modifier
-                    .size(310.dp)
+                    .size(240.dp)
                     .clip(CircleShape)
                     .border(
                         width = 10.dp,
@@ -101,7 +107,7 @@ fun SOSScreen(navController: NavController) {
                     text = "SOS",
                     style = TextStyle(
                         color = Color.White,
-                        fontSize = 80.sp,
+                        fontSize = 64.sp, // Ukuran font disesuaikan dari 80.sp
                         fontWeight = FontWeight.Bold,
                         fontFamily = FontFamily(Font(R.font.verdana_bold))
                     )
@@ -171,7 +177,7 @@ fun SOSScreen(navController: NavController) {
 
         // Bottom Bar
         Box(
-            modifier = Modifier.align(Alignment.BottomCenter)
+            modifier = Modifier.align(Alignment.BottomCenter).padding(bottom = 30.dp)
         ) {
             BottomBarHome(navController)
         }
@@ -182,16 +188,16 @@ fun SOSScreen(navController: NavController) {
 fun EmergencyReasonCard(text: String, gradient: Brush) {
     Box(
         modifier = Modifier
-            .width(140.dp) // Sesuaikan lebar agar terlihat seperti di screenshot
+            .width(140.dp)
             .height(130.dp)
             .clip(RoundedCornerShape(16.dp))
             .background(brush = gradient)
-            .padding(1.5.dp) // Ketebalan border gradient
+            .padding(1.5.dp)
     ) {
         Box(
             modifier = Modifier
                 .fillMaxSize()
-                .clip(RoundedCornerShape(15.dp)) // Sedikit lebih kecil dari parent agar rapi
+                .clip(RoundedCornerShape(15.dp))
                 .background(Color.White)
                 .padding(12.dp),
             contentAlignment = Alignment.Center
